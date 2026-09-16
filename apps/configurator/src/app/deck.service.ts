@@ -1,10 +1,11 @@
 import { Injectable, signal } from '@angular/core';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { DeckConfig, DeckState, DisplayState } from './models';
+import { DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class DeckService {
   readonly state = signal<DeckState | null>(null);
+  readonly widgetCatalog = signal<WidgetCatalog | null>(null);
   readonly config = signal<DeckConfig | null>(null);
   readonly connected = signal(false);
   readonly error = signal('');
@@ -24,7 +25,8 @@ export class DeckService {
   }
   private async open() {
     try {
-      const [config, state] = await Promise.all([this.request<DeckConfig>('/api/config'), this.request<DeckState>('/api/state')]);
+      const [config, state, catalog] = await Promise.all([this.request<DeckConfig>('/api/config'), this.request<DeckState>('/api/state'), this.request<WidgetCatalog>('/api/widget-slots')]);
+      this.widgetCatalog.set(catalog);
       if (!this.config()) this.config.set(config);
       this.state.set(state);
       this.lastState = new Date(state.timestamp).getTime();

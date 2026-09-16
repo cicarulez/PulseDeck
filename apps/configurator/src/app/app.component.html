@@ -25,6 +25,8 @@
       <section class="roadmap"><span class="eyebrow">NEXT UP</span><p><strong>FPS e attività vocale</strong> richiedono ancora le integrazioni PresentMon e Discord Voice. Nessun valore dimostrativo viene mostrato come dato reale.</p></section>
     } @else if (tab() === 'sensors') {
       <pd-sensors [hardware]="deck.state()?.hardware ?? null" [online]="deck.connected()" />
+    } @else if (tab() === 'widgets') {
+      @if (deck.config(); as config) { @if (deck.widgetCatalog(); as catalog) { <pd-widgets [config]="config" [catalog]="catalog" [hardware]="deck.state()?.hardware ?? null" [preview]="preview()" [online]="deck.connected()" [busy]="deck.busy()" (save)="save($event)" /> } }
     } @else {
       @if (deck.config(); as config) { <pd-settings [config]="config" [busy]="deck.busy()" (save)="save($event)" /> }
     }

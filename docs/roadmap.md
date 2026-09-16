@@ -15,6 +15,8 @@ nella sessione Windows dell'utente, senza console aperta.
 - Agent C#/.NET 10, configuratore Angular 22, rendering unico con SkiaSharp.
 - Trasporto TURZX verificato sul dispositivo, aggiornamenti completi e parziali.
 - Inventario con 617 sensori/parametri rilevati su questo PC; ricerca e filtri.
+- Selezione dei sensori nelle otto posizioni del layout, etichette, scale e visibilità;
+  configurazione persistente e valori originali per le configurazioni precedenti.
 - PawnIO installato e letture di CPU, scheda madre, ventole, RAM, GPU e dischi.
 - Spotify tramite sessioni multimediali Windows; profili Desktop/Musica/Gaming.
 - Discord integrato: bot collegato, cache dei partecipanti e stato mute/deaf.
@@ -27,15 +29,21 @@ nella sessione Windows dell'utente, senza console aperta.
 | Priorità | Attività | Risultato atteso | Verifica per considerarla conclusa |
 | --- | --- | --- | --- |
 | P0 | Prove della base | Avvio quotidiano affidabile | Accesso Windows reale, arresto volontario, Spotify, display; ingresso/uscita e mute/deaf con partecipanti Discord |
-| P1 | Prova Aura Sync in lettura | Capire se il pannello può seguire i colori RGB del PC | Colori dell'effetto ASUS osservabili senza acquisire il controllo né alterare i LED |
+| P1 | Ricerca di una sorgente Aura in lettura | Superare l'esito negativo della prima prova SDK | Colori dell'effetto ASUS osservabili senza acquisire il controllo né alterare i LED |
 | P1 | Architettura per più display | Uno stato condiviso, schermi indipendenti | Due configurazioni con dimensioni, driver e contenuti separati; errore USB isolato per dispositivo |
-| P1 | Scelta dei widget e layout | Scegliere quali sensori e informazioni mettere sul TURZX | Configurazione persistente, anteprima coerente, nessuna sovrapposizione a 1920×480 |
+| P2 | Layout oltre le otto posizioni disponibili | Disporre anche musica e Discord per display/profilo | Configurazione persistente e composizione leggibile alle dimensioni di ogni schermo |
 | P2 | Tema con colori Aura | Accenti e barre coordinati al PC | Cambi colore reali, testo leggibile, comportamento corretto quando Aura non è disponibile |
 | P2 | FPS e tempi dei fotogrammi | Informazioni del gioco in primo piano | Misure reali attribuite al processo corretto, confronto con uno strumento di riferimento |
 | P2 | Chi parla su Discord | Indicatore vocale distinto dal mute | Due utenti, cambio interlocutore, silenzio, mute e riconnessione verificati |
 | P3 | Musica e sfondi | Copertina, progresso e tema Battlefield | Cambio traccia, pausa, sorgente multimediale alternativa; sfondo nitido sul display |
 | P3 | Regole contestuali avanzate | Widget/profili diversi per app attiva | Priorità esplicite e nessun cambio continuo durante Alt-Tab |
 | P3 | Gestione quotidiana | Icona nella tray, recupero del display e aggiornamenti | Uscita senza processi residui, scollegamento USB, sospensione/ripresa, ripristino del colore |
+
+Durante la prova widget è stato osservato un `needReSend:1` dal display: il trasporto
+attuale passa in errore e richiede **Collega display**. La riconnessione esplicita ha
+ripristinato gli aggiornamenti. Aggiungere un recupero limitato del fotogramma completo,
+con test del protocollo, senza trasformare una disconnessione volontaria in un ciclo
+di riconnessione automatica.
 
 La prova Aura precede il lavoro grafico esteso: evita di progettare un tema attorno
 a una sorgente di colore che potrebbe non essere leggibile.
@@ -59,6 +67,26 @@ Fonti ufficiali consultate:
 
 - [Tutorial C# Aura SDK](https://www.asus.com/microsite/aurareadydevportal/tutorial_csharp.html).
 - [Interfaccia IAuraRgbLight](https://www.asus.com/microsite/aurareadydevportal/interface_aura_service_lib_1_1_i_aura_rgb_light.html).
+- [Interfaccia IAuraSdk](https://www.asus.com/microsite/aurareadydevportal/interface_aura_service_lib_1_1_i_aura_sdk.html).
+
+### Esito della prima prova — 17 settembre 2026
+
+SDK installato **3.07.05.0**, COM `aura.sdk.1`, DLL x64 nella cartella ASUS.
+Una sonda PowerShell separata ha chiamato solo `Enumerate(0)` e getter dei LED,
+senza `SwitchMode`, setter o `Apply`, lasciando attivi i servizi ASUS.
+Il processo non elevato è terminato con codice 9 durante l'enumerazione; quello
+elevato ha enumerato RAM, GPU, periferiche, scheda madre e strip.
+
+Tre campioni consecutivi dei primi LED hanno prodotto valori fermi, incoerenti con
+il **giallo fisso** confermato dall'utente; alcuni erano compatibili con contenuto di
+buffer non valido. L'enumerazione riuscita non dimostra quindi una lettura dell'effetto
+attivo. Nessun provider Aura è stato collegato al rendering e il colore manuale resta
+attivo. Non è stata eseguita la prova dinamica, perché già il confronto statico falliva.
+
+Il requisito documentato dell'SDK di acquisire il controllo prima delle altre
+operazioni rende questa strada insufficiente per la modalità passiva richiesta.
+Un'alternativa dovrà essere verificata separatamente senza cambiare l'illuminazione.
+Qualunque ulteriore sonda nativa deve restare in un processo isolato dall'agent.
 
 Passi della prova:
 
@@ -81,9 +109,14 @@ deve usare un fallback dichiarato, senza presentare l'ultimo colore come aggiorn
 
 ## Widget e temi
 
-Prima versione: posizioni predefinite e selezione dei contenuti, evitando di rendere
-obbligatorio un editor drag-and-drop completo. Le aree possono contenere metriche,
-musica, FPS o Discord. Separare configurazione del tema, profilo e sorgenti dati.
+Prima versione completata: tre barre, quattro valori centrali e un valore laterale
+possono mostrare un riepilogo hardware o un sensore scelto per ID e nome, oppure
+essere nascosti. Etichette e scale modificabili, salvataggio esplicito e ripristino
+dei valori iniziali; stesso rendering per anteprima e USB. Schema 1 compatibile con
+i file precedenti tramite valori predefiniti per la nuova proprietà `widgets`.
+
+Restano futuri il posizionamento libero, lo spostamento di musica/Discord e i layout
+per display e profilo. Separare configurazione del tema, profilo e sorgenti dati.
 
 - ID dei widget stabili e configurazione versionata con migrazione.
 - Binding dei sensori che distingua anche identificatori duplicati nella libreria.
@@ -189,6 +222,7 @@ Non dedurre la voce attiva da mute=false. In caso di incompatibilità mostrare
 ## Come riprendere
 
 Leggere `AGENTS.md` e `docs/validation.md`, verificare che non ci siano modifiche
-locali da sovrascrivere, poi iniziare dalla prova Aura in sola lettura. Aggiornare
+locali da sovrascrivere, poi scegliere tra architettura multi-display e ricerca di
+una sorgente Aura passiva alternativa, tenendo conto dell'esito SDK sopra. Aggiornare
 questo piano con risultati e limiti osservati. Ogni incremento deve lasciare il
 pannello utilizzabile e avere un commit semantico con la validazione pertinente.

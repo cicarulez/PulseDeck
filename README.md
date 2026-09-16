@@ -8,7 +8,7 @@ l'agent continua a lavorare in background. L'avvio automatico non apre né conso
 né browser e collega il display.
 
 Il [piano di sviluppo](docs/roadmap.md) raccoglie le prossime attività: Aura Sync,
-widget selezionabili, più schermi, FPS, attività vocale e temi. Le verifiche realmente
+layout avanzati, più schermi, FPS, attività vocale e temi. Le verifiche realmente
 eseguite sono descritte in [docs/validation.md](docs/validation.md).
 
 ## Funzionalità disponibili
@@ -16,6 +16,7 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
 - Anteprima e display condividono lo stesso rendering 1920×480, con sfondo locale.
 - Pagina **Sensori** con ricerca, filtri, valori correnti/minimi/massimi e diagnostica
   dei permessi. Sul PC di sviluppo: 617 sensori e parametri, incluse soglie dei dispositivi.
+- Pagina **Widget**: otto posizioni configurabili con sensori, etichette e scale delle barre.
 - Titolo, artista, stato e progresso di Spotify o altri player compatibili con Windows.
 - Profili Desktop, Gaming e Musica; selezione manuale o automatica con ritardo configurabile.
 - Bot Discord integrato: partecipanti del canale, mute/deaf e utente da evidenziare.
@@ -26,7 +27,7 @@ Le letture mancanti appaiono come `—`. Il bot collegato è stato verificato; l
 transizioni ingresso/uscita e mute/deaf con partecipanti richiedono ancora una prova.
 
 **Non ancora disponibili:** FPS, indicatore di chi parla, colori Aura Sync, più display,
-copertine musicali, sfondi video, editor dei widget e icona nella tray. Il solo valore
+copertine musicali, sfondi video, layout libero e icona nella tray. Il solo valore
 `mute=false` non viene interpretato come attività vocale.
 
 ## Cosa installare per usarlo
@@ -74,6 +75,26 @@ l'agent e liberare la porta seriale.
 Per tornare al programma TURZX, arresta PulseDeck e riapri TURZX con il suo tema.
 Il display mantiene l'ultimo fotogramma finché non riceve nuovi dati. PulseDeck non
 modifica firmware o file dei temi originali.
+
+## Scegliere i widget
+
+Apri **Widget** nel configuratore, scegli una delle otto posizioni (tre barre a
+sinistra, quattro valori centrali e un valore a destra) e seleziona un riepilogo
+hardware o un sensore dell'inventario. Puoi filtrare per nome/hardware, cambiare
+l'etichetta, impostare il valore a barra piena oppure nascondere la posizione.
+Per esempio, una ventola in RPM può usare una scala massima di 3000.
+
+Premi **Salva widget** per applicare le modifiche all'anteprima e al display.
+**Annulla modifiche** recupera l'ultimo salvataggio; **Ripristina layout iniziale**
+prepara i valori originali, da confermare con il salvataggio. La configurazione
+rimane su disco e le configurazioni precedenti ricevono automaticamente le otto
+associazioni originali. Un sensore mancante mostra `—`, conservando il collegamento.
+Le aree musica e Discord restano nelle loro posizioni attuali.
+
+La prova Aura del 17 settembre 2026 con SDK 3.07.05.0 ha enumerato i dispositivi,
+ma i valori RGB non corrispondevano al giallo fisso confermato dall'utente.
+La sincronizzazione non è quindi attiva: il colore resta quello manuale scelto
+in **Configurazione**. Dettagli e prossimi passi nel [piano](docs/roadmap.md#aura-sync-il-pannello-segue-il-pc).
 
 ## Avvio automatico senza finestre
 

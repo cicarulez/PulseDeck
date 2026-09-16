@@ -1,0 +1,3 @@
+@use '../shared/form-fields' as form;
+@include form.fields;
+.editor{padding:24px}.editor-heading{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:20px}h2{font-size:18px;margin:8px 0 0}.reading{font:12px var(--mono);color:var(--accent)}small,.note{font-size:11px;line-height:1.6;color:var(--muted)}@media(max-width:640px){.editor-heading{align-items:flex-start;flex-direction:column;gap:10px}}

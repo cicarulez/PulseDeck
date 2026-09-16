@@ -1,4 +1,4 @@
-# Validation — 2026-09-16
+# Validation — updated 2026-09-17
 
 ## Automated
 
@@ -72,3 +72,37 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   state Ready and zero remaining agent processes. Starting the task again restored
   the agent and display. This verifies the normal stop path does not signal a failure
   to the task scheduler's restart policy.
+
+## Configurable widgets — 2026-09-17
+
+- 19 Core tests passed, including legacy configuration defaults, sensor ID/name
+  collisions, persistence round-trip, invalid bindings/scales, and bar fractions.
+- Windows self-contained Release publish and Angular production build passed.
+- Deployed after stopping and waiting for the previous process; published app and
+  configuration backed up outside the repository. Existing startup task reused.
+- Browser selected the real Nuvoton Fan #2 for bar 1, label `VENTOLA #2`, scale 3000.
+  Draft edits did not change the live configuration until Save. A zero scale disabled
+  Save; the API independently rejected it with 400. Saved bindings were read back.
+- Hide and restore-defaults workflows verified. Original widget configuration restored
+  after testing; music, Discord, display and other settings preserved.
+- Shared preview remains 1920x480. Widget page inspected at 1500x1000 and 390x844;
+  no horizontal page overflow. Live fan preview and label rendered correctly.
+- Elevated hardware inventory still contains 617 entries; embedded Discord connected.
+- During checks the display reported `needReSend:1`; the existing transport closed
+  the connection on that error. Explicit reconnect succeeded, then the fan layout
+  and restored defaults were sent with connected status. Automatic full-frame recovery
+  remains follow-up work. No new user visual confirmation of this layout yet.
+
+## Aura read-only feasibility — 2026-09-17
+
+- Local ASUS Aura SDK 3.07.05.0, registered COM `aura.sdk.1`, queried in a separate
+  Windows PowerShell process. No SwitchMode, LED setters or Apply calls; ASUS
+  services and hardware illumination left under their existing controller.
+- Standard-user process exited with native code 9 while enumerating. An elevated
+  process enumerated devices and read three samples, with at most 12 devices and
+  three LEDs per device. This is not evidence of complete-device coverage.
+- User confirmed a static yellow effect. Returned RGB values did not match it and
+  remained unchanged; some looked like invalid/stale buffer contents. No dynamic
+  effect test was attempted after this failed static comparison.
+- No Aura provider enabled in PulseDeck. Manual accent remains the supported path;
+  this result does not rule out other independently validated passive data sources.

@@ -37,6 +37,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapGet("/api/health", () => new { ok = true, app = "PulseDeck", version = "0.1.0" });
 app.MapGet("/api/state", (DeckRuntime runtime) => runtime.State);
+app.MapGet("/api/widget-slots", () => new { slots = WidgetCatalog.Slots, defaults = WidgetCatalog.Defaults() });
 app.MapGet("/api/sensors", (DeckRuntime runtime) => runtime.State.Hardware);
 app.MapGet("/api/config", (ConfigStore store) => store.Current);
 app.MapPut("/api/config", (DeckConfig config, ConfigStore store) =>

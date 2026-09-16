@@ -1,0 +1,15 @@
+<section class="panel editor">
+  <div class="editor-heading"><div><span class="eyebrow">POSIZIONE SELEZIONATA</span><h2>{{ slot().name }}</h2></div><span class="reading">{{ reading() }}</span></div>
+  <div class="fields">
+    <label class="wide">Filtra l’inventario<input type="search" placeholder="Es. Ryzen, Fan, Samsung…" [ngModel]="query()" (ngModelChange)="query.set($event)"></label>
+    <label class="wide">Dato da mostrare<select [ngModel]="selection()" (ngModelChange)="select($event)">
+      <option value="none">Nascondi questa posizione</option>
+      <optgroup label="Riepilogo hardware">@for (metric of hardware()?.metrics ?? []; track metric.id) { <option [value]="metricKey(metric.id)">{{ metric.label }} · {{ metric.unit }}</option> }</optgroup>
+      @if (missing()) { <option [value]="selection()">{{ widget().sensorName }} · sensore attualmente non rilevato</option> }
+      @for (group of groups(); track group.id) { <optgroup [label]="group.name">@for (sensor of group.sensors; track sensorKey(sensor)) { <option [value]="sensorKey(sensor)">{{ sensor.name }} · {{ sensor.sensorType }} {{ sensor.unit }}{{ sensor.value === null ? ' · senza lettura' : '' }}</option> }</optgroup> }
+    </select></label>
+    <label>Etichetta sul display<input type="text" maxlength="24" [disabled]="widget().source === 'none'" [ngModel]="widget().label" (ngModelChange)="patch({ label: $event })" placeholder="Nome del sensore"></label>
+    @if (slot().isBar) { <label>Valore a barra piena<input type="number" min="0.001" max="1000000000000000" step="any" [disabled]="widget().source === 'none'" [ngModel]="widget().maximum" (ngModelChange)="patch({ maximum: $event })"><small>Espresso nell’unità del sensore: ad esempio 3000 per una ventola in RPM.</small></label> }
+  </div>
+  @if (missing()) { <p class="note">Il collegamento al sensore viene conservato. Finché manca, il display mostra —.</p> }
+</section>

@@ -49,11 +49,28 @@ contains the integration mode and tracked user, never the token.
    keep unsupported/offline activity separate from silence and mute.
 3. Album artwork and media-driven theme variations.
 4. Tray lifecycle and explicit recovery after a later device disconnection.
-5. Versioned theme/widget models and an editor. Add video only after throughput
+5. Extend the fixed-slot sensor editor to per-display themes and layouts. Add video only after throughput
    and CPU/GPU overhead measurements on the actual display.
 
 Theme images remain local user resources. The existing Earth theme and potential
 Battlefield assets are not necessary for the engine and are not bundled here.
+
+## Configurable sensor widgets
+
+`WidgetCatalog` defines eight stable slots, their default bindings and validation.
+`DeckConfig.widgets` is additive to schema 1: older files receive the original layout
+through the property initializer. Bindings select a summary metric, a raw sensor by
+ID plus name, or no content. Missing sensors remain bound and render as unavailable.
+Bar maxima are explicit, positive finite values; displayed readings are not clamped.
+
+`/api/widget-slots` supplies the slot catalog/defaults to Angular. The standalone
+widgets page owns an editable draft and delegates selection to a slot editor;
+the existing config endpoint validates and persists all eight slots together.
+The renderer resolves bindings against the cached snapshot, scales long values
+and constrains labels to the slot width. Music and Discord keep their fixed areas.
+
+Aura SDK passive sampling has not produced trustworthy live colors on the tested
+installation. It remains outside the runtime; see the evidence in the roadmap.
 
 ## Windows startup
 

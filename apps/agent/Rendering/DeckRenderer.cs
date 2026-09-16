@@ -54,14 +54,23 @@ public sealed class DeckRenderer : IDisposable
             }
             canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
         }
-        double? Value(string id) => state.Hardware.Metrics.FirstOrDefault(m => m.Id == id)?.Value;
-        string Format(string id, string suffix = "", string number = "0") => Value(id) is { } v ? v.ToString(number) + suffix : "—";
-        void Bar(string name, string id, float y)
+        var widgets = config.Widgets.ToDictionary(w => w.Slot, w => WidgetCatalog.Resolve(w, state.Hardware));
+        void ValueText(WidgetReading widget, float x, float y, float size, float maxWidth, float minimumSize = 18)
         {
-            Text(name, 32, y, 18, muted); Text(Format(id, "%"), 224, y, 18);
+            var text = widget.DisplayValue + (widget.Value.HasValue && widget.Unit.Length > 0 ? " " + widget.Unit : "");
+            using var font = new SKFont(typeface, size);
+            if (font.MeasureText(text) > maxWidth) size = Math.Max(minimumSize, size * maxWidth / font.MeasureText(text));
+            Text(text, x, y, size, maxWidth: maxWidth);
+        }
+        void Bar(string slot, float y)
+        {
+            var widget = widgets[slot];
+            if (widget.Hidden) return;
+            Text(widget.Label, 32, y, 16, muted, maxWidth: 126);
+            ValueText(widget, 168, y, 17, 114, 12);
             using var track = new SKPaint { Color = new SKColor(38, 53, 53) };
             canvas.DrawRect(32, y + 12, 250, 6, track);
-            if (Value(id) is { } v) canvas.DrawRect(32, y + 12, (float)Math.Clamp(v, 0, 100) * 2.5f, 6, accentPaint);
+            if (widget.Fraction is { } fraction) canvas.DrawRect(32, y + 12, (float)fraction * 250, 6, accentPaint);
         }
         Text("PULSEDECK", 32, 42, 23, accent, true);
         Text("RECON / " + state.Profile.ToUpperInvariant(), 320, 42, 18, muted);
@@ -69,10 +78,10 @@ public sealed class DeckRenderer : IDisposable
         canvas.DrawLine(32, 66, 1888, 66, line);
         canvas.DrawLine(310, 90, 310, 446, line);
         canvas.DrawLine(1370, 90, 1370, 446, line);
-        Bar("CPU", "cpu.load", 113); Bar("GPU", "gpu.load", 171); Bar("RAM", "ram.load", 229);
+        Bar("bar1", 113); Bar("bar2", 171); Bar("bar3", 229);
         canvas.DrawLine(32, 273, 282, 273, line);
         Text("VOICE / DISCORD", 32, 307, 16, accent, true);
-        if (state.Discord.Status != "connected") Text("Backend offline", 32, 344, 19, muted);
+        if (state.Discord.Status != "connected") Text("Discord non collegato", 32, 344, 19, muted);
         else if (state.Discord.Members.Count == 0) Text("Nessun partecipante", 32, 344, 18, muted);
         else
         {
@@ -97,10 +106,14 @@ public sealed class DeckRenderer : IDisposable
             Text(state.Profile == "gaming" ? "FPS  —" : "READY FOR ACTION", 350, 192, 50, heavy: true);
             Text(state.Profile == "gaming" ? "Collegamento PresentMon da configurare" : "Telemetria locale / profili automatici", 350, 236, 22, muted);
         }
-        Text("CPU TEMP", 350, 302, 16, muted); Text(Format("cpu.temperature", "°"), 350, 365, 48);
-        Text("GPU TEMP", 590, 302, 16, muted); Text(Format("gpu.temperature", "°"), 590, 365, 48);
-        Text("GPU POWER", 830, 302, 16, muted); Text(Format("gpu.power", " W"), 830, 365, 42);
-        Text("VRAM", 1100, 302, 16, muted); Text(Format("gpu.memory", " MB"), 1100, 365, 34);
+        for (int i = 0; i < 4; i++)
+        {
+            var widget = widgets[$"value{i + 1}"];
+            if (widget.Hidden) continue;
+            var x = 350 + i * 250;
+            Text(widget.Label, x, 302, 16, muted, maxWidth: 225);
+            ValueText(widget, x, 365, 42, 225);
+        }
         Text("ACTIVE / " + (state.ForegroundApp.Length > 0 ? state.ForegroundApp : "Desktop"), 350, 432, 18, muted, maxWidth: 970);
 
         Text("MEDIA SESSION", 1410, 119, 16, accent, true);
@@ -110,7 +123,12 @@ public sealed class DeckRenderer : IDisposable
         canvas.DrawLine(1410, 279, 1875, 279, line);
         if (state.Media.DurationSeconds > 0)
             canvas.DrawRect(1410, 277, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * 465, 4, accentPaint);
-        Text("RAM ALLOCATED", 1410, 335, 15, muted); Text(Format("ram.used", " GB", "0.0"), 1410, 379, 30);
+        var side = widgets["side"];
+        if (!side.Hidden)
+        {
+            Text(side.Label, 1410, 335, 15, muted, maxWidth: 465);
+            ValueText(side, 1410, 379, 30, 465);
+        }
         Text(state.Hardware.Status == "connected" ? "LIVE SENSOR DATA" : "SENSORS UNAVAILABLE", 1410, 432, 16, muted);
         using var image = SKImage.FromBitmap(bitmap);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);

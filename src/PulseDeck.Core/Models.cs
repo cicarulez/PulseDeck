@@ -13,6 +13,8 @@ public sealed record DeckConfig
     public string BackgroundPath { get; init; } = "";
     public string AccentColor { get; init; } = "#a9ff69";
 
+    public WidgetConfig[] Widgets { get; init; } = WidgetCatalog.Defaults();
+
     public string? Validate()
     {
         if (SchemaVersion != 1) return "Unsupported configuration version.";
@@ -24,7 +26,7 @@ public sealed record DeckConfig
         if (DisplayPort is null || !System.Text.RegularExpressions.Regex.IsMatch(DisplayPort, @"^COM[1-9]\d{0,3}$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return "Invalid COM port.";
         if (AccentColor is null || !System.Text.RegularExpressions.Regex.IsMatch(AccentColor, "^#[0-9a-fA-F]{6}$")) return "Accent must be a six-digit hex color.";
         if (BackgroundPath is null || BackgroundPath.Length > 1024 || TrackedMemberId is null || TrackedMemberId.Length > 100) return "Invalid background path or member ID.";
-        return null;
+        return WidgetCatalog.Validate(Widgets);
     }
 }
 
