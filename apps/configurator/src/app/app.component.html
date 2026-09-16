@@ -1,0 +1,33 @@
+<div class="shell">
+  <aside class="sidebar"><a class="brand" href="/" aria-label="PulseDeck home"><span class="brand-mark">P<span>▰</span></span>PulseDeck<span class="version">/ 01</span></a>
+    <div class="nav-caption">CONTROL ROOM</div>
+    <nav aria-label="Navigazione principale">@for (item of pages; track item.id) { <button [class.active]="tab() === item.id" [attr.aria-current]="tab() === item.id ? 'page' : null" (click)="tab.set(item.id)"><span>{{ item.icon }}</span>{{ item.label }}</button> }</nav>
+    <div class="sidebar-bottom"><span class="device-icon">▰</span><strong>TURZX 8.8″</strong><span>1920 × 480 / USB</span><pd-status [label]="deck.state()?.display?.connected ? 'Collegato' : 'Anteprima'" [active]="deck.state()?.display?.connected ?? false" /></div>
+  </aside>
+  <main>
+    <header><div class="breadcrumb">WORKSPACE <span>/</span> IL TUO DISPLAY</div><pd-status [label]="deck.connected() ? 'Agent online' : 'Agent offline'" [active]="deck.connected()" /></header>
+    <div class="page-heading"><div><p class="eyebrow">YOUR PC. AT A GLANCE.</p><h1>{{ page().title }}</h1><p class="subtitle">{{ page().subtitle }}</p></div><div class="profile-chip"><span>PROFILO ATTIVO</span><strong>{{ profile() }}</strong></div></div>
+    @if (!deck.connected()) { <div class="notice" role="status">In attesa del motore PulseDeck. Avvia PulseDeck.Agent sul PC Windows. Le ultime letture, se presenti, non sono aggiornate.</div> }
+    @if (deck.error()) { <div class="notice notice--error" role="alert">{{ deck.error() }}</div> }
+    @if (saved()) { <div class="notice" role="status">Configurazione salvata.</div> }
+    @if (tab() === 'overview') {
+      <section class="panel preview-panel"><div class="panel-heading"><div><span class="eyebrow">LIVE CANVAS</span><h2>Recon <span>/ 1920 × 480</span></h2></div><div class="display-actions"><pd-status [label]="deck.state()?.display?.connected ? 'Output USB attivo' : 'Solo anteprima'" [active]="deck.state()?.display?.connected ?? false" /><button class="button" [disabled]="!deck.connected() || deck.busy()" (click)="deck.display(deck.state()?.display?.connected ? 'disconnect' : 'connect')">{{ deck.busy() ? 'Attendi…' : deck.state()?.display?.connected ? 'Scollega display' : 'Collega display' }}</button></div></div>
+        <div class="screen">@if (deck.state() && deck.connected()) { <img [src]="preview()" alt="Anteprima live del pannello PulseDeck" width="1920" height="480"> } @else { <div class="screen-empty"><span>◫</span>Il tuo pannello apparirà qui quando l’agent sarà pronto.</div> }</div>
+        <div class="preview-footer"><span>L’anteprima usa lo stesso rendering inviato al display.</span><span>Chiudi TURZX prima di collegare.</span></div>
+      </section>
+      <div class="section-heading"><h2>Telemetria hardware</h2><span>Valori reali dal tuo PC</span></div>
+      <div class="metrics">@for (metric of deck.state()?.hardware?.metrics ?? []; track metric.id) { <pd-metric [metric]="metric" /> } @empty { <p class="muted">In attesa dei sensori.</p> }</div>
+      @if (deck.state()?.hardware?.detail) { <p class="footnote">{{ deck.state()?.hardware?.detail }}</p> }
+      <div class="sources">
+        <section class="panel source"><div class="panel-heading"><span class="eyebrow">NOW PLAYING</span><pd-status [label]="deck.state()?.media?.playing ? 'In riproduzione' : 'In pausa / inattivo'" [active]="deck.state()?.media?.playing ?? false" /></div><h3>{{ deck.state()?.media?.title || 'Aspettando la prossima traccia' }}</h3><p>{{ deck.state()?.media?.artist || 'Avvia Spotify o un player compatibile con Windows.' }}</p><div class="source-bottom">{{ mediaSource() }}</div></section>
+        <section class="panel source"><div class="panel-heading"><span class="eyebrow">VOICE CHANNEL</span><pd-status [label]="deck.state()?.discord?.status === 'connected' ? 'Discord collegato' : 'Discord non collegato'" [active]="deck.state()?.discord?.status === 'connected'" /></div><h3>La tua squadra.</h3><div class="members">@for (member of deck.state()?.discord?.members ?? []; track member.id) { <span>{{ member.name }} <b>{{ member.deaf ? 'DEAF' : member.mute ? 'MUTE' : 'ON' }}</b></span> } @empty { <p>Nessun partecipante disponibile.</p> }</div><div class="source-bottom">{{ deck.state()?.discord?.detail || 'In attesa di Discord.' }}</div></section>
+      </div>
+      <section class="roadmap"><span class="eyebrow">NEXT UP</span><p><strong>FPS e attività vocale</strong> richiedono ancora le integrazioni PresentMon e Discord Voice. Nessun valore dimostrativo viene mostrato come dato reale.</p></section>
+    } @else if (tab() === 'sensors') {
+      <pd-sensors [hardware]="deck.state()?.hardware ?? null" [online]="deck.connected()" />
+    } @else {
+      @if (deck.config(); as config) { <pd-settings [config]="config" [busy]="deck.busy()" (save)="save($event)" /> }
+    }
+    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.1 · Windows</span></footer>
+  </main>
+</div>

@@ -1,0 +1,32 @@
+# Third-party components
+
+PulseDeck is licensed under GPL-3.0-or-later. It includes an adaptation of the
+TURZX revision C frame encoding from **turing-smart-screen-python**, commit
+`2b33ab4f00a096916dd6a1174441a53a7ec33b03`:
+
+- Source: https://github.com/mathoudebine/turing-smart-screen-python
+- Original file: `library/lcd/lcd_comm_rev_c.py`
+- PulseDeck adaptation: `src/PulseDeck.Core/TurzxProtocol.cs`
+- Copyright (C) 2021 Matthieu Houdebine
+- Copyright (C) 2023 Alex W. Baulé
+- Copyright (C) 2023 Arthur Ferrai
+- License: GPL-3.0-or-later; see `LICENSE`.
+
+The Python diagnostic in `tools/turzx-probe` was developed in the local
+Discord Overlay project and imports a separately installed upstream driver.
+
+Other dependencies retain their own licenses:
+
+| Component | License | Project |
+| --- | --- | --- |
+| .NET / ASP.NET Core / SignalR | MIT | https://github.com/dotnet |
+| Angular | MIT | https://github.com/angular/angular |
+| RxJS | Apache-2.0 | https://github.com/ReactiveX/rxjs |
+| SkiaSharp | MIT; bundled Skia has its own notices | https://github.com/mono/SkiaSharp |
+| LibreHardwareMonitor | MPL-2.0 and component-specific notices | https://github.com/LibreHardwareMonitor/LibreHardwareMonitor |
+| Discord.Net | MIT | https://github.com/discord-net/Discord.Net |
+| xUnit.net | Apache-2.0 | https://github.com/xunit/xunit |
+
+Dependency license files included by their packages must accompany redistribution.
+No TURZX binaries, original theme files, EA artwork or game assets are included.
+Background images are selected from the user's local files.

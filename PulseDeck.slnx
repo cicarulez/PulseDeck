@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/apps/" />
+  <Folder Name="/apps/agent/">
+    <Project Path="apps/agent/PulseDeck.Agent.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/PulseDeck.Core/PulseDeck.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PulseDeck.Core.Tests/PulseDeck.Core.Tests.csproj" />
+  </Folder>
+</Solution>

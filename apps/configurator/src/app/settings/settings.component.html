@@ -1,0 +1,25 @@
+<form (ngSubmit)="submit()">
+  <section class="panel"><div class="section-title"><span>01 / COMPORTAMENTO</span><h2>Il profilo giusto, al momento giusto.</h2></div>
+    <div class="fields">
+      <label>Profilo<select name="profile" [(ngModel)]="draft.profileMode"><option value="auto">Automatico</option><option value="desktop">Desktop</option><option value="gaming">Gaming</option><option value="music">Musica</option></select></label>
+      <label>Attesa prima del cambio (secondi)<input name="delay" type="number" min="0" max="30" [(ngModel)]="draft.profileDelaySeconds" required></label>
+      <label class="wide">Processi dei giochi<input name="games" [(ngModel)]="processes" placeholder="bf6, altro-gioco"><small>Nomi esatti, separati da virgole. La regola usa il programma in primo piano.</small></label>
+    </div>
+  </section>
+  <section class="panel"><div class="section-title"><span>02 / DISPLAY E ASPETTO</span><h2>Il tuo pannello.</h2></div>
+    <div class="fields">
+      <label>Porta del TURZX<input name="port" [(ngModel)]="draft.displayPort" pattern="[Cc][Oo][Mm][1-9][0-9]{0,3}" required></label>
+      <label>Colore principale<input name="accent" type="color" [(ngModel)]="draft.accentColor"></label>
+      <label class="wide">Immagine di sfondo sul PC Windows<input name="background" [(ngModel)]="draft.backgroundPath" placeholder="C:\Immagini\battlefield.jpg"><small>PNG, JPEG o WebP. Lascia vuoto per lo sfondo Recon.</small></label>
+    </div>
+  </section>
+  <section class="panel"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>
+    <div class="fields">
+      <label>Collegamento Discord<select name="discordMode" [(ngModel)]="draft.discordMode"><option value="embedded">Integrato in PulseDeck</option><option value="external">Backend esterno</option></select></label>
+      @if (draft.discordMode === 'external') { <label>Indirizzo del backend<input name="backend" type="url" [(ngModel)]="draft.discordBaseUrl" required></label> }
+      <label>ID dell’utente da evidenziare<input name="tracked" [(ngModel)]="draft.trackedMemberId" placeholder="Facoltativo"></label>
+    </div>
+    <p class="note">In modalità integrata basta avviare PulseDeck. Il bot legge partecipanti e mute/deaf dal canale configurato; l’indicatore di chi parla richiede ancora un’integrazione dedicata. Le credenziali importate restano protette sul PC.</p>
+  </section>
+  <div class="save-row"><span>Le modifiche vengono applicate dopo il salvataggio.</span><button class="button button--primary" type="submit" [disabled]="busy()">{{ busy() ? 'Salvataggio…' : 'Salva configurazione' }}</button></div>
+</form>

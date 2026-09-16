@@ -1,0 +1,13 @@
+{
+  "name": "pulsedeck-configurator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "start": "ng serve --proxy-config proxy.conf.json", "build": "ng build", "check": "ng build --configuration development" },
+  "engines": { "node": "^24.15.0 || >=26.0.0" },
+  "dependencies": {
+    "@angular/common": "22.1.7", "@angular/compiler": "22.1.7", "@angular/core": "22.1.7",
+    "@angular/forms": "22.1.7", "@angular/platform-browser": "22.1.7",
+    "@microsoft/signalr": "10.0.0", "rxjs": "7.8.2", "tslib": "2.8.1"
+  },
+  "devDependencies": { "@angular/build": "22.1.8", "@angular/cli": "22.1.8", "typescript": "~6.0.2" }
+}
