@@ -127,10 +127,36 @@ software fornito, foto del retro e revisione.
 Annuncio ricevuto: [AliExpress 1005008850981488](https://it.aliexpress.com/item/1005008850981488.html).
 Consultato il 17 settembre 2026: titolo 3,5 pollici 320×480 con software TURZX,
 marca nelle specifiche **SHCHV**, venditore IceCrab Global Store, prezzo mostrato
-17,15 EUR per la variante Black. Il prezzo può variare. La revisione/protocollo
-non è identificata nell'annuncio consultato: la compatibilità resta da verificare,
-nonostante il riferimento al software TURZX. La scheda prodotto è stata letta;
-le sintesi generate dalla piattaforma non costituiscono prova tecnica del protocollo.
+17,15 EUR per la variante Black. Il prezzo può variare. L'annuncio da solo non
+identifica il protocollo; il successivo controllo del software ha fornito elementi
+più precisi. Le sintesi generate dalla piattaforma non costituiscono prova tecnica.
+
+### Software del venditore: verifica del 17 settembre 2026
+
+Cartella fornita dall'utente: [download del venditore](https://drive.google.com/drive/folders/1KMiDKiGRQc3uLGeVeZ--59YLoGJu5pUN).
+È stato esaminato `35inchENG.rar` (23.533.528 byte, file Drive
+`14FQQ-vAjWnH4UNGQzyo21kBbnrGGbFut`), SHA-256
+`f4eb676c05d893ca4456c5a4078ae95b9434da4449f60d316ec8ec30f8d6a891`.
+
+Risultati dell'ispezione statica, senza eseguire/installare il software:
+
+- Contiene `UsbMonitor.exe` e `Driver/usbser/cdc.inf`; quest'ultimo usa il driver
+  seriale USB CDC di Windows, senza identificare uno specifico VID/PID.
+- L'eseguibile apre una porta seriale a 115200 baud, 8N1, e gestisce 320×480/480×320.
+- Formato del comando a 6 byte, impacchettamento delle coordinate e comando bitmap
+  197 coincidono con il driver upstream `lcd_comm_rev_a.py`.
+- Comando orientamento 121, pacchetto a 16 byte, orientamento con offset 100 e
+  dimensioni corrispondono al driver upstream; presente anche il comando mirror 122.
+
+Conclusione: forte evidenza che il pacchetto controlli la famiglia Turing 3,5 pollici
+revision A, con protocollo già documentato e quindi una base concreta per l'adapter
+C#. Nessuna prova su un esemplare fisico: va ancora confermata la corrispondenza tra
+il software pubblicato e la revisione effettivamente spedita. PulseDeck non supporta
+ancora questo display finché non vengono implementati adapter, layout e gestione multipla.
+
+Riferimento: [driver revision A upstream](https://github.com/mathoudebine/turing-smart-screen-python/blob/main/library/lcd/lcd_comm_rev_a.py).
+Archivio ed eseguibile proprietari restano fuori dal repository; viene versionato
+soltanto questo resoconto dei fatti osservati.
 
 Criterio di completamento: due schermi fisici con contenuti differenti, riavvio,
 scollegamento di uno solo, scambio di porte e continuità dell'altro verificati.
