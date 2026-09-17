@@ -165,12 +165,24 @@ e ricrea esecutori degli effetti: non è un getter passivo e non è stato invoca
 Il controllo di firma osservato in `DoEnumerateHalInfo` riguarda il percorso
 `AuraSdk_x86.dll`; non dimostra un rifiuto del nostro HAL.
 
-Prossimo passaggio ancora necessario: un percorso di registrazione/rimozione del
-HAL nel servizio reale con isolamento dei guasti verificato. La registrazione COM
-locale e il ricevitore IPC attuali non rendono il dispositivo visibile al servizio;
-il precedente tentativo COM tra processi resta non funzionante. Non caricare la
-sonda sperimentale dentro LightingService come scorciatoia. Dopo questo passaggio,
-verificare rilevamento e contratto dei colori prima della prova fisica.
+**COM tra processi ora verificato nella sessione utente:** un server nativo
+temporaneo espone il nostro HAL mediante `CoRegisterClassObject`, senza scrivere
+registrazioni persistenti. Il client diretto legge Enumerate2/GetCapability.
+Il client SDK inizialmente terminava con `0xC0000005` in AuraSdk_x86.dll+0x16b92:
+nel percorso Enumerate2 richiede `IAacLedDeviceOpt2`, assente nella prima versione.
+Esposte le interfacce ereditate con la corretta disposizione dei metodi, l'SDK
+enumera nome, LED, dimensioni ed effetto Static per tre volte dal processo esterno.
+I nuovi metodi riceventi degli effetti restano E_NOTIMPL; nessun setter viene chiamato.
+Verificata la scomparsa della classe COM dopo uscita normale e arresto forzato del
+nostro server. Questo supera il precedente limite del trasporto COM, senza dimostrare
+il funzionamento continuativo o risolvere la proprietà dei riferimenti interni SDK.
+
+Prossimo passaggio ancora necessario: registrazione/rimozione e accesso dal servizio
+ASUS reale. LightingService gira come LocalSystem, mentre questa prova usa due
+processi dello stesso utente; il confine di sicurezza/sessione resta da verificare.
+La classe temporanea non compare nelle categorie HAL ASUS del sistema e il servizio
+non la rileva. Non caricare la sonda dentro LightingService come scorciatoia. Dopo
+questo passaggio, verificare ricezione e contratto dei colori prima della prova fisica.
 Nessun provider o ricevitore persistente viene installato nell'agent in questa fase.
 
 Il modulo GmAcc installato include già una modalità virtuale, ma usa il canale

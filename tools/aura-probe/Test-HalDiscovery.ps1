@@ -5,10 +5,14 @@ param(
     [switch]$SeparateProcess,
     [switch]$TestTransport,
     [switch]$CheckContracts,
+    [switch]$RemoteServer,
     [ValidateRange(0,10)][int]$ObserveSeconds = 0,
     [ValidateRange(1,60)][int]$TimeoutSeconds = 20
 )
 $ErrorActionPreference = 'Stop'
+if ($RemoteServer -and ($CheckContracts -or $SeparateProcess -or $TestTransport -or $EmptyDevices -or $ObserveSeconds)) {
+    throw 'RemoteServer requires an existing test server and cannot use local HAL/receiver options.'
+}
 if ($CheckContracts -and ($SeparateProcess -or $TestTransport -or $EmptyDevices -or $ObserveSeconds)) {
     throw 'Contract checks are a separate mode.'
 }
@@ -23,6 +27,7 @@ $root.Dispose()
 $process = $null
 try {
     $mode = if ($EmptyDevices) { 'empty' } else { 'device' }
+    if ($RemoteServer) { $mode = 'remote' }
     $arguments = '"' + $scratchKey + '" ' + $Iterations + ' ' + $mode
     if ($TestTransport) { $arguments += " transport-test" }
     elseif ($SeparateProcess) { $arguments += " separate" }

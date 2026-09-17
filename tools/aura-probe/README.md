@@ -24,6 +24,8 @@ then run in a normal Windows PowerShell session (administrator rights not needed
 ./Test-HalDiscovery.ps1 -SeparateProcess
 ./Test-HalDiscovery.ps1 -TestTransport
 ./Read-ServiceCapabilities.ps1
+./Test-ComIsolation.ps1 -WithSdk
+./Test-ComIsolation.ps1 -WithSdk -TerminateServer
 ```
 
 Only the development build needs MinGW; running the probe needs the locally
@@ -143,6 +145,44 @@ of effect executors; that path was not invoked. The inspected signature check in
 DoEnumerateHalInfo targets the SDK DLL, so it does not establish that unsigned HALs
 are rejected. Live registration/removal and fault isolation remain unresolved:
 the process-local factory and private IPC do not expose our HAL to LightingService.
+
+## Native COM server in another process
+
+`Test-ComIsolation.ps1` starts our native STA server and a direct native client.
+With `-WithSdk`, it also runs the existing SDK metadata checks using that external
+server (`externalComHal=true`). Only the client uses a private discovery category;
+the server registers a running class using CLSCTX_LOCAL_SERVER, without Classes
+or ASUS registry entries. The class is usable by another process in the same user
+session while the server runs. This is not a LightingService installation.
+
+Direct Enumerate2/GetCapability worked initially, but the SDK path crashed at
+AuraSdk_x86.dll+0x16b92 because it requires IAacLedDeviceOpt2 from the returned
+SAFEARRAY. Added the actual inherited Opt/Device2/Opt2 vtable slots and interface
+identities, rather than returning a base-only vtable under a different IID. Direct
+and SDK metadata checks now pass. All three additional incoming effect methods
+return E_NOTIMPL and increment the request counter; no such method is called in
+these tests. Static metadata recognition does not imply working remote colors.
+
+The server pumps STA messages, waits for stop or supervisor exit and has a
+15-second deadline. The supervisor bounds each client, stops its server in finally,
+and checks that CoGetClassObject subsequently returns REGDB_E_CLASSNOTREG.
+`-TerminateServer` deliberately kills only our server after successful checks and
+verifies the same registration cleanup. Both normal and forced-exit paths passed.
+`-ObserveSeconds 10` permits independent lifecycle observation; terminating that
+PowerShell supervisor also caused its observed server to exit within three seconds,
+with the class absent afterwards. The external observer could not retrieve a numeric
+server exit code, so this last check verifies process/registration cleanup only.
+
+Normal `-WithSdk` server totals: two activations, seven Enumerate2 calls, four
+capability reads and zero effect/synchronization requests. The SDK client's local
+HAL counters must remain zero. Its local reference roots of 1/1/1 do not measure
+remote references or resolve the previously observed SDK lifetime issue.
+
+LightingService runs as LocalSystem; activation across that user/session boundary,
+real Aura category discovery, color payloads and continuous lifetime remain to test.
+No persistent server, agent provider, service refresh or Armoury Crate tile is installed.
+
+Microsoft reference: [running EXE class registration and revocation](https://learn.microsoft.com/en-us/windows/win32/com/registering-a-running-exe-server).
 
 ## Inspect contracts without activating COM
 

@@ -136,6 +136,17 @@ the already-running LightingService. It saves the response outside Git and never
 registers a HAL or requests a device refresh. Service capabilities are metadata,
 not current RGB samples; PulseDeck is absent from that response on the tested PC.
 
+`Test-ComIsolation.ps1 -WithSdk` now verifies a separate native COM server through
+temporary `CoRegisterClassObject(CLSCTX_LOCAL_SERVER)` registration. It does not add
+Classes or ASUS category registry entries. The STA server pumps messages, observes
+supervisor exit/stop events and has a 15-second deadline. The SDK client discovers
+only our private HAL category and restores normal HKCR before external activation.
+Its Enumerate2 path requires IAacLedDeviceOpt2, so the device exposes the inherited
+Opt/Device2/Opt2 interfaces with their correct vtable slots. Their extra incoming
+effect callbacks return E_NOTIMPL; no live color reception is claimed. Direct COM
+and SDK metadata checks pass, including class-table cleanup after forced server exit.
+This proves same-user process isolation, not activation by LocalSystem LightingService.
+
 ## Windows startup
 
 The elevated interactive-user scheduled task runs a hidden PowerShell launcher.

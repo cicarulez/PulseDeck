@@ -286,6 +286,39 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   provider installed. COM isolation across processes remains unresolved; the private
   IPC receiver alone does not make the HAL discoverable outside its test host.
 
+## Aura native COM server isolation — 2026-09-17
+
+- Added a temporary native EXE server registered in COM's running class table,
+  without persistent Classes or ASUS category registry changes. A direct client
+  successfully called Enumerate2, queried IAacLedDeviceOpt2 and read GetCapability
+  through the installed Automation proxy. Server and client are separate processes
+  in the same Windows user/session; no ASUS service code hosts our implementation.
+- Initial SDK client failed with access violation 0xC0000005 at AuraSdk_x86.dll
+  offset 0x16b92. Inspection showed its Enumerate2 path requests IAacLedDeviceOpt2;
+  failure left no device-pointer array before the later access. Exposing the actual
+  inherited Opt/Device2/Opt2 interface layout fixed this reproducer without changing
+  the SDK or returning a mismatched interface pointer. Their extra effect callbacks
+  remain E_NOTIMPL and are never invoked by the test.
+- `Test-ComIsolation.ps1 -WithSdk` passed direct metadata checks plus three SDK
+  enumerations: name, 1x1 dimensions, one LED and Static effect. Server recorded
+  two activations, seven Enumerate2 calls, four capability reads and zero effect or
+  synchronization calls. Client local HAL counters stay zero, as asserted.
+- Normal shutdown and `-WithSdk -TerminateServer` both left the class unavailable:
+  subsequent CoGetClassObject returned REGDB_E_CLASSNOTREG (0x80040154). Forced
+  termination affects only our probe server. No PC/ASUS service shutdown occurred.
+- An independent observer saw the server alive, terminated its PowerShell supervisor
+  during `-ObserveSeconds 10`, and observed server exit within three seconds plus
+  REGDB_E_CLASSNOTREG afterwards. That observer returned no numeric server exit
+  code; only process disappearance and class cleanup are established by this check.
+- Own COM identity/reference checks passed 100 cycles including all added interface
+  views; ordinary in-process SDK discovery with the private IPC receiver still passed.
+  SDK client reference counters of 1/1/1 in external mode are its unused local roots,
+  not evidence that the SDK's remote reference ownership problem is resolved.
+- LightingService and ArmouryCrateService retained PIDs 6840 and 6608, both running
+  as LocalSystem. PulseDeck stayed connected and acknowledgements advanced. Live
+  service activation, Armoury Crate discovery, color reception and physical color
+  matching remain unverified. No installed-agent or startup-task changes.
+
 ## Windows shutdown and display power — 2026-09-17
 
 - Root cause: the runtime only released the serial port at exit, and the hidden
