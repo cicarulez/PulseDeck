@@ -1,11 +1,13 @@
 import { Component, effect, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DeckConfig } from '../models';
+import { DeckConfig, NewsSnapshot } from '../models';
+import { NewsSettingsComponent } from './news-settings.component';
 import { WeatherSettingsComponent } from './weather-settings.component';
 import { GameThemesComponent } from './game-themes.component';
 
-@Component({ selector: 'pd-settings', standalone: true, imports: [FormsModule, GameThemesComponent, WeatherSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
+@Component({ selector: 'pd-settings', standalone: true, imports: [FormsModule, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
 export class SettingsComponent {
+  newsState = input<NewsSnapshot | null>(null);
   config = input.required<DeckConfig>(); busy = input(false); save = output<DeckConfig>();
   draft!: DeckConfig; processes = '';
   constructor() { effect(() => { this.draft = { ...this.config(), gameProcesses: [...this.config().gameProcesses], gameThemes: this.config().gameThemes.map(t => ({ ...t })) }; this.processes = this.draft.gameProcesses.join(', '); }); }

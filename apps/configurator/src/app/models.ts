@@ -1,3 +1,7 @@
+export interface NewsChannel { name: string; url: string; enabled: boolean; }
+export interface NewsOptions { enabled: boolean; rotationSeconds: number; fontSize: number; channels: NewsChannel[]; }
+export interface NewsItem { source: string; title: string; url: string; publishedAt: string | null; }
+export interface NewsSnapshot { status: string; channels: { name: string; url: string; status: string; items: NewsItem[] }[]; items: NewsItem[]; fetchedAt: string | null; }
 export interface WeatherLocation { name: string; latitude: number; longitude: number; }
 export interface WeatherPlace extends WeatherLocation { label: string; }
 export interface WidgetConfig { slot: string; source: 'metric' | 'sensor' | 'none'; metricId: string; sensorId: string; sensorName: string; label: string; maximum: number; style: 'auto' | 'value' | 'bar' | 'ring'; }
@@ -7,7 +11,7 @@ export interface GameTheme { processName: string; backgroundPath: string; }
 export interface DeckConfig {
   widgets: WidgetConfig[];
   layout: 'classic' | 'compact' | 'weather';
-  weatherLocation: WeatherLocation | null;
+  weatherLocation: WeatherLocation | null; news: NewsOptions;
   gamingLayout: boolean; gameThemes: GameTheme[];
   schemaVersion: number; profileMode: string; gameProcesses: string[]; profileDelaySeconds: number;
   discordMode: string; discordBaseUrl: string; trackedMemberId: string; displayPort: string; backgroundPath: string; accentColor: string;
@@ -23,6 +27,7 @@ export interface DisplayState {
   lastAcknowledgedAt: string | null; lastTransportError: string | null; userDisconnected: boolean;
 }
 export interface DeckState {
+  news: NewsSnapshot;
   timestamp: string; profile: string; foregroundApp: string;
   hardware: HardwareState;
   media: { playing: boolean; title: string; artist: string; app: string; positionSeconds: number; durationSeconds: number; status: string; artworkId: string | null };

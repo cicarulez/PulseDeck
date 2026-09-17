@@ -14,6 +14,7 @@ public sealed record DeckConfig
     public string AccentColor { get; init; } = "#a9ff69";
     public string Layout { get; init; } = "compact";
     public WeatherLocation? WeatherLocation { get; init; }
+    public NewsOptions News { get; init; } = new();
     public bool GamingLayout { get; init; } = true;
     public GameTheme[] GameThemes { get; init; } = [];
 
@@ -21,6 +22,8 @@ public sealed record DeckConfig
 
     public string? Validate()
     {
+        if (News is null) return "Invalid news settings.";
+        if (News.Validate() is { } newsError) return newsError;
         if (SchemaVersion != 1) return "Unsupported configuration version.";
         if (Layout is not ("classic" or "compact" or "weather")) return "Unknown display layout.";
         if (WeatherLocation is { } location && !location.IsValid) return "Invalid weather location.";
@@ -70,4 +73,5 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
     public ForegroundSnapshot Foreground { get; init; } = ForegroundSnapshot.Empty;
     public ForegroundSnapshot? Game { get; init; }
     public WeatherSnapshot Weather { get; init; } = new();
+    public NewsSnapshot News { get; init; } = new();
 }

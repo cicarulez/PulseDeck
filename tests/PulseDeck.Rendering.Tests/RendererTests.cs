@@ -6,6 +6,29 @@ using Xunit;
 
 public class RendererTests
 {
+    [Theory]
+    [InlineData("weather")]
+    [InlineData("compact")]
+    [InlineData("classic")]
+    public void NewsChangesOnlyFooterAndDisablingRestoresIt(string layout)
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig { Layout = layout };
+        var baseline = renderer.Render(State, config);
+        var news = new NewsSnapshot { Status = "connected", FetchedAt = State.Timestamp,
+            Items = [new("Synthetic source", "Synthetic test headline " + new string('X', 250), "https://example.com/news", null)] };
+        var on = config with { News = new() { Enabled = true } };
+        var active = renderer.Render(State with { News = news }, on);
+        Assert.True(baseline.Pixels.AsSpan(0, 1920 * 446 * 4).SequenceEqual(active.Pixels.AsSpan(0, 1920 * 446 * 4)));
+        Assert.NotEqual(baseline.Pixels, active.Pixels);
+        Assert.Equal(baseline.Pixels, renderer.Render(State with { News = news }, config).Pixels);
+        Assert.NotEqual(active.Pixels, renderer.Render(State, on).Pixels);
+        foreach (var size in new[] { 20, 24, 26 })
+        {
+            var sized = renderer.Render(State with { News = news }, on with { News = on.News with { FontSize = size } });
+            Assert.True(baseline.Pixels.AsSpan(0, 1920 * 446 * 4).SequenceEqual(sized.Pixels.AsSpan(0, 1920 * 446 * 4)));
+        }
+    }
     [Fact]
     public void WeatherUsesTwelveCardsAndClearsUnavailableReadings()
     {

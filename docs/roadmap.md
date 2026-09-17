@@ -517,3 +517,23 @@ l'architettura multi-display, FPS/Discord e temi/regole. La ricerca di una sorge
 Aura passiva resta isolata dall'agent, tenendo conto dell'esito SDK sopra. Aggiornare
 questo piano con risultati e limiti osservati. Ogni incremento deve lasciare il
 pannello utilizzabile e avere un commit semantico con la validazione pertinente.
+
+## News nel footer (0.2.4)
+
+Richiesta: fonti RSS selezionabili, URL personalizzati e preset pronti. Implementati
+cinque preset dai cataloghi ufficiali ANSA (ultime notizie, tecnologia, sport, Lazio)
+e Multiplayer.it (news PC), fino a otto canali attivabili singolarmente e interruttore
+per il footer. Scelta iniziale esplicita: ultime notizie ANSA, tecnologia ANSA e gaming
+PC. Le fonti si alternano ogni 20 secondi, regolabili da 10 a 120, senza animazione
+continua e senza spostare meteo o sensori. Testo ingrandito a 24 px su richiesta,
+con scelta 20/24/26 px nell’app. Link agli articoli completi nel configuratore.
+
+RSS 2.0/Atom pubblici HTTPS diretti, nessuna chiave o scraping degli articoli. Solo
+titoli con fonte/data (data assente dichiarata), fino a dieci recenti per canale,
+cache in memoria e aggiornamento ogni quindici minuti. Errori/assenza di notizie
+espliciti, richieste indipendenti dal rendering. La prova sul display fisico del
+footer e della rotazione è ancora da confermare. La 0.2.4 è installata: tre fonti
+collegate, URL personalizzati e persistenza verificati dal configuratore Windows.
+
+Fonti dei preset: [ANSA RSS](https://www.ansa.it/sito/static/ansa_rss.html),
+[Multiplayer.it feed](https://multiplayer.it/feed/).

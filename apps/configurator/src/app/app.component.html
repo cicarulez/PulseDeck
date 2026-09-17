@@ -28,8 +28,8 @@
     } @else if (tab() === 'widgets') {
       @if (deck.config(); as config) { @if (deck.widgetCatalog(); as catalog) { <pd-widgets [config]="config" [catalog]="catalog" [hardware]="deck.state()?.hardware ?? null" [preview]="preview()" [online]="deck.connected()" [busy]="deck.busy()" (save)="save($event)" /> } }
     } @else {
-      @if (deck.config(); as config) { <pd-settings [config]="config" [busy]="deck.busy()" (save)="save($event)" /> }
+      @if (deck.config(); as config) { <pd-settings [newsState]="deck.state()?.news ?? null" [config]="config" [busy]="deck.busy()" (save)="save($event)" /> }
     }
-    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.2.3 · Windows</span></footer>
+    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.2.4 · Windows</span></footer>
   </main>
 </div>

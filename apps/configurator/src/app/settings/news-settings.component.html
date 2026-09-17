@@ -1,0 +1,34 @@
+<div class="fields">
+  <label>News nel footer<select name="newsEnabled" [ngModel]="options().enabled" (ngModelChange)="update({enabled: $event})" [disabled]="busy()"><option [ngValue]="true">Attive</option><option [ngValue]="false">Disattivate</option></select></label>
+  <label>Cambio notizia (secondi)<input name="newsRotation" type="number" min="10" max="120" [ngModel]="options().rotationSeconds" (ngModelChange)="update({rotationSeconds: $event})" [disabled]="busy()"></label>
+  <label>Dimensione testo<select name="newsFontSize" [ngModel]="options().fontSize" (ngModelChange)="update({fontSize: $event})" [disabled]="busy()"><option [ngValue]="20">Compatto · 20 px</option><option [ngValue]="24">Grande · 24 px</option><option [ngValue]="26">Massimo · 26 px</option></select></label>
+</div>
+<h3>Fonti pronte</h3>
+<div class="presets">@for (preset of presets; track preset.url) {
+  <button class="button" type="button" (click)="add(preset)" [disabled]="busy() || has(preset.url) || options().channels.length >= 8">{{ has(preset.url) ? 'Aggiunto · ' : '+ ' }}{{ preset.name }}</button>
+}</div>
+<h3>I tuoi canali · {{ options().channels.length }}/8</h3>
+@for (channel of options().channels; track $index; let i = $index) {
+  <div class="channel">
+    <div class="fields channel-fields">
+      <label>Nome fonte<input [name]="'newsName' + i" maxlength="40" [ngModel]="channel.name" (ngModelChange)="change(i, {name: $event})" [disabled]="busy()"></label>
+      <label>Feed RSS / Atom<input [name]="'newsUrl' + i" type="url" maxlength="2048" [ngModel]="channel.url" (ngModelChange)="change(i, {url: $event})" [disabled]="busy()"></label>
+      <label>Canale<select [name]="'newsActive' + i" [ngModel]="channel.enabled" (ngModelChange)="change(i, {enabled: $event})" [disabled]="busy()"><option [ngValue]="true">Attivo</option><option [ngValue]="false">In pausa</option></select></label>
+      <button class="button" type="button" (click)="remove(i)" [disabled]="busy()" [attr.aria-label]="'Rimuovi ' + channel.name">Rimuovi</button>
+    </div>
+    <p>{{ status(channel.url) }}</p>
+  </div>
+} @empty { <p>Scegli una fonte pronta oppure aggiungi il tuo feed.</p> }
+<h3>Feed personalizzato</h3>
+<div class="fields channel-fields">
+  <label>Nome<input name="customNewsName" maxlength="40" [(ngModel)]="customName" placeholder="La mia fonte" [disabled]="busy()"></label>
+  <label>URL del feed<input name="customNewsUrl" type="url" maxlength="2048" [(ngModel)]="customUrl" placeholder="https://sito.it/feed/" [disabled]="busy()"></label>
+  <button class="button" type="button" (click)="addCustom()" [disabled]="busy() || !customValid() || options().channels.length >= 8">Aggiungi feed</button>
+</div>
+<p>Salva configurazione per applicare canali e attivazione. Una notizia alla volta, senza scorrimento continuo. Aggiornamento ogni 15 minuti; vengono alternati fino a 10 titoli recenti per fonte. URL pubblici HTTPS diretti, senza credenziali. I titoli lunghi sono abbreviati sul display.</p>
+@if (state()?.items?.length) {
+  <details><summary>Notizie ricevute · apri l’articolo completo</summary>
+    <ul>@for (item of state()?.items ?? []; track item.url) { <li><span>{{ item.source }} · {{ item.publishedAt ? (item.publishedAt | date:'dd/MM HH:mm') : 'Data non indicata' }}</span><a [href]="item.url" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></li> }</ul>
+  </details>
+}
+<p>Preset dai cataloghi ufficiali <a href="https://www.ansa.it/sito/static/ansa_rss.html" target="_blank" rel="noopener noreferrer">ANSA</a> e <a href="https://multiplayer.it/feed/" target="_blank" rel="noopener noreferrer">Multiplayer.it</a>. Titoli e articoli appartengono alle rispettive fonti.</p>

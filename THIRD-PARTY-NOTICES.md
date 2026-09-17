@@ -37,3 +37,14 @@ and location search based on [GeoNames](https://www.geonames.org/). See the serv
 and [geocoding attribution](https://open-meteo.com/en/docs/geocoding-api).
 Attribution appears in the panel and configurator. Weather icons are drawn by
 PulseDeck; no third-party icon collection is bundled.
+
+## News feed presets
+
+Preset URLs are taken from the publishers' own feed catalogs:
+[ANSA RSS](https://www.ansa.it/sito/static/ansa_rss.html) and
+[Multiplayer.it](https://multiplayer.it/feed/). Headlines remain the property of their
+publishers; PulseDeck is a personal feed reader displaying attribution, publication
+time and links to the original articles. Feed content is fetched only after opt-in,
+kept in memory and is not bundled in the application or repository. No article text
+or publisher images are included in the distribution. Availability and publisher
+terms may change; users can disable or replace any preset.

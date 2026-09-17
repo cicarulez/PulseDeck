@@ -327,6 +327,18 @@ public sealed class DeckRenderer : IDisposable
         }
         Text(state.Hardware.Status == "connected" ? "LIVE SENSOR DATA" : "SENSORS UNAVAILABLE", 1410, 432, 16, muted);
         }
+        if (config.News.Enabled)
+        {
+            using var strip = new SKPaint { Color = new SKColor(8, 18, 23) };
+            canvas.DrawRect(SKRect.Create(0, 446, 1920, 34), strip);
+            var headline = state.News.Select(state.Timestamp, config.News.RotationSeconds);
+            var newsSize = Math.Clamp(config.News.FontSize, 20, 26);
+            Text(headline?.Source ?? "NEWS", 32, 470, newsSize - 4, accent, true, maxWidth: 235);
+            var notice = state.News.Status switch { "loading" => "Aggiornamento notizie…", "not-configured" => "Scegli i canali in Configurazione → News",
+                "empty" => "Nessuna notizia recente", _ => "Notizie non disponibili" };
+            Text(headline?.Title ?? notice, 286, 470, newsSize, maxWidth: 1450, minimumSize: newsSize);
+            Text(headline?.PublishedAt?.ToLocalTime().ToString("dd/MM HH:mm") ?? "data n/d", 1764, 470, newsSize - 8, muted, maxWidth: 136);
+        }
         using var image = SKImage.FromBitmap(bitmap);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         var pixels = new byte[1920 * 480 * 4]; Marshal.Copy(bitmap.GetPixels(), pixels, 0, pixels.Length);

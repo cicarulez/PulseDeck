@@ -26,5 +26,8 @@
   <section class="panel"><div class="section-title"><span>04 / METEO</span><h2>Il tempo nella tua città.</h2></div>
     <pd-weather-settings [location]="draft.weatherLocation" [busy]="busy()" (locationChange)="draft.weatherLocation = $event" />
   </section>
+  <section class="panel"><div class="section-title"><span>05 / NEWS</span><h2>Le tue fonti, nel footer.</h2></div>
+    <pd-news-settings [options]="draft.news" [state]="newsState()" [busy]="busy()" (optionsChange)="draft.news = $event" />
+  </section>
   <div class="save-row"><span>Le modifiche vengono applicate dopo il salvataggio.</span><button class="button button--primary" type="submit" [disabled]="busy()">{{ busy() ? 'Salvataggio…' : 'Salva configurazione' }}</button></div>
 </form>

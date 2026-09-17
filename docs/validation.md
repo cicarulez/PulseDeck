@@ -852,3 +852,74 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   or anomalous pixels. This closes the physical readability/artifact check for this
   layout; prolonged USB stability and externally induced weather network-loss checks
   remain separate outstanding validations.
+
+## Selectable RSS/Atom news footer — 2026-09-17 (0.2.4)
+
+- User requested news in the footer with selectable RSS sources, custom URLs and
+  ready-made presets; explicitly chose ANSA top news, ANSA technology and Multiplayer
+  PC as initially active sources. Existing weather/twelve-sensor setup is retained.
+- Added a dedicated Angular news settings component with five verified presets,
+  up to eight named channels, independent pause/remove, custom URL entry, global
+  enable and 10–120-second rotation (20 by default). Article links remain available
+  in the configurator; long display titles are shortened. Legacy settings disable
+  news without making requests; all source choices require normal config save.
+- Portable provider supports bounded RSS 2.0/Atom parsing, cancellation, cache/retry,
+  invalidation on channel change/disable, markup removal, date/link checks and source
+  interleaving. HTTP uses validated public addresses with no proxy, cookies or
+  automatic redirects. Failed sources clear their own titles; others remain usable.
+  No article bodies, remote images or credentials are requested/stored in Git.
+- 67 Core and 15 renderer tests passed, including asynchronous obsolete-result
+  handling, partial failure/expiry, rotation, XML external-entity rejection,
+  oversized feeds, URL/private-address checks and footer-only pixel changes across
+  weather/compact/classic layouts. Angular production build and self-contained
+  Windows publish passed; USB command/recovery/shutdown code unchanged.
+- All five official preset endpoints returned HTTP 200 directly from Windows;
+  the real Core parser accepted ten dated items from each. A separate live process
+  also exercised the production public-address HTTP handler and NewsFeed: the three
+  selected sources all connected with ten items each. Inspected standalone preview
+  using real feed data and actual state; article/feed assets remain outside Git.
+- First UAC deployment request was cancelled before its script ran. The user
+  explicitly approved resending it and accepted the second Windows request.
+- Installed the package after backing up app/config/credentials/task definitions,
+  waiting for the old agent and launcher to exit, and observing standby identity
+  CT88INCH on COM3. Automatic wake restored the identified panel on COM5. One
+  health probe timed out during startup before readiness succeeded. Binary hashes
+  matched the staged build; settings and credential hashes survived deployment.
+- Browser testing found that rapidly adding a preset then changing enable state
+  could overwrite a pending input update. Changed the news editor to a local
+  writable Angular model and rebuilt. Deployed that UI correction with another
+  complete stop/backup/start, again preserving settings and hidden startup. The
+  corrected UI loaded main-ZGAS46UA.js. Simultaneous preset additions and enable
+  changes now preserve all five draft sources in the regression check.
+- Installed UI checks passed for preset add/remove, global disable (runtime status
+  disabled), custom HTTPS URL addition/save/reload, and restoring the three requested
+  sources. All config PUTs returned 200. Final sources each report connected with
+  ten items (thirty total). Article list provides publisher links with a separate
+  tab and noopener; no horizontal overflow at 1500px or 390px. No page errors during
+  the final interaction checks. Custom test configuration was removed afterward.
+- Final configuration differs from the pre-news backup only in the added `news`
+  settings. Weather location/layout, every sensor binding and all other preferences
+  match. Agent remains hidden in interactive session 2, scheduled task is
+  Highest/Interactive, and the legacy vendor task stays disabled.
+- Inspected the actual Windows preview: source/title/date fit within the footer,
+  with weather, twelve sensors, current Spotify cover and Discord header intact.
+  Physical footer readability/rotation awaits user confirmation. Long-term USB
+  stability and real network-outage recovery remain separate from unit/UI checks.
+  No PC shutdown/reboot, firmware, Aura or vendor-app action occurred.
+- Successive installed previews showed different headlines and source labels as
+  snapshot time advanced, consistent with the twenty-second rotation. Spotify also
+  changed track and cover during this observation. Before the size adjustment, COM5 reached
+  176 acknowledged frames, zero recoveries and no transport error since the
+  last restart; this is a short observation window, not a long-term USB guarantee.
+- On seeing the footer, the user requested it slightly larger rather than approving
+  its physical readability. Increased default title text from 20 to 24 px, enlarged
+  source/date, and exposed 20/24/26 px choices in the app. Long headlines now keep
+  the selected size and use ellipsis. Renderer regression checks confirm all three
+  sizes leave every pixel above y=446 unchanged in weather/compact/classic layouts.
+- Rebuilt and installed the size adjustment using complete stop, backup and hidden
+  task restart again; agent/Core hashes and config/credential preservation checks
+  passed. The final configurator loads main-SGDI2BHN.js. Saved 24 px from the UI
+  (HTTP 200), reloaded and verified size plus the same three active sources. Inspected
+  actual Windows preview with the larger gaming headline: it fits without touching
+  widgets. COM5 reached 100 acknowledged frames, zero recoveries and no transport
+  error since this last restart. Physical approval of the enlarged text is pending.

@@ -21,6 +21,7 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
 - Layout **Meteo**: 12 sensori in una griglia 3×4, meteo a sinistra e Spotify/Discord
   a destra. Località ricercabile e selezionabile nell’app; inizialmente Roma, Italia,
   sul PC di sviluppo.
+- News nel footer con preset, feed RSS/Atom personalizzati e dimensione testo regolabile.
 - Copertina, titolo, artista, stato e progresso di Spotify o altri player Windows.
 - RAM fisica usata/libera/totale utilizzabile; sensori rete con velocità in B/s, KiB/s o MiB/s.
 - Sfondo statico scuro integrato, oppure un’immagine locale scelta dall’utente.
@@ -166,6 +167,28 @@ dimostrativa; le icone meteo sono disegnate dal renderer condiviso.
 
 Sul PC di sviluppo i 12 widget conservano i dieci precedenti e aggiungono potenza
 CPU Package e frequenza GPU Core, legate ai sensori reali per ID e nome.
+
+### News nel footer (0.2.4)
+
+Installata sul PC di sviluppo con Ultime notizie ANSA, Tecnologia ANSA e gaming PC
+di Multiplayer.it attivi. Ricezione delle tre fonti e configuratore verificati;
+leggibilità fisica del nuovo footer ancora da confermare.
+
+In **Configurazione → News**, aggiungi i preset ANSA (ultime notizie, tecnologia,
+sport, Lazio) e Multiplayer.it (gaming PC), oppure un feed RSS/Atom personalizzato.
+Puoi salvare fino a otto canali, metterli in pausa singolarmente e attivare le news
+nel footer. Premi **Salva configurazione** per applicare le modifiche.
+
+Il display alterna fonte, titolo e data/ora ogni 20 secondi (regolabili da 10 a 120),
+senza spostare meteo e sensori. **Dimensione testo** offre 20, 24 o 26 px;
+il valore iniziale è 24 px. I titoli lunghi sono abbreviati mantenendo la dimensione
+scelta; nel configuratore puoi leggere il titolo completo e aprire l'articolo sul
+sito originale.
+L'aggiornamento avviene ogni 15 minuti; in caso di errore il canale viene indicato
+come non disponibile e ritentato dopo 2 minuti. Le altre fonti restano utilizzabili.
+Sono accettati feed pubblici HTTPS diretti, senza autenticazione o reindirizzamenti;
+RSS 2.0 e Atom. Nessun download del testo completo o delle immagini degli articoli.
+Le configurazioni precedenti mantengono le news disattivate fino alla selezione.
 
 ## Copertine, sfondo e app attiva
 

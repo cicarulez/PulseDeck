@@ -319,3 +319,35 @@ one word. The callback stores a bounded latest sample with monotonic tick/count 
 returns S_OK; it does not call an SDK method or affect hardware. Other modes remain
 unsupported. Diagnostics explicitly mark colorVerified=false; this is not a runtime
 AuraColorProvider or proof the device participates in the user's sync selection.
+
+## RSS/Atom news footer
+
+Schema 1 adds opt-in `news` settings: enabled, rotationSeconds (10–120, default 20),
+fontSize (20–26 pixels, default 24), plus up to eight named HTTPS channels with
+independent enable flags. Legacy configs keep the previous footer and perform no news requests. Presets live in the news
+settings feature component; adding a preset populates the same editable channel
+model used by custom feeds. Settings changes apply only after the existing save.
+
+The single render-loop owner polls `NewsFeed.Read` without awaiting network I/O.
+Each refresh launches at most eight bounded requests concurrently; eight-second
+cancellation and a 512 KiB decompressed response cap apply to each feed. Success is
+cached fifteen minutes, any failure retries after two; failed sources lose their
+headlines while healthy sources remain available with aggregate `partial` status.
+A selection change cancels/discards the old batch; data older than thirty minutes
+since request start clears after suspend. Disabling cancels polling and clears state.
+
+RSS 2.0 and Atom parsing prohibits DTD/external entities, bounds XML characters,
+strips markup/control characters from titles, rejects non-web article links and
+retains at most ten unique items per channel. Known dates older than seven days or
+more than thirty minutes in the future are excluded; missing/unparseable dates
+remain explicitly unknown. Sources are interleaved before global link deduplication.
+Only title, source, article link and publication time enter state; no article body,
+remote image, script or attachment is fetched. Cache stays in memory, outside logs.
+
+The agent HTTP handler uses no proxy, cookies, credentials or automatic redirects.
+Only direct public HTTPS feeds on port 443 are accepted. DNS addresses are checked
+and the connection uses the selected public address directly, avoiding a second
+DNS lookup and local/private destinations. Feed errors are status-only in the API.
+The renderer replaces only y=446..479 with source, one headline and publication time;
+rotation is tied to snapshot time and configured interval, never a smooth marquee.
+The configurator exposes source status and complete headlines linked to publishers.
