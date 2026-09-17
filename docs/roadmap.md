@@ -415,7 +415,8 @@ Non dedurre la voce attiva da mute=false. In caso di incompatibilità mostrare
 ## Musica, Battlefield e regole
 
 - Copertina da miniatura Windows implementata con cache singola, limiti e reset
-  traccia/sorgente; completare le prove reali di cambio traccia e player.
+  traccia/sorgente. Dopo la 0.2.0 l'utente ha confermato layout e copertine funzionanti
+  rispondendo alla prova fisica, incluso il cambio brano; restano i cambi di player.
 - Sfondi GIF/WebP implementati fino a 2 fps, con limiti di file/pixel/cache e fallback
   statico dichiarato. La GIF fornita dall'utente è stata ritagliata localmente in 4:1;
   nessun asset incluso nel repository. La prova animata ha esaurito i tentativi USB;

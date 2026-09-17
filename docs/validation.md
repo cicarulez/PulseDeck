@@ -640,3 +640,12 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   stable animated USB throughput and long-duration reliability remain unverified.
   Background animation is left disabled with the user's cropped first frame shown.
   No PC shutdown/reboot, firmware change, TURZX launch or RGB-control action.
+
+### User physical confirmation after 0.2.0 deployment
+
+- Asked to check artwork, CPU/GPU/RAM rings, network, image artifacts and Spotify
+  track/artwork changes, the user reported everything working except the stationary
+  GIF. This supplies user confirmation for those physical layout/media checks.
+- The GIF was deliberately left static after the failed animated transport trial;
+  this observation does not indicate a decoding failure. Animation remains disabled.
+  Stable animated USB delivery and long-duration reliability are still outstanding.
