@@ -577,3 +577,66 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   real Aura RGB reception and selectable tile were not achieved. Runtime cleanup
   audit and backup remain outside Git. Do not restart this experiment without a new
   user request.
+
+## Spotify artwork, compact widgets and background trial — 2026-09-17 (0.2.0)
+
+- Started from clean `213971f`, installed 0.1.1 connected on identified COM5,
+  elevated interactive agent, legacy TURZX task disabled and no vendor display app.
+  Aura investigation remained retired; no ASUS changes or probes.
+- Added compact 4×4 layout (16 bindings), retaining the classic eight-slot layout.
+  Exact old bindings migrate without losing ID/name, label, maximum or visibility;
+  eight new slots start hidden. Presentation adds numeric values, bars and rings.
+  RAM uses physical `/ram` used+available, excluding `/vram`; total is usable RAM,
+  not an invented capacity or necessarily the modules' marketed capacity.
+- Installed configuration preserves original eight sources, adds rings for CPU/GPU
+  usage and physical RAM used/free/total, and adds download/upload from the actual
+  Ethernet interface. Filter-driver duplicates are not summed. Other six extra
+  slots remain hidden. Existing accent, profiles, Discord and startup are preserved.
+- Spotify thumbnail was obtained on Windows and visibly rendered in the shared
+  preview beside matching title/artist. Playback and pause were observed. No Spotify
+  credentials or HTTP artwork downloads were introduced. Missing/corrupt artwork,
+  refresh failure, source/track invalidation and stale-art refusal are automated
+  checks; physical matching and a controlled real track/cover change remain pending.
+- 51 Core tests and 7 rendering tests passed; Angular production build (Node 24.15.0)
+  and .NET 10 self-contained Windows publish passed. Full-frame/shutdown protocol
+  bytes and recovery tests unchanged. New tests cover old configuration expansion,
+  invalid sets/styles, physical vs virtual RAM, adaptive network units, artwork size
+  limits/cache reset, last-slot output, stale artwork, GIF loop/disable, invalid
+  backgrounds and animation suspension without overriding manual disconnection.
+- Browser checked at 1500×1000 and 390×844: sixteen/eight slots switch correctly,
+  extra-slot RAM/ring editing enables Save, Discard restores saved values, no page
+  overflow or browser console errors. Final installed footer reports 0.2.0; animated
+  background selector is off. Browser edits were discarded; intended configuration
+  was saved separately through the validated local API.
+- User GIF was 1280×1571, 35 frames, 3.2 seconds. Only the upper flight scene was
+  cropped (1280×320 at y=180), scaled to 960×240 and resampled to 10 fps, 32 frames.
+  Renderer targets 2 fps by selecting current animation time. Original and cropped
+  assets remain outside Git; the latter is under LOCALAPPDATA/PulseDeck/assets.
+  Cached animation decodes successfully; synthetic tests verify looping and stop.
+- First Windows trial: static background acknowledged 16 frames in 20.54 seconds
+  with one recovery (3.38 CPU seconds, about 216 MiB working set). Animated trial
+  acknowledged only 2 frames in 40.91 seconds, with one more recovery and eventual
+  timeout exhaustion (7.30 CPU seconds, about 226 MiB). These are failed-throughput
+  observations, not a claim of stable 2-fps hardware output. Static mode also had a
+  timeout, so animation cannot be identified as the sole cause.
+- Disabled animation and explicitly reconnected after exhaustion. Static output
+  recovered once and then exceeded 60 consecutive confirmed frames. Added
+  `AnimationGuard`: a real transport recovery/error suspends animation on frame zero,
+  advertises suspension in preview/UI and requires explicit toggle or asset change
+  before retrying. The guard's transitions were tested with synthetic statuses;
+  the final guard build has not been subjected to another animated USB stress trial.
+- Both deployments backed up app/config/DPAPI credentials/task XML outside Git,
+  stopped the agent, waited for process and hidden launcher exit, then replaced
+  binaries and reused the existing elevated interactive task. Config/credential
+  hashes matched across each binary deployment; intended layout settings were a
+  separate save. Normal stop logged screen-off, standby COM3 appeared, startup woke
+  to COM5 and acknowledged output. Final agent is hidden in user session 2.
+- Final installed guard build: agent/Core DLL hashes match the tested publish,
+  118 acknowledged frames with zero transport errors/recoveries at last check.
+  Compact layout has ten visible bindings out of sixteen, animation off, real Spotify
+  artwork available, physical usable RAM about 63.64 GiB. This is a short runtime
+  observation, not proof the previously observed USB fault is resolved.
+- New physical layout readability/artifact check, controlled Spotify cover changes,
+  stable animated USB throughput and long-duration reliability remain unverified.
+  Background animation is left disabled with the user's cropped first frame shown.
+  No PC shutdown/reboot, firmware change, TURZX launch or RGB-control action.

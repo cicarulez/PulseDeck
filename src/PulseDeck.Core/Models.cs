@@ -11,13 +11,16 @@ public sealed record DeckConfig
     public string TrackedMemberId { get; init; } = "";
     public string DisplayPort { get; init; } = "COM5";
     public string BackgroundPath { get; init; } = "";
+    public bool AnimateBackground { get; init; }
     public string AccentColor { get; init; } = "#a9ff69";
+    public string Layout { get; init; } = "compact";
 
     public WidgetConfig[] Widgets { get; init; } = WidgetCatalog.Defaults();
 
     public string? Validate()
     {
         if (SchemaVersion != 1) return "Unsupported configuration version.";
+        if (Layout is not ("classic" or "compact")) return "Unknown display layout.";
         if (ProfileMode is not ("auto" or "desktop" or "gaming" or "music")) return "Unknown profile.";
         if (ProfileDelaySeconds is < 0 or > 30) return "Profile delay must be between 0 and 30 seconds.";
         if (GameProcesses is null || GameProcesses.Length > 50 || GameProcesses.Any(p => string.IsNullOrWhiteSpace(p) || p.Length > 100)) return "Invalid game process list.";
@@ -39,7 +42,10 @@ public sealed record HardwareSnapshot(IReadOnlyList<Metric> Metrics, string Stat
     public bool IsAdministrator { get; init; }
     public bool PawnIoInstalled { get; init; }
 }
-public sealed record MediaSnapshot(bool Playing, string Title, string Artist, string App, double PositionSeconds, double DurationSeconds, string Status);
+public sealed record MediaSnapshot(bool Playing, string Title, string Artist, string App, double PositionSeconds, double DurationSeconds, string Status)
+{
+    public string? ArtworkId { get; init; }
+}
 public sealed record VoiceMember(string Id, string Name, bool Mute, bool Deaf);
 public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMember? Tracked, string Status, string? Detail = null);
 public sealed record DisplaySnapshot(bool Connected, string Port, string? DeviceId, string Status, string? Error = null)
@@ -52,4 +58,7 @@ public sealed record DisplaySnapshot(bool Connected, string Port, string? Device
     public bool UserDisconnected { get; init; }
 }
 public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string ForegroundApp, HardwareSnapshot Hardware,
-    MediaSnapshot Media, DiscordSnapshot Discord, DisplaySnapshot Display, string FpsStatus = "not-configured");
+    MediaSnapshot Media, DiscordSnapshot Discord, DisplaySnapshot Display, string FpsStatus = "not-configured")
+{
+    public string AnimationStatus { get; init; } = "off";
+}

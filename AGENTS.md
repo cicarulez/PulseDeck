@@ -11,6 +11,7 @@ must run in the signed-in Windows user's session.
   Reuse shared components/styles; keep feature state and markup in feature components.
 - `src/PulseDeck.Core`: portable contracts, validation, profile selection and protocol.
 - `tests/PulseDeck.Core.Tests`: profile and hardware-protocol regression tests.
+- `tests/PulseDeck.Rendering.Tests`: real renderer/cache checks with synthetic images.
 - `scripts`: publishing, interactive/background launch, Discord import and startup setup.
 - `docs/validation.md`: evidence from actual Windows and physical-display checks.
 - `docs/roadmap.md`: agreed priorities and next steps. Aura must initially follow PC
@@ -27,6 +28,7 @@ Requirements: .NET 10 SDK and Node 24.15+ compatible with Angular 22.
 
 ```sh
 dotnet test tests/PulseDeck.Core.Tests/PulseDeck.Core.Tests.csproj -c Release
+dotnet test tests/PulseDeck.Rendering.Tests/PulseDeck.Rendering.Tests.csproj -c Release
 dotnet publish apps/agent/PulseDeck.Agent.csproj -c Release -r win-x64 --self-contained true -o artifacts/windows
 # In apps/configurator:
 npm ci

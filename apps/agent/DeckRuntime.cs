@@ -14,13 +14,15 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
     ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly ProfileSelector selector = new();
+    private readonly AnimationGuard animation = new();
     public DeckState State { get; private set; } = new(DateTimeOffset.UtcNow, "desktop", "",
         new([], "starting"), new(false, "", "", "", 0, 0, "starting"), new([], null, "starting"), new(false, "", null, "disconnected"));
     public byte[]? Preview { get; private set; }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+        long sampled = 0, renderedAt = 0;
         try
         {
             do
@@ -28,15 +30,27 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                 try
                 {
                     var settings = config.Current;
-                    var hardwareTask = Task.Run(hardware.Read, stoppingToken);
-                    var mediaTask = media.ReadAsync(stoppingToken);
-                    var discordTask = discord.ReadAsync(settings, stoppingToken);
-                    await Task.WhenAll(hardwareTask, mediaTask, discordTask);
+                    var animationStatus = animation.Select(settings.AnimateBackground, settings.BackgroundPath, display.Status);
+                    var renderSettings = animationStatus == "suspended" ? settings with { AnimateBackground = false } : settings;
+                    if (renderedAt != 0 && System.Diagnostics.Stopwatch.GetElapsedTime(renderedAt).TotalMilliseconds < (renderSettings.AnimateBackground ? 450 : 950)) continue;
+                    renderedAt = System.Diagnostics.Stopwatch.GetTimestamp();
+                    var hardwareState = State.Hardware;
+                    var mediaState = State.Media;
+                    var discordState = State.Discord;
+                    if (sampled == 0 || System.Diagnostics.Stopwatch.GetElapsedTime(sampled).TotalMilliseconds >= 950)
+                    {
+                        sampled = System.Diagnostics.Stopwatch.GetTimestamp();
+                        var hardwareTask = Task.Run(hardware.Read, stoppingToken);
+                        var mediaTask = media.ReadAsync(stoppingToken);
+                        var discordTask = discord.ReadAsync(settings, stoppingToken);
+                        await Task.WhenAll(hardwareTask, mediaTask, discordTask);
+                        hardwareState = hardwareTask.Result; mediaState = mediaTask.Result; discordState = discordTask.Result;
+                    }
                     var now = DateTimeOffset.UtcNow;
                     var foreground = ForegroundProvider.Read();
-                    var next = new DeckState(now, selector.Select(settings, foreground, mediaTask.Result.Playing, now), foreground,
-                        hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status);
-                    var rendered = renderer.Render(next, settings);
+                    var next = new DeckState(now, selector.Select(settings, foreground, mediaState.Playing, now), foreground,
+                        hardwareState, mediaState, discordState, display.Status) { AnimationStatus = animationStatus };
+                    var rendered = renderer.Render(next, renderSettings, media.Artwork);
                     Preview = rendered.Png;
                     display.Send(rendered.Pixels);
                     State = next with { Display = display.Status };

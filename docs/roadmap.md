@@ -17,8 +17,10 @@ nella sessione Windows dell'utente, senza console aperta.
 - Recupero USB limitato: due tentativi con frame completo, identità verificata alla
   riapertura e cancellazione per disconnessione volontaria/arresto; diagnostica API/log.
 - Inventario con 617 sensori/parametri rilevati su questo PC; ricerca e filtri.
-- Selezione dei sensori nelle otto posizioni del layout, etichette, scale e visibilità;
-  configurazione persistente e valori originali per le configurazioni precedenti.
+- Layout compatto con 16 posizioni, valori/barre/anelli e layout classico a otto;
+  associazioni precedenti conservate, nuove posizioni nascoste e scale configurabili.
+- Copertine dalla sessione Windows, RAM fisica usata/libera/totale e velocità di rete.
+- GIF/WebP locali con cache limitata e cadenza massima di 2 fotogrammi/s.
 - PawnIO installato e letture di CPU, scheda madre, ventole, RAM, GPU e dischi.
 - Spotify tramite sessioni multimediali Windows; profili Desktop/Musica/Gaming.
 - Discord integrato: bot collegato, cache dei partecipanti e stato mute/deaf.
@@ -36,11 +38,11 @@ nella sessione Windows dell'utente, senza console aperta.
 | P0 | Affidabilità USB | Recupero limitato implementato; completare prove fisiche | Errori reali, scollegamento/ricollegamento USB, sospensione/ripresa e immagine corretta dopo recupero |
 | In pausa | Ricerca di una sorgente Aura in lettura | Tentativo HAL virtuale interrotto dall'utente; mantenere il colore manuale | Colori dell'effetto ASUS osservabili senza acquisire il controllo né alterare i LED |
 | P1 | Architettura per più display | Uno stato condiviso, schermi indipendenti | Due configurazioni con dimensioni, driver e contenuti separati; errore USB isolato per dispositivo |
-| P2 | Layout oltre le otto posizioni disponibili | Disporre anche musica e Discord per display/profilo | Configurazione persistente e composizione leggibile alle dimensioni di ogni schermo |
+| P2 | Layout liberi e per profilo (16 posizioni già disponibili) | Disporre anche musica e Discord per display/profilo | Configurazione persistente e composizione leggibile alle dimensioni di ogni schermo |
 | In pausa | Tema con colori Aura | Accenti e barre coordinati al PC | Cambi colore reali, testo leggibile, comportamento corretto quando Aura non è disponibile |
 | P2 | FPS e tempi dei fotogrammi | Informazioni del gioco in primo piano | Misure reali attribuite al processo corretto, confronto con uno strumento di riferimento |
 | P2 | Chi parla su Discord | Indicatore vocale distinto dal mute | Due utenti, cambio interlocutore, silenzio, mute e riconnessione verificati |
-| P3 | Musica e sfondi | Copertina, progresso e tema Battlefield | Cambio traccia, pausa, sorgente multimediale alternativa; sfondo nitido sul display |
+| P3 | Musica e sfondi | Verificare cambi copertina e stabilizzare l’animazione USB prima di aumentare la cadenza | Cambio traccia, pausa, sorgente multimediale alternativa; sfondo nitido sul display |
 | P3 | Regole contestuali avanzate | Widget/profili diversi per app attiva | Priorità esplicite e nessun cambio continuo durante Alt-Tab |
 | P3 | Gestione quotidiana | Icona nella tray, recupero del display e aggiornamenti | Uscita senza processi residui, scollegamento USB, sospensione/ripresa, ripristino del colore |
 
@@ -309,11 +311,12 @@ deve usare un fallback dichiarato, senza presentare l'ultimo colore come aggiorn
 
 ## Widget e temi
 
-Prima versione completata: tre barre, quattro valori centrali e un valore laterale
-possono mostrare un riepilogo hardware o un sensore scelto per ID e nome, oppure
-essere nascosti. Etichette e scale modificabili, salvataggio esplicito e ripristino
-dei valori iniziali; stesso rendering per anteprima e USB. Schema 1 compatibile con
-i file precedenti tramite valori predefiniti per la nuova proprietà `widgets`.
+La 0.2.0 aggiunge una griglia compatta 4×4 oltre al classico a otto posizioni.
+Le associazioni persistono passando fra i layout; migrazione additiva dello schema 1,
+con spazi nuovi nascosti. Valori numerici, barre e anelli selezionabili nel compatto;
+RAM usata con totale fisico utilizzabile e quota libera, senza memoria virtuale.
+I sensori rete rimangono associati a una specifica interfaccia per ID e nome, con
+unità di velocità adattive. Anteprima e USB condividono tutta la composizione.
 
 Restano futuri il posizionamento libero, lo spostamento di musica/Discord e i layout
 per display e profilo. Separare configurazione del tema, profilo e sorgenti dati.
@@ -411,13 +414,18 @@ Non dedurre la voce attiva da mute=false. In caso di incompatibilità mostrare
 
 ## Musica, Battlefield e regole
 
-- Usare la miniatura della sessione Windows per la copertina; gestire cache, cambio
-  traccia e sorgenti multiple senza rendere necessario un account Spotify aggiuntivo.
-- Prima uno sfondo statico scelto dall'utente; scene/video Battlefield solo dopo una
-  misura della banda USB e del carico di rendering. Gli asset restano separati dal codice.
+- Copertina da miniatura Windows implementata con cache singola, limiti e reset
+  traccia/sorgente; completare le prove reali di cambio traccia e player.
+- Sfondi GIF/WebP implementati fino a 2 fps, con limiti di file/pixel/cache e fallback
+  statico dichiarato. La GIF fornita dall'utente è stata ritagliata localmente in 4:1;
+  nessun asset incluso nel repository. La prova animata ha esaurito i tentativi USB;
+  animazione lasciata disattivata sul PC, con sospensione automatica al primo errore
+  di trasporto per nuove prove. Fluidità superiore e video richiedono nuove misure
+  USB/CPU e mantenimento del recupero limitato.
 - Definire regole esplicite: gioco in primo piano, riproduzione multimediale, desktop;
   mantenere override manuale e ritardo prima del cambio, già presenti.
-- Separare frequenza di acquisizione dei sensori, aggiornamento UI e invio al display.
+- Acquisizione condivisa limitata a circa 1 Hz, rendering fino a 2 Hz se animato.
+  Il trasporto è ancora sincrono: una scrittura lenta riduce la cadenza, senza code.
 
 ## Come riprendere
 

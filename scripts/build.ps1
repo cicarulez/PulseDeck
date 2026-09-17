@@ -11,6 +11,8 @@ Push-Location $repoDir
 try {
     dotnet test tests/PulseDeck.Core.Tests/PulseDeck.Core.Tests.csproj -c Release
     if ($LASTEXITCODE -ne 0) { throw 'Core tests failed' }
+    dotnet test tests/PulseDeck.Rendering.Tests/PulseDeck.Rendering.Tests.csproj -c Release
+    if ($LASTEXITCODE -ne 0) { throw 'Rendering tests failed' }
     dotnet publish apps/agent/PulseDeck.Agent.csproj -c Release -r win-x64 --self-contained true -o artifacts/windows
     if ($LASTEXITCODE -ne 0) { throw 'Agent publish failed' }
     New-Item -ItemType Directory -Force artifacts/windows/wwwroot | Out-Null

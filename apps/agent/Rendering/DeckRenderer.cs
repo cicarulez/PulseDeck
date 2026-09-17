@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using PulseDeck.Core;
+using PulseDeck.Agent.Providers;
 using SkiaSharp;
 
 namespace PulseDeck.Agent.Rendering;
@@ -10,31 +11,31 @@ public sealed class DeckRenderer : IDisposable
 {
     private readonly SKTypeface typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
     private readonly SKTypeface bold = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-    private SKBitmap? background;
-    private string backgroundPath = "";
-    private DateTime backgroundModified;
+    private readonly BackgroundFrames backgrounds = new();
+    public string BackgroundStatus => backgrounds.Status;
+    public int BackgroundFrameCount => backgrounds.Count;
+    private SKBitmap? cover;
+    private string? coverId;
 
-    public RenderedFrame Render(DeckState state, DeckConfig config)
+    public RenderedFrame Render(DeckState state, DeckConfig config, MediaArtwork? artwork = null)
     {
+        var nextCoverId = state.Media.Status == "connected" && state.Media.ArtworkId == artwork?.Id ? artwork?.Id : null;
+        if (coverId != nextCoverId)
+        {
+            cover?.Dispose(); cover = null; coverId = nextCoverId;
+            if (nextCoverId is not null)
+                try { cover = SKBitmap.Decode(artwork!.Png); } catch { /* Missing cover is explicit. */ }
+        }
         using var bitmap = new SKBitmap(new SKImageInfo(1920, 480, SKColorType.Bgra8888, SKAlphaType.Premul));
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(new SKColor(10, 16, 18));
-        var modified = File.Exists(config.BackgroundPath) ? File.GetLastWriteTimeUtc(config.BackgroundPath) : DateTime.MinValue;
-        if (config.BackgroundPath != backgroundPath || modified != backgroundModified)
-        {
-            background?.Dispose(); background = null;
-            backgroundPath = config.BackgroundPath; backgroundModified = modified;
-            if (modified != DateTime.MinValue)
-            {
-                try { background = SKBitmap.Decode(backgroundPath); } catch { /* Keep the readable base theme. */ }
-            }
-        }
+        var background = backgrounds.Get(config.BackgroundPath, config.AnimateBackground);
         if (background is not null)
         {
             float scale = Math.Max(1920f / background.Width, 480f / background.Height);
             var width = background.Width * scale; var height = background.Height * scale;
             canvas.DrawBitmap(background, SKRect.Create((1920 - width) / 2, (480 - height) / 2, width, height));
-            using var shade = new SKPaint { Color = new SKColor(5, 10, 13, 210) }; canvas.DrawRect(0, 0, 1920, 480, shade);
+            using var shade = new SKPaint { Color = new SKColor(5, 10, 13, 130) }; canvas.DrawRect(0, 0, 1920, 480, shade);
         }
         var accent = SKColor.Parse(config.AccentColor);
         var muted = new SKColor(144, 162, 161);
@@ -54,10 +55,10 @@ public sealed class DeckRenderer : IDisposable
             }
             canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
         }
-        var widgets = config.Widgets.ToDictionary(w => w.Slot, w => WidgetCatalog.Resolve(w, state.Hardware));
+        var widgets = WidgetCatalog.Expand(config.Widgets).ToDictionary(w => w.Slot, w => WidgetCatalog.Resolve(w, state.Hardware));
         void ValueText(WidgetReading widget, float x, float y, float size, float maxWidth, float minimumSize = 18)
         {
-            var text = widget.DisplayValue + (widget.Value.HasValue && widget.Unit.Length > 0 ? " " + widget.Unit : "");
+            var text = widget.DisplayValue + (widget.Value.HasValue && widget.DisplayUnit.Length > 0 ? " " + widget.DisplayUnit : "");
             using var font = new SKFont(typeface, size);
             if (font.MeasureText(text) > maxWidth) size = Math.Max(minimumSize, size * maxWidth / font.MeasureText(text));
             Text(text, x, y, size, maxWidth: maxWidth);
@@ -72,10 +73,120 @@ public sealed class DeckRenderer : IDisposable
             canvas.DrawRect(32, y + 12, 250, 6, track);
             if (widget.Fraction is { } fraction) canvas.DrawRect(32, y + 12, (float)fraction * 250, 6, accentPaint);
         }
+        void Cover(float x, float y, float size)
+        {
+            var bounds = SKRect.Create(x, y, size, size);
+            canvas.Save();
+            using var rounded = new SKRoundRect(bounds, 8);
+            canvas.ClipRoundRect(rounded, SKClipOperation.Intersect, true);
+            using var placeholder = new SKPaint { Color = new SKColor(29, 43, 43) };
+            canvas.DrawRect(bounds, placeholder);
+            if (cover is not null)
+            {
+                var scale = Math.Min(size / cover.Width, size / cover.Height);
+                canvas.DrawBitmap(cover, SKRect.Create(x + (size - cover.Width * scale) / 2,
+                    y + (size - cover.Height * scale) / 2, cover.Width * scale, cover.Height * scale));
+            }
+            else
+            {
+                Text("COPERTINA", x + 10, y + size / 2 - 4, 12, muted, maxWidth: size - 20);
+                Text("non disponibile", x + 10, y + size / 2 + 16, 12, muted, maxWidth: size - 20);
+            }
+            canvas.Restore();
+        }
+        void Media(float x, float y, float width)
+        {
+            const float size = 132;
+            var available = state.Media.Status == "connected";
+            Text(state.Media.App.Contains("Spotify", StringComparison.OrdinalIgnoreCase) ? "SPOTIFY" : "MEDIA SESSION", x, y, 15, accent, true);
+            Cover(x, y + 16, size);
+            var textX = x + size + 18;
+            var textWidth = width - size - 18;
+            Text(available && state.Media.Title.Length > 0 ? state.Media.Title : "Nessuna riproduzione", textX, y + 47, 24, heavy: true, maxWidth: textWidth);
+            Text(available ? state.Media.Artist : "", textX, y + 80, 18, muted, maxWidth: textWidth);
+            Text(available ? state.Media.Playing ? "IN RIPRODUZIONE" : "IN PAUSA" : "INATTIVO", textX, y + 115, 13, state.Media.Playing ? accent : muted, maxWidth: textWidth);
+            string Time(double seconds) => TimeSpan.FromSeconds(Math.Clamp(double.IsFinite(seconds) ? seconds : 0, 0, 359999)).ToString(seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
+            Text(available && state.Media.DurationSeconds > 0 ? $"{Time(state.Media.PositionSeconds)} / {Time(state.Media.DurationSeconds)}" : "— / —", textX, y + 144, 14, muted);
+            canvas.DrawLine(x, y + 166, x + width, y + 166, line);
+            if (available && state.Media.DurationSeconds > 0)
+                canvas.DrawRect(x, y + 164, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * width, 4, accentPaint);
+        }
+        void Compact()
+        {
+            const float startX = 32, startY = 86, cellWidth = 314, cellHeight = 80, gap = 12;
+            using var card = new SKPaint { Color = new SKColor(12, 24, 28, 185), IsAntialias = true };
+            using var track = new SKPaint { Color = new SKColor(43, 58, 57) };
+            canvas.DrawRoundRect(SKRect.Create(1352, 86, 548, 356), 8, 8, card);
+            for (int i = 0; i < WidgetCatalog.Slots.Count; i++)
+            {
+                var widget = widgets[WidgetCatalog.Slots[i].Id];
+                if (widget.Hidden) continue;
+                float x = startX + i % 4 * (cellWidth + gap), y = startY + i / 4 * (cellHeight + gap);
+                canvas.DrawRoundRect(SKRect.Create(x, y, cellWidth, cellHeight), 8, 8, card);
+                var style = config.Widgets.FirstOrDefault(w => w.Slot == widget.Slot)?.Style ?? "auto";
+                if (style == "ring")
+                {
+                    var bounds = SKRect.Create(x + 16, y + 14, 52, 52);
+                    using var ring = new SKPaint { Color = track.Color, Style = SKPaintStyle.Stroke, StrokeWidth = 6, IsAntialias = true, StrokeCap = SKStrokeCap.Round };
+                    canvas.DrawOval(bounds, ring);
+                    if (widget.Fraction is { } fraction)
+                    {
+                        ring.Color = accent;
+                        using var arc = new SKPath(); arc.AddArc(bounds, -90, (float)fraction * 359.99f); canvas.DrawPath(arc, ring);
+                    }
+                    else Text("—", x + 31, y + 47, 18, muted);
+                    Text(widget.Label, x + 84, y + 23, 13, muted, maxWidth: cellWidth - 100);
+                    if (widget.Capacity is { } capacity && widget.Value is { } used)
+                    {
+                        Text($"{widget.DisplayValue} / {capacity:0.#} {widget.DisplayUnit}", x + 84, y + 47, 22, maxWidth: cellWidth - 100);
+                        Text($"{Math.Max(0, capacity - used):0.#} {widget.DisplayUnit} liberi", x + 84, y + 67, 13, muted, maxWidth: cellWidth - 100);
+                    }
+                    else ValueText(widget, x + 84, y + 58, 29, cellWidth - 100);
+                }
+                else
+                {
+                    Text(widget.Label, x + 16, y + 24, 14, muted, maxWidth: cellWidth - 32);
+                    ValueText(widget, x + 16, y + 60, 30, cellWidth - 32, 18);
+                }
+                if (style == "bar" || style == "auto" && WidgetCatalog.Slots[i].IsBar)
+                {
+                    canvas.DrawRect(x + 16, y + 70, cellWidth - 32, 3, track);
+                    if (widget.Fraction is { } fraction)
+                        canvas.DrawRect(x + 16, y + 70, (float)fraction * (cellWidth - 32), 3, accentPaint);
+                }
+            }
+            canvas.DrawLine(1340, 86, 1340, 442, line);
+            Media(1364, 108, 524);
+            canvas.DrawLine(1364, 296, 1888, 296, line);
+            Text("DISCORD", 1364, 322, 15, accent, true);
+            if (state.Discord.Status != "connected") Text("Discord non collegato", 1364, 356, 18, muted);
+            else if (state.Discord.Members.Count == 0) Text("Nessun partecipante", 1364, 356, 18, muted);
+            else
+            {
+                var members = state.Discord.Members.OrderByDescending(m => m.Id == config.TrackedMemberId).Take(3).ToArray();
+                for (int i = 0; i < members.Length; i++)
+                {
+                    Text(members[i].Name, 1364, 351 + i * 29, 18, maxWidth: 408);
+                    Text(members[i].Deaf ? "DEAF" : members[i].Mute ? "MUTE" : "ON", 1818, 351 + i * 29, 14,
+                        members[i].Deaf || members[i].Mute ? new SKColor(255, 146, 131) : accent);
+                }
+                if (state.Discord.Members.Count > 3) Text($"+{state.Discord.Members.Count - 3} partecipanti", 1364, 436, 13, muted);
+            }
+            Text("ACTIVE / " + (state.ForegroundApp.Length > 0 ? state.ForegroundApp : "Desktop"), 32, 469, 13, muted, maxWidth: 850);
+            Text(state.Hardware.Status == "connected" ? "SENSORI LIVE" : "SENSORI NON DISPONIBILI", 920, 469, 13, muted, maxWidth: 400);
+            if (state.Profile == "gaming") Text("FPS non disponibili", 1364, 469, 13, muted);
+        }
         Text("PULSEDECK", 32, 42, 23, accent, true);
         Text("RECON / " + state.Profile.ToUpperInvariant(), 320, 42, 18, muted);
         Text(state.Timestamp.ToLocalTime().ToString("HH:mm:ss"), 1760, 42, 22);
+        if (state.AnimationStatus == "suspended")
+            Text("Animazione sospesa dopo errore USB", 990, 42, 15, muted, maxWidth: 720);
+        else if (BackgroundStatus is "unavailable" or "static-limit")
+            Text(BackgroundStatus == "unavailable" ? "Sfondo non disponibile" : "Sfondo statico: animazione oltre i limiti", 990, 42, 15, muted, maxWidth: 720);
         canvas.DrawLine(32, 66, 1888, 66, line);
+        if (config.Layout == "compact") Compact();
+        else
+        {
         canvas.DrawLine(310, 90, 310, 446, line);
         canvas.DrawLine(1370, 90, 1370, 446, line);
         Bar("bar1", 113); Bar("bar2", 171); Bar("bar3", 229);
@@ -116,13 +227,7 @@ public sealed class DeckRenderer : IDisposable
         }
         Text("ACTIVE / " + (state.ForegroundApp.Length > 0 ? state.ForegroundApp : "Desktop"), 350, 432, 18, muted, maxWidth: 970);
 
-        Text("MEDIA SESSION", 1410, 119, 16, accent, true);
-        Text(state.Media.Status == "connected" ? state.Media.Title : "Nessuna riproduzione", 1410, 170, 26, heavy: true, maxWidth: 465);
-        Text(state.Media.Artist, 1410, 204, 20, muted, maxWidth: 465);
-        Text(state.Media.Playing ? "PLAYING" : "PAUSED / IDLE", 1410, 247, 15, state.Media.Playing ? accent : muted);
-        canvas.DrawLine(1410, 279, 1875, 279, line);
-        if (state.Media.DurationSeconds > 0)
-            canvas.DrawRect(1410, 277, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * 465, 4, accentPaint);
+        Media(1410, 113, 465);
         var side = widgets["side"];
         if (!side.Hidden)
         {
@@ -130,10 +235,11 @@ public sealed class DeckRenderer : IDisposable
             ValueText(side, 1410, 379, 30, 465);
         }
         Text(state.Hardware.Status == "connected" ? "LIVE SENSOR DATA" : "SENSORS UNAVAILABLE", 1410, 432, 16, muted);
+        }
         using var image = SKImage.FromBitmap(bitmap);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         var pixels = new byte[1920 * 480 * 4]; Marshal.Copy(bitmap.GetPixels(), pixels, 0, pixels.Length);
         return new(encoded.ToArray(), pixels);
     }
-    public void Dispose() { background?.Dispose(); typeface.Dispose(); bold.Dispose(); }
+    public void Dispose() { cover?.Dispose(); backgrounds.Dispose(); typeface.Dispose(); bold.Dispose(); }
 }

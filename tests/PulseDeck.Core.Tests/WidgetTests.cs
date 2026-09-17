@@ -7,14 +7,70 @@ public class WidgetTests
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     [Fact]
-    public void ExistingConfigurationGetsTheOriginalEightWidgets()
+    public void ExistingConfigurationGetsOriginalBindingsAndEightHiddenSlots()
     {
         var config = JsonSerializer.Deserialize<DeckConfig>("""{"schemaVersion":1,"accentColor":"#123456"}""", Json)!;
         Assert.Null(config.Validate());
         Assert.Equal("#123456", config.AccentColor);
-        Assert.Equal(8, config.Widgets.Length);
+        Assert.Equal(16, config.Widgets.Length);
+        Assert.All(config.Widgets.Skip(8), w => Assert.Equal("none", w.Source));
         Assert.Equal("cpu.load", config.Widgets.Single(w => w.Slot == "bar1").MetricId);
         Assert.Equal("ram.used", config.Widgets.Single(w => w.Slot == "side").MetricId);
+    }
+
+    [Fact]
+    public void LegacyMigrationPreservesOrderBindingsLabelsVisibilityAndScale()
+    {
+        var original = WidgetCatalog.Defaults().Take(8).Reverse().ToArray();
+        original[0] = original[0] with { Source = "none", Label = "CUSTOM", Maximum = 2048 };
+        original[1] = original[1] with { Source = "sensor", SensorId = "/duplicated", SensorName = "Bus" };
+        Assert.Null(WidgetCatalog.Validate(original));
+        var migrated = WidgetCatalog.Expand(original);
+        Assert.Equal(original, migrated.Take(8));
+        Assert.All(migrated.Skip(8), w => Assert.Equal("none", w.Source));
+        Assert.Equal(migrated, WidgetCatalog.Expand(migrated));
+        var config = new DeckConfig { Widgets = migrated, Layout = "classic" };
+        var restored = JsonSerializer.Deserialize<DeckConfig>(JsonSerializer.Serialize(config, Json), Json)!;
+        Assert.Equal("classic", restored.Layout);
+        Assert.Equal(migrated, restored.Widgets);
+    }
+
+    [Fact]
+    public void MigrationRejectsIncompleteSetsAndUnknownSlotsRatherThanDroppingBindings()
+    {
+        var widgets = WidgetCatalog.Defaults();
+        Assert.NotNull(WidgetCatalog.Validate(widgets.Take(9).ToArray()));
+        Assert.NotNull(WidgetCatalog.Validate(widgets.Skip(8).ToArray()));
+        Assert.Throws<ArgumentException>(() => WidgetCatalog.Expand(widgets.Take(7).ToArray()));
+        Assert.NotNull((new DeckConfig { Layout = "unknown" }).Validate());
+        widgets[0] = widgets[0] with { Style = "pie-invalid" };
+        Assert.NotNull(WidgetCatalog.Validate(widgets));
+    }
+
+    [Fact]
+    public void NetworkDisplayScalesBytesWithoutChangingTheValueOrFraction()
+    {
+        var reading = new WidgetReading("extra1", "Download", 524288, "B/s", 1048576, false);
+        Assert.Equal("512", reading.DisplayValue);
+        Assert.Equal("KiB/s", reading.DisplayUnit);
+        Assert.Equal(.5d, reading.Fraction);
+        Assert.Equal("MiB/s", (reading with { Value = 2097152 }).DisplayUnit);
+    }
+
+    [Fact]
+    public void RamCapacityUsesPhysicalMemoryAndDoesNotInventMissingTotals()
+    {
+        SensorReading Sensor(string hardware, string name, double? value) => new(hardware + name, name, hardware, hardware, "Memory", "Data", value, null, null, "GiB");
+        var metrics = MemorySummary.Read([Sensor("/vram", "Memory Used", 123), Sensor("/ram", "Memory Used", 20), Sensor("/ram", "Memory Available", 44)]);
+        Assert.Equal(64d, metrics.Single(m => m.Id == "ram.total").Value);
+        var widget = WidgetCatalog.Defaults().Single(w => w.Slot == "side") with { Style = "ring" };
+        var reading = WidgetCatalog.Resolve(widget, new(metrics, "connected"));
+        Assert.Equal(20d, reading.Value);
+        Assert.Equal(64d, reading.Capacity);
+        Assert.Equal(20d / 64, reading.Fraction);
+        var missing = MemorySummary.Read([Sensor("/ram", "Memory Used", 20), Sensor("/vram", "Memory Available", 100)]);
+        Assert.Null(missing.Single(m => m.Id == "ram.total").Value);
+        Assert.Null(WidgetCatalog.Resolve(widget, new(missing, "connected")).Fraction);
     }
 
     [Fact]

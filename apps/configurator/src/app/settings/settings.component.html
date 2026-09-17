@@ -10,7 +10,8 @@
     <div class="fields">
       <label>Porta del TURZX<input name="port" [(ngModel)]="draft.displayPort" pattern="[Cc][Oo][Mm][1-9][0-9]{0,3}" required></label>
       <label>Colore principale<input name="accent" type="color" [(ngModel)]="draft.accentColor"></label>
-      <label class="wide">Immagine di sfondo sul PC Windows<input name="background" [(ngModel)]="draft.backgroundPath" placeholder="C:\Immagini\battlefield.jpg"><small>PNG, JPEG o WebP. Lascia vuoto per lo sfondo Recon.</small></label>
+      <label class="wide">Immagine di sfondo sul PC Windows<input name="background" [(ngModel)]="draft.backgroundPath" placeholder="C:\Immagini\battlefield.gif"><small>PNG, JPEG, WebP o GIF. Lascia vuoto per lo sfondo Recon. L’immagine riempie il pannello con ritaglio centrale.</small></label>
+      <label>Sfondo animato<select name="animation" [(ngModel)]="draft.animateBackground"><option [ngValue]="false">Fermo · primo fotogramma</option><option [ngValue]="true">Animato · fino a 2 fotogrammi/s</option></select><small>Per GIF e WebP animati. La velocità effettiva dipende dal display; disattiva per tornare allo sfondo fermo.</small></label>
     </div>
   </section>
   <section class="panel"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>

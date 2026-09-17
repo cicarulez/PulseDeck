@@ -1,8 +1,10 @@
-export interface WidgetConfig { slot: string; source: 'metric' | 'sensor' | 'none'; metricId: string; sensorId: string; sensorName: string; label: string; maximum: number; }
+export interface WidgetConfig { slot: string; source: 'metric' | 'sensor' | 'none'; metricId: string; sensorId: string; sensorName: string; label: string; maximum: number; style: 'auto' | 'value' | 'bar' | 'ring'; }
 export interface WidgetSlot { id: string; name: string; isBar: boolean; }
 export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; }
 export interface DeckConfig {
   widgets: WidgetConfig[];
+  layout: 'classic' | 'compact';
+  animateBackground: boolean;
   schemaVersion: number; profileMode: string; gameProcesses: string[]; profileDelaySeconds: number;
   discordMode: string; discordBaseUrl: string; trackedMemberId: string; displayPort: string; backgroundPath: string; accentColor: string;
 }
@@ -18,7 +20,7 @@ export interface DisplayState {
 export interface DeckState {
   timestamp: string; profile: string; foregroundApp: string;
   hardware: HardwareState;
-  media: { playing: boolean; title: string; artist: string; app: string; positionSeconds: number; durationSeconds: number; status: string };
+  media: { playing: boolean; title: string; artist: string; app: string; positionSeconds: number; durationSeconds: number; status: string; artworkId: string | null };
   discord: { members: VoiceMember[]; tracked: VoiceMember | null; status: string; detail: string | null };
-  display: DisplayState; fpsStatus: string;
+  display: DisplayState; fpsStatus: string; animationStatus: 'off' | 'enabled' | 'suspended';
 }

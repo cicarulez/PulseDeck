@@ -46,10 +46,9 @@ public sealed class HardwareProvider : IDisposable
                 new("gpu.load", "GPU", Get(x => Gpu(x.Hardware) && x.Sensor.SensorType == SensorType.Load, "Core"), "%"),
                 new("gpu.temperature", "GPU temperature", Get(x => Gpu(x.Hardware) && x.Sensor.SensorType == SensorType.Temperature, "Core"), "°C"),
                 new("gpu.power", "GPU power", Get(x => Gpu(x.Hardware) && x.Sensor.SensorType == SensorType.Power, "Package"), "W"),
-                new("gpu.memory", "VRAM used", Get(x => Gpu(x.Hardware) && x.Sensor.SensorType == SensorType.SmallData && x.Sensor.Name.Contains("Used")), "MB"),
-                new("ram.load", "RAM", Get(x => x.Hardware == HardwareType.Memory && x.Sensor.SensorType == SensorType.Load), "%"),
-                new("ram.used", "RAM used", Get(x => x.Hardware == HardwareType.Memory && x.Sensor.SensorType == SensorType.Data && x.Sensor.Name.Equals("Memory Used", StringComparison.OrdinalIgnoreCase)), "GB")
+                new("gpu.memory", "VRAM used", Get(x => Gpu(x.Hardware) && x.Sensor.SensorType == SensorType.SmallData && x.Sensor.Name.Contains("Used")), "MiB")
             };
+            metrics.AddRange(MemorySummary.Read(sensors));
             var pawn = LibreHardwareMonitor.PawnIo.PawnIo.IsInstalled;
             if (!pawn) errors.Add("PawnIO non è installato: mancano le letture a basso livello di CPU, scheda madre e ventole. Installa il driver e riavvia PulseDeck come amministratore.");
             else if (!admin) errors.Add("Avvia PulseDeck come amministratore per accedere anche ai sensori di CPU, scheda madre e ventole.");

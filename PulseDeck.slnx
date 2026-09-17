@@ -8,5 +8,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PulseDeck.Core.Tests/PulseDeck.Core.Tests.csproj" />
+    <Project Path="tests/PulseDeck.Rendering.Tests/PulseDeck.Rendering.Tests.csproj" />
   </Folder>
 </Solution>

@@ -6,6 +6,8 @@ import { HardwareState, SensorReading, WidgetConfig, WidgetSlot } from '../model
 export class WidgetSlotEditorComponent {
   readonly widget = input.required<WidgetConfig>();
   readonly slot = input.required<WidgetSlot>();
+  readonly compact = input(false);
+  readonly usesScale = computed(() => this.compact() ? this.widget().style === 'ring' || this.widget().style === 'bar' || this.widget().style === 'auto' && this.slot().isBar : this.slot().isBar);
   readonly hardware = input<HardwareState | null>(null);
   readonly change = output<WidgetConfig>();
   readonly query = signal('');

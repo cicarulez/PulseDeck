@@ -6,6 +6,7 @@ npm ci
 npm run build
 cd "$repo_dir"
 dotnet test tests/PulseDeck.Core.Tests/PulseDeck.Core.Tests.csproj -c Release
+dotnet test tests/PulseDeck.Rendering.Tests/PulseDeck.Rendering.Tests.csproj -c Release
 dotnet publish apps/agent/PulseDeck.Agent.csproj -c Release -r win-x64 --self-contained true -o artifacts/windows
 mkdir -p artifacts/windows/wwwroot
 cp -a artifacts/configurator/browser/. artifacts/windows/wwwroot/

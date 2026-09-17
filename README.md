@@ -7,8 +7,8 @@ Il configuratore è disponibile su **http://127.0.0.1:5178**. Puoi chiudere il b
 l'agent continua a lavorare in background. L'avvio automatico non apre né console
 né browser e collega il display.
 
-Il [piano di sviluppo](docs/roadmap.md) raccoglie le prossime attività: Aura Sync,
-layout avanzati, più schermi, FPS, attività vocale e temi. Le verifiche realmente
+Il [piano di sviluppo](docs/roadmap.md) raccoglie le prossime attività: layout liberi,
+più schermi, FPS, attività vocale e temi. La ricerca Aura è in pausa. Le verifiche realmente
 eseguite sono descritte in [docs/validation.md](docs/validation.md).
 
 ## Funzionalità disponibili
@@ -16,8 +16,11 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
 - Anteprima e display condividono lo stesso rendering 1920×480, con sfondo locale.
 - Pagina **Sensori** con ricerca, filtri, valori correnti/minimi/massimi e diagnostica
   dei permessi. Sul PC di sviluppo: 617 sensori e parametri, incluse soglie dei dispositivi.
-- Pagina **Widget**: otto posizioni configurabili con sensori, etichette e scale delle barre.
-- Titolo, artista, stato e progresso di Spotify o altri player compatibili con Windows.
+- Pagina **Widget**: layout compatto fino a 16 posizioni, valori, barre e anelli;
+  resta disponibile il layout classico a otto posizioni.
+- Copertina, titolo, artista, stato e progresso di Spotify o altri player Windows.
+- RAM fisica usata/libera/totale utilizzabile; sensori rete con velocità in B/s, KiB/s o MiB/s.
+- Sfondi locali statici o GIF/WebP animati, con aggiornamento fino a 2 fotogrammi/s.
 - Profili Desktop, Gaming e Musica; selezione manuale o automatica con ritardo configurabile.
 - Bot Discord integrato: partecipanti del canale, mute/deaf e utente da evidenziare.
 - Collegamento TURZX con verifica dell'identità e aggiornamenti completi/parziali.
@@ -29,7 +32,7 @@ Le letture mancanti appaiono come `—`. Il bot collegato è stato verificato; l
 transizioni ingresso/uscita e mute/deaf con partecipanti richiedono ancora una prova.
 
 **Non ancora disponibili:** FPS, indicatore di chi parla, colori Aura Sync, più display,
-copertine musicali, sfondi video, layout libero e icona nella tray. Il solo valore
+video MP4/WebM, animazioni fluide, layout libero e icona nella tray. Il solo valore
 `mute=false` non viene interpretato come attività vocale.
 
 ## Cosa installare per usarlo
@@ -110,18 +113,47 @@ visiva del pannello; vedi [validazione](docs/validation.md).
 
 ## Scegliere i widget
 
-Apri **Widget** nel configuratore, scegli una delle otto posizioni (tre barre a
-sinistra, quattro valori centrali e un valore a destra) e seleziona un riepilogo
-hardware o un sensore dell'inventario. Puoi filtrare per nome/hardware, cambiare
-l'etichetta, impostare il valore a barra piena oppure nascondere la posizione.
-Per esempio, una ventola in RPM può usare una scala massima di 3000.
+Apri **Widget** e scegli **Compatto** (16 posizioni in una griglia 4×4) oppure
+**Classico** (le otto posizioni precedenti). Musica con copertina e Discord mantengono
+aree dedicate. Le associazioni esistenti sono conservate; le otto posizioni nuove
+partono nascoste. Il passaggio al classico conserva anche quelle aggiuntive.
 
-Premi **Salva widget** per applicare le modifiche all'anteprima e al display.
+Seleziona una posizione, poi un riepilogo hardware o un sensore dell'inventario.
+Puoi filtrare per nome/hardware, cambiare l'etichetta o nascondere la posizione.
+Nel compatto scegli valore numerico, barra oppure anello. Per barre/anelli imposta
+il valore massimo nell'unità del sensore: 100 per una percentuale, 3000 per RPM.
+L'anello **RAM usata** ricava automaticamente il totale utilizzabile e mostra anche
+la memoria libera; non somma la memoria virtuale né la memoria riservata all'hardware.
+Per la rete scegli Download Speed/Upload Speed dell'interfaccia desiderata, evitando
+di sommare le copie dei filtri virtuali. Le unità si adattano alla velocità corrente.
+
+Premi **Salva widget** per applicare le modifiche a anteprima e display.
 **Annulla modifiche** recupera l'ultimo salvataggio; **Ripristina layout iniziale**
-prepara i valori originali, da confermare con il salvataggio. La configurazione
-rimane su disco e le configurazioni precedenti ricevono automaticamente le otto
-associazioni originali. Un sensore mancante mostra `—`, conservando il collegamento.
-Le aree musica e Discord restano nelle loro posizioni attuali.
+prepara le associazioni originali e nasconde gli spazi aggiuntivi, da confermare con
+il salvataggio. Un sensore mancante mostra `—` conservando il collegamento.
+
+## Copertine e sfondo animato
+
+La copertina proviene dalla miniatura della sessione multimediale Windows: non serve
+un account/API key aggiuntivo. La cache conserva solo l'immagine corrente in memoria,
+si svuota al cambio traccia/sorgente o alla perdita della sessione e viene ricontrollata
+ogni 30 secondi (ogni 5 se manca). Se il player non fornisce un'immagine valida appare
+**Copertina non disponibile**, senza riutilizzare quella di un'altra traccia.
+
+In **Configurazione**, scegli un file locale PNG/JPEG/WebP/GIF. **Sfondo animato**
+abilita GIF e WebP animati fino a 2 fotogrammi/s, mantenendo i sensori a circa 1 Hz.
+Non è riproduzione video fluida: l'USB può ridurre ulteriormente la cadenza. Disattiva
+l'opzione per fermarti al primo fotogramma. Un errore USB sospende automaticamente
+l'animazione fino a una riattivazione esplicita, senza alterare la disconnessione
+volontaria o i tentativi limitati del trasporto. Nella prova del 17 settembre la
+modalità animata ha esaurito il recupero USB: sul PC di sviluppo è lasciata disattivata.
+Lo sfondo ritagliato resta visibile come immagine fissa. L'immagine riempie il pannello con ritaglio
+centrale; prepara il file in rapporto 4:1 per scegliere precisamente l'inquadratura.
+
+Limiti dello sfondo: file fino a 32 MiB e 4 megapixel; cache animata fino a 120 frame
+e 64 MiB decodificati. Oltre il limite della cache resta il primo frame con avviso;
+file illeggibili mostrano lo sfondo base e un avviso. Immagini, GIF dell'utente e copie
+ritagliate restano fuori Git. `/api/rendering` riporta stato e numero di frame caricati.
 
 La prova Aura del 17 settembre 2026 con SDK 3.07.05.0 ha enumerato i dispositivi,
 ma i valori RGB non corrispondevano al giallo fisso confermato dall'utente.
@@ -233,7 +265,7 @@ Linux/WSL, per compilare e poi eseguire il pacchetto su Windows:
 ./scripts/build.sh
 ```
 
-Gli script eseguono i test Core, pubblicano l'agent win-x64 con runtime e copiano
+Gli script eseguono i test Core e di rendering, pubblicano l'agent win-x64 con runtime e copiano
 interfaccia, licenze e script di avvio/importazione/installazione in `artifacts/windows`.
 Per i test reali servono Windows e i dispositivi: la sola build in WSL non verifica
 Spotify, sensori, Discord o USB. La raggiungibilità del loopback Windows da WSL dipende

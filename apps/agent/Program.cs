@@ -48,6 +48,7 @@ app.MapPut("/api/config", (DeckConfig config, ConfigStore store) =>
     catch (IOException) { return Results.Problem("Could not save the configuration."); }
 });
 app.MapGet("/api/preview.png", (DeckRuntime runtime) => runtime.Preview is { } png ? Results.File(png, "image/png") : Results.StatusCode(503));
+app.MapGet("/api/rendering", (DeckRenderer renderer) => new { backgroundStatus = renderer.BackgroundStatus, backgroundFrames = renderer.BackgroundFrameCount });
 app.MapGet("/api/display", (TurzxDisplay display) => display.Status);
 app.MapGet("/api/display/ports", TurzxDisplay.Ports);
 app.MapPost("/api/display/connect", (ConfigStore store, TurzxDisplay display, bool? startup) =>

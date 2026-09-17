@@ -66,9 +66,14 @@ The agent runs in the interactive user session so that foreground windows and
 Windows media sessions are available. Hardware data availability depends on
 permissions and the hardware's sensor support. Values are never fabricated.
 
-The current render cadence targets one update per second; slow providers or
-serial writes reduce that cadence. There is no unbounded frame queue. Smooth
-animation is a separate performance milestone, not implied by the static probe.
+Rendering targets one update per second, or two when background animation is enabled.
+Provider snapshots are acquired together at most about once per second and reused on
+the intermediate render. Serial delivery is still synchronous, so slow providers or
+writes reduce cadence; no frame queue is introduced. GIF timing selects the current
+frame and skips missed frames rather than accumulating work. `AnimationGuard` suspends
+requested animation on a real transport recovery/error, holds frame zero at normal cadence,
+and requires an explicit disable/enable or asset change to retry. It does not reconnect
+or renew USB retry budgets. API state and preview expose suspension. Smooth video remains future work.
 
 ## Sensor inventory and embedded Discord
 
@@ -94,7 +99,7 @@ contains the integration mode and tracked user, never the token.
    named application/display FPS and frame-time metrics.
 2. Discord speaking proof: test a bot voice connection in the target server;
    keep unsupported/offline activity separate from silence and mute.
-3. Album artwork and media-driven theme variations.
+3. Validate album-art transitions and improve media-driven themes and animation cadence.
 4. Tray lifecycle and physical unplug/replug and suspend/resume validation of bounded USB recovery.
 5. Extend the fixed-slot sensor editor to per-display themes and layouts. Add video only after throughput
    and CPU/GPU overhead measurements on the actual display.
@@ -104,17 +109,54 @@ Battlefield assets are not necessary for the engine and are not bundled here.
 
 ## Configurable sensor widgets
 
-`WidgetCatalog` defines eight stable slots, their default bindings and validation.
+`WidgetCatalog` defines sixteen stable slots, default bindings and validation.
 `DeckConfig.widgets` is additive to schema 1: older files receive the original layout
-through the property initializer. Bindings select a summary metric, a raw sensor by
+through the property initializer. Exact original eight-slot sets are accepted and
+expanded on load/save with eight hidden slots; malformed/incomplete sets are rejected.
+The compact layout is the new default; the classic layout retains the original eight
+positions without discarding extra bindings. Bindings select a summary metric, a raw sensor by
 ID plus name, or no content. Missing sensors remain bound and render as unavailable.
 Bar maxima are explicit, positive finite values; displayed readings are not clamped.
 
 `/api/widget-slots` supplies the slot catalog/defaults to Angular. The standalone
 widgets page owns an editable draft and delegates selection to a slot editor;
-the existing config endpoint validates and persists all eight slots together.
+the existing config endpoint validates and persists all sixteen slots together.
 The renderer resolves bindings against the cached snapshot, scales long values
-and constrains labels to the slot width. Music and Discord keep their fixed areas.
+and constrains labels to the slot width. Compact cards support values, bars and rings.
+RAM used obtains capacity from physical `/ram` used+available readings, never `/vram`;
+unknown capacity does not become a fictitious 100 GiB total. Network widgets bind a
+specific interface sensor (including its name), with adaptive B/s/KiB/s/MiB/s display
+and original byte-based scales. Music and Discord keep dedicated areas in each layout.
+
+## Media artwork and animated backgrounds
+
+`MediaProvider` reads the selected session's Windows `Thumbnail` (the same Spotify-first
+selection as metadata). `MediaArtworkCache` retains one bounded, normalized PNG in
+memory. Identity includes app, title, artist, album and track number; session/identity
+changes clear it before reading. Successful entries refresh after 30 seconds, missing
+or failed ones after 5. Thumbnail reads have a one-second cancellation budget; failures
+do not discard usable text metadata. Inputs are capped at 4 MiB and 4 megapixels,
+normalized to at most 256 pixels on either side, and identified by a content hash.
+Only `artworkId` goes into state/SignalR; image bytes go directly to the renderer,
+which caches its decoded image and refuses artwork whose ID differs from the snapshot.
+Neither media artwork nor user assets are persisted or bundled by this provider.
+
+Reference: [Windows media properties and Thumbnail](https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssessionmediaproperties?view=winrt-26100).
+
+`BackgroundFrames` owns decoded Skia bitmaps and durations, invalidated by path,
+modification time or animation setting. GIF/WebP frames are reconstructed by Skia with
+no assumed prior frame, including disposal/dependency handling. Source limits are
+32 MiB and 4 megapixels; animation limits are 120 frames and 64 MiB decoded. Oversize
+animations fall back to the first frame with a visible warning. Decode failures clear
+the cache and retain the base canvas with an unavailable warning. A monotonic clock
+selects a looping frame. Disabling animation returns to frame zero; no decoding occurs
+every tick. `/api/rendering` exposes status/count without leaking files or image bytes.
+The renderer crops centrally to fill 4:1; pre-cropped user assets remain outside Git.
+
+The rendering test project links the actual renderer/cache classes and uses synthetic
+images only. It covers artwork bounds/invalidation, extra-slot output, stale-art refusal,
+animation looping/disable and corrupt/deleted files on Linux. Windows media and USB
+checks remain separate, as do physical visibility and sustained-load confirmation.
 
 Aura SDK passive sampling has not produced trustworthy live colors on the tested
 installation. It remains outside the runtime; see the evidence in the roadmap.

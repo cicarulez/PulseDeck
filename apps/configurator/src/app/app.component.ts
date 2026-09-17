@@ -15,7 +15,7 @@ export class AppComponent {
   readonly pages = [
     { id: 'overview', icon: '◫', label: 'Panoramica', title: 'Tutto sotto controllo.', subtitle: 'Prestazioni, musica e squadra. Un unico punto di vista.' },
     { id: 'sensors', icon: '≋', label: 'Sensori', title: 'Ogni lettura, in chiaro.', subtitle: 'Esplora tutti i sensori rilevati sul tuo PC.' },
-    { id: 'widgets', icon: '⊡', label: 'Widget', title: 'Il tuo display, i tuoi dati.', subtitle: 'Scegli quali letture mostrare nelle otto posizioni del pannello.' },
+    { id: 'widgets', icon: '⊡', label: 'Widget', title: 'Il tuo display, i tuoi dati.', subtitle: 'Fino a 16 widget: valori, barre e anelli con musica e Discord.' },
     { id: 'settings', icon: '⊞', label: 'Configurazione', title: 'Un pannello, le tue regole.', subtitle: 'Scegli cosa mostrare e quando cambiare profilo.' }
   ] as const;
   readonly page = computed(() => this.pages.find(p => p.id === this.tab())!);

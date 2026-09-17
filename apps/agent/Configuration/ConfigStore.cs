@@ -24,7 +24,7 @@ public sealed class ConfigStore
         {
             var loaded = JsonSerializer.Deserialize<DeckConfig>(File.ReadAllText(path), Json);
             if (loaded is null || loaded.Validate() is { }) throw new InvalidDataException("Invalid saved configuration.");
-            current = loaded;
+            current = loaded with { Widgets = WidgetCatalog.Expand(loaded.Widgets) };
         }
         catch (Exception e) { logger.LogWarning(e, "Could not read config; using defaults. The existing file was preserved."); }
     }
@@ -32,8 +32,9 @@ public sealed class ConfigStore
     public void Save(DeckConfig config)
     {
         if (config.Validate() is { } error) throw new ArgumentException(error);
-        if (config.BackgroundPath.Length > 0 && (!File.Exists(config.BackgroundPath) || !new[] { ".png", ".jpg", ".jpeg", ".webp" }.Contains(Path.GetExtension(config.BackgroundPath).ToLowerInvariant())))
-            throw new ArgumentException("Background must be an existing PNG, JPEG or WebP file on this Windows PC.");
+        config = config with { Widgets = WidgetCatalog.Expand(config.Widgets) };
+        if (config.BackgroundPath.Length > 0 && (!File.Exists(config.BackgroundPath) || !new[] { ".png", ".jpg", ".jpeg", ".webp", ".gif" }.Contains(Path.GetExtension(config.BackgroundPath).ToLowerInvariant())))
+            throw new ArgumentException("Background must be an existing PNG, JPEG, WebP or GIF file on this Windows PC.");
         lock (gate)
         {
             var temporary = path + ".tmp";

@@ -9,6 +9,7 @@
     <div class="page-heading"><div><p class="eyebrow">YOUR PC. AT A GLANCE.</p><h1>{{ page().title }}</h1><p class="subtitle">{{ page().subtitle }}</p></div><div class="profile-chip"><span>PROFILO ATTIVO</span><strong>{{ profile() }}</strong></div></div>
     @if (!deck.connected()) { <div class="notice" role="status">In attesa del motore PulseDeck. Avvia PulseDeck.Agent sul PC Windows. Le ultime letture, se presenti, non sono aggiornate.</div> }
     @if (deck.error()) { <div class="notice notice--error" role="alert">{{ deck.error() }}</div> }
+    @if (deck.state()?.animationStatus === 'suspended') { <div class="notice" role="status">Animazione sospesa dopo un errore USB: lo sfondo resta fermo. Per riprovare, disattiva e salva lo sfondo animato in Configurazione, poi riattivalo.</div> }
     @if (saved()) { <div class="notice" role="status">Configurazione salvata.</div> }
     @if (tab() === 'overview') {
       <section class="panel preview-panel"><div class="panel-heading"><div><span class="eyebrow">LIVE CANVAS</span><h2>Recon <span>/ 1920 × 480</span></h2></div><pd-display-controls [display]="deck.state()?.display ?? null" [online]="deck.connected()" [busy]="deck.busy()" (action)="deck.display($event)" /></div>
@@ -30,6 +31,6 @@
     } @else {
       @if (deck.config(); as config) { <pd-settings [config]="config" [busy]="deck.busy()" (save)="save($event)" /> }
     }
-    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.1.1 · Windows</span></footer>
+    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.2.0 · Windows</span></footer>
   </main>
 </div>
