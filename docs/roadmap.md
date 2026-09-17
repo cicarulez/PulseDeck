@@ -621,3 +621,7 @@ dei giochi configurati; Alt-Tab mantiene la raccolta e seleziona i campioni per 
 Dopo un riavvio dell’agent o una modifica dei processi configurati può servire
 chiudere il gioco, attendere lo stato `ready` e riaprirlo. Nessuna modifica alle
 impostazioni di sicurezza. Le misure effettive sono riportate in `docs/validation.md`.
+
+L’utente ha confermato il funzionamento degli FPS su BF6 con la 0.3.2 dopo la prova
+richiesta di riapertura e Alt-Tab/rientro. Nessun valore numerico FPS è stato
+registrato durante quella prova; distinguere la conferma d’uso dalle misure.

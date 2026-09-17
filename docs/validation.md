@@ -1173,7 +1173,13 @@ Sources: [PresentMon v1 header](https://github.com/GameTechDev/PresentMon/blob/v
   no transport errors/recoveries. This readiness check alone does not prove FPS.
 - 75 Core tests passed after the lifecycle change, Angular production build and
   self-contained Windows publish passed. Renderer unchanged since its 17 passing
-  tests above. BF6 was still closed during this check; actual FPS after reopening
-  and preservation of this collector across live Alt-Tab remain to be verified.
+  tests above. BF6 was still closed during the initial readiness check.
+- User subsequently replied “ok funziona” to the requested BF6 reopen/20-second/
+  Alt-Tab/return test: FPS functionality is now user-confirmed on 0.3.2. The bounded
+  monitor ended before that game run, so it contains no numerical FPS samples or
+  independently observed Alt-Tab transitions. The follow-up check found BF6 closed,
+  the original PresentMon PID 51516 still running, and capture `ready`. COM5 had
+  326 acknowledged frames with zero errors/recoveries. Do not treat this acceptance
+  as a measured FPS accuracy or sustained Discord speech reliability test.
 
 Source: [PresentMon BF6 capture startup failure](https://github.com/GameTechDev/PresentMon/issues/573).
