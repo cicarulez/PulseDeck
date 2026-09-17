@@ -634,5 +634,6 @@ a parità di riproduzione prevale la scheda della finestra attiva. Mantiene la
 precedenza dei player nativi già in riproduzione. Senza estensione, senza player
 supportato o dopo dieci secondi senza dati torna alla lettura Windows. Installazione
 manuale dalla cartella `youtube-extension`, inclusa nelle build; nessun obbligo per
-usare PulseDeck. Test automatici e trasporto verificati; accettazione sul sito reale
-in attesa dell'attivazione in Chrome. Dettagli in `docs/validation.md`.
+usare PulseDeck. Test automatici e trasporto verificati; dopo le istruzioni di
+attivazione l’utente ha confermato che funziona perfettamente sul proprio Chrome.
+Dettagli e limiti della verifica in `docs/validation.md`.

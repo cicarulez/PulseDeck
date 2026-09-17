@@ -1223,9 +1223,12 @@ Source: [PresentMon BF6 capture startup failure](https://github.com/GameTechDev/
   connected without the extension. No fabricated media was injected into the agent.
 - Extension files are installed at `%LOCALAPPDATA%\PulseDeck\app\youtube-extension`.
   User must load this folder in Chrome developer mode and reload existing YouTube
-  tabs. Real two-window/hover acceptance, extension-to-agent selected media and live
-  disable/re-enable transitions remain pending that activation. Multiple profiles
-  with simultaneous extension instances are not supported (last update wins).
+  tabs. Multiple profiles with simultaneous extension instances are not supported
+  (last update wins).
+- After installation instructions and the request to try two windows/sidebar previews,
+  the user confirmed “funziona perfettamente”. Record this as user acceptance of the
+  live Chrome/YouTube integration. Individual transitions were not independently
+  captured; live disable/re-enable fallback and prolonged use remain unverified.
 
 Sources: [Chromium shared system media controls](https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/content/browser/media/system_media_controls/),
 [Chrome extension network requests](https://developer.chrome.com/docs/extensions/develop/concepts/network-requests),
