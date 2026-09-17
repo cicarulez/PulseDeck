@@ -5,6 +5,8 @@
 
 #define PROBE_GUID_TEXT L"{702D21B6-3A25-4D2C-9F73-F64C78E212A8}"
 #define PROBE_DEVICE_NAME L"PulseDeck Virtual Probe"
+/* Installed LightingService maps 0x64000 to EXTERNAL_GENERAL; 0 means All. */
+#define PROBE_DEVICE_TYPE 0x64000UL
 
 typedef struct ProbeStats {
     LONG activations;
@@ -15,6 +17,10 @@ typedef struct ProbeStats {
     LONG hal_refs;
     LONG device_refs;
     LONG factory_refs;
+    LONG last_effect_method;
+    ULONG last_effect_id;
+    ULONG last_effect_count;
+    ULONG last_effect_variant;
 } ProbeStats;
 
 int CheckProbeContracts(void);

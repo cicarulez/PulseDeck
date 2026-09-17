@@ -17,6 +17,14 @@ static LONG registered_factory_refs;
 static BOOL empty_devices;
 static DWORD cookie;
 static Receiver *receiver;
+static LONG last_effect_method;
+static ULONG last_effect_id, last_effect_count, last_effect_variant;
+/* Record incoming call shape only. No dereference of unverified color payloads. */
+static void record_effect(LONG method, ULONG effect, ULONG count, ULONG variant) {
+    InterlockedIncrement(&effect_requests);
+    last_effect_method = method; last_effect_id = effect;
+    last_effect_count = count; last_effect_variant = variant;
+}
 void SetProbeReceiver(Receiver *target) { receiver = target; }
 static const GUID device_iid = {0x61711778,0xab59,0x4026,{0x89,0xe8,0x7a,0x63,0x42,0x2c,0x29,0xc2}};
 static const GUID device_opt_iid = {0x68f0c6e1,0x7469,0x40b3,{0x84,0xd5,0xe0,0x79,0x3f,0x44,0x9e,0x4d}};
@@ -48,9 +56,9 @@ static HRESULT STDMETHODCALLTYPE device_query(Device *self, REFIID iid, void **r
 static HRESULT STDMETHODCALLTYPE device_capability(Device *self, BSTR *xml) {
     (void)self;
     if (!xml) return E_POINTER;
-    *xml = SysAllocString(L"<capability><version>1</version><type>0</type>"
+    *xml = SysAllocString(L"<capability><version>1</version><type>409600</type>"
         L"<device><name>" PROBE_DEVICE_NAME L"</name><id>0</id><manufacturer>PulseDeck</manufacturer>"
-        L"<model>Isolated test destination</model><layout><led_count>1</led_count>"
+        L"<model>" PROBE_DEVICE_NAME L"</model><layout><led_count>1</led_count>"
         L"<size><width>1</width><height>1</height></size></layout>"
         L"<supported_effect><effect><name>Static</name><id>1</id>"
         L"<synchronizable>0</synchronizable></effect></supported_effect>"
@@ -60,7 +68,7 @@ static HRESULT STDMETHODCALLTYPE device_capability(Device *self, BSTR *xml) {
 }
 static HRESULT STDMETHODCALLTYPE device_effect(Device *self, ULONG effect, ULONG *colors, ULONG count) {
     (void)self;
-    InterlockedIncrement(&effect_requests);
+    record_effect(1, effect, count, 0);
     /* This is an incoming HAL callback, never invoked by our probe. Keep the
        packed word unverified until its effect/color contract is validated. */
     if (effect != 1) return E_NOTIMPL;
@@ -78,16 +86,16 @@ static HRESULT STDMETHODCALLTYPE device_sync(Device *self, ULONG effect, ULONGLO
 static HRESULT STDMETHODCALLTYPE device_effect_opt(Device *self, ULONG effect, ULONG *colors,
                                                    ULONG count, ULONG speed, ULONG direction) {
     (void)self; (void)effect; (void)colors; (void)count; (void)speed; (void)direction;
-    InterlockedIncrement(&effect_requests); return E_NOTIMPL;
+    record_effect(2, effect, count, 0); return E_NOTIMPL;
 }
 static HRESULT STDMETHODCALLTYPE device_effect2(Device *self, ULONG effect, VARIANT colors, ULONG count) {
     (void)self; (void)effect; (void)colors; (void)count;
-    InterlockedIncrement(&effect_requests); return E_NOTIMPL;
+    record_effect(3, effect, count, V_VT(&colors)); return E_NOTIMPL;
 }
 static HRESULT STDMETHODCALLTYPE device_effect_opt2(Device *self, ULONG effect, VARIANT colors,
                                                     ULONG count, ULONG speed, ULONG direction) {
     (void)self; (void)effect; (void)colors; (void)count; (void)speed; (void)direction;
-    InterlockedIncrement(&effect_requests); return E_NOTIMPL;
+    record_effect(4, effect, count, V_VT(&colors)); return E_NOTIMPL;
 }
 static const DeviceVtbl device_vtbl={device_query,device_add,device_release,device_capability,
     device_effect,device_sync,device_effect_opt,device_effect2,device_effect_opt2};
@@ -185,7 +193,8 @@ HRESULT UnregisterProbe(void) {
 }
 ProbeStats GetProbeStats(void) {
     ProbeStats stats = {activations, enumerations, capabilities, effect_requests,
-        sync_requests, hal.refs, device.refs, factory_refs};
+        sync_requests, hal.refs, device.refs, factory_refs,
+        last_effect_method, last_effect_id, last_effect_count, last_effect_variant};
     return stats;
 }
 

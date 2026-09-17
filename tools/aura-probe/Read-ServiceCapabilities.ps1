@@ -1,5 +1,8 @@
 # Read-only inventory through the already-running ASUS service. No HAL registration.
-param([ValidateRange(1,60)][int]$TimeoutSeconds = 20)
+param(
+    [ValidateRange(1,60)][int]$TimeoutSeconds = 20,
+    [ValidateSet('Capabilities','Devices')][string]$Query = 'Capabilities'
+)
 $ErrorActionPreference = 'Stop'
 $service = Get-CimInstance Win32_Service -Filter "Name='LightingService'"
 if (-not $service -or $service.State -ne 'Running') {
@@ -9,7 +12,8 @@ $exe = Join-Path $PSScriptRoot 'PulseDeck.AuraProbe.exe'
 if (-not (Test-Path -LiteralPath $exe)) { throw 'Build the native probe first.' }
 $process = $null
 try {
-    $start = New-Object Diagnostics.ProcessStartInfo($exe, '--service-capabilities')
+    $argument = if ($Query -eq 'Devices') { '--service-devices' } else { '--service-capabilities' }
+    $start = New-Object Diagnostics.ProcessStartInfo($exe, $argument)
     $start.UseShellExecute = $false
     $start.CreateNoWindow = $true
     $start.RedirectStandardOutput = $true
@@ -28,7 +32,9 @@ try {
     $settings.XmlResolver = $null
     $inputText = [IO.StringReader]::new($stdout.Result)
     $reader = [Xml.XmlReader]::Create($inputText, $settings)
-    try { while ($reader.Read()) {} }
+    $document=[Xml.XmlDocument]::new()
+    $document.XmlResolver=$null
+    try { $document.Load($reader) }
     finally { $reader.Dispose(); $inputText.Dispose() }
     $after = Get-CimInstance Win32_Service -Filter "Name='LightingService'"
     if ($after.State -ne 'Running' -or $after.ProcessId -ne $service.ProcessId) {
@@ -37,14 +43,32 @@ try {
     # Inventory can contain hardware identifiers: keep the full response outside Git.
     $directory = Join-Path $env:LOCALAPPDATA 'PulseDeck\aura-investigation'
     [IO.Directory]::CreateDirectory($directory) | Out-Null
-    $path = Join-Path $directory ('service-capabilities-' + [Guid]::NewGuid().ToString('N') + '.xml')
+    $path = Join-Path $directory ('service-' + $Query.ToLowerInvariant() + '-' + [Guid]::NewGuid().ToString('N') + '.xml')
     [IO.File]::WriteAllText($path, $stdout.Result, [Text.UTF8Encoding]::new($false))
+    # The service does not preserve the HAL Name in every response. Match our own
+    # manufacturer/model instead of treating an absent name as an absent device.
+    $probeDevices=@()
+    if ($Query -eq 'Devices') {
+        foreach ($device in $document.SelectNodes('/root/devicelist/device')) {
+            if ($device.manufacture -eq 'PulseDeck' -and
+                $device.model -in @('Isolated test destination','PulseDeck Virtual Probe')) {
+                $probeDevices += [PSCustomObject]@{
+                    Type=[string]$device.type; LightingName=[string]$device.lightingname
+                    Model=[string]$device.model; Manufacturer=[string]$device.manufacture
+                    LedCount=[string]$device.count; Index=[string]$device.index
+                }
+            }
+        }
+    }
     [PSCustomObject]@{
-        Scope='running service capabilities only'
+        Scope='running service metadata only'
+        Query=$Query
         Path=$path
         ServiceProcessId=$after.ProcessId
         ContainsProbeName=$stdout.Result.Contains('PulseDeck Virtual Probe')
-    } | ConvertTo-Json
+        ProbeIdentityCount=$probeDevices.Count
+        ProbeDevices=$probeDevices
+    } | ConvertTo-Json -Depth 5
 } finally {
     if ($process) {
         if (-not $process.HasExited) { $process.Kill(); $process.WaitForExit() }

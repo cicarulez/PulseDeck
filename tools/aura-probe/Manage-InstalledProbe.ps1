@@ -158,7 +158,7 @@ try {
             $key=$machine.CreateSubKey($categoryPath)
             try {
                 $key.SetValue('PulseDeckOwner',$owner); $key.SetValue('Name','PulseDeck Virtual Probe')
-                $key.SetValue('Manufacturer','PulseDeck'); $key.SetValue('Version','0.2.0-probe')
+                $key.SetValue('Manufacturer','PulseDeck'); $key.SetValue('Version','0.3.0-probe')
                 $key.SetValue('Pluging',0,[Microsoft.Win32.RegistryValueKind]::DWord)
             } finally { $key.Dispose() }
             $inventory=Run-Native '--registered-hal-info'

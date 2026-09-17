@@ -463,3 +463,48 @@ background or colored pixel artifacts. Live sensor/media updates continue.
 - Next acceptance sequence: tile appears, user selects PulseDeck, incoming callbacks
   and physical color correspondence are verified. Existing device selections and
   the current effect must be preserved. The screenshot remains outside Git.
+
+## Aura detailed inventory and generic device metadata — 2026-09-17
+
+- Added a separate bounded, read-only query for IServiceMediator.get_QueryAllDevice
+  (DISPID 63, no parameters, BSTR result in the installed type library). The original
+  get_QueryAllDeviceCap remains the default; both calls returned valid XML and left
+  LightingService PID 6456 unchanged. No refresh or profile/control setter is used.
+- Detailed inventory has 15 entries and already includes our old prototype:
+  manufacturer PulseDeck, model Isolated test destination, Type=All,
+  LightingName=All, one LED, index 0. This proves the service retained the device;
+  prior ContainsProbeName=false only proved the literal name was absent. Aggregate
+  capability XML reports groups/LED locations, not a complete per-device identity list.
+- The metadata reader now identifies the probe by manufacturer/model and reports
+  its classification separately. Query Devices returned ProbeIdentityCount=1 despite
+  ContainsProbeName=false. Full vendor inventory remains outside Git.
+- Static inspection of installed LightingService 3.10.12 associates type 0x64000
+  (409600) with EXTERNAL_GENERAL in its device-type table. Service code also reads
+  effects' Synchronized property, but no causal link to tile eligibility was proved.
+  Updated our descriptor from type 0 to 409600 and model to PulseDeck Virtual Probe.
+  Static's synchronizable=0 remains unchanged. Generic external classification is
+  a test candidate, not proof Armoury Crate supports a corresponding tile.
+- Added last incoming callback method/effect/count/VARTYPE to the bounded latest
+  diagnostic report; no unknown buffer decoding, outgoing effect call or color
+  claim. Methods still return E_NOTIMPL in the installed host. The old host had
+  reached four incoming effect requests before replacement; payloads were not saved.
+- Native build passed with warnings as errors. 100-cycle own COM identity/reference
+  checks and three isolated SDK enumerations passed, now asserting device Type is
+  exactly 409600 while keeping existing Static metadata assertions.
+- Backed up installed own package and pre-update Status under private LOCALAPPDATA.
+  Removed our registration, signalled only our host, waited for exit, then installed
+  version 0.3.0-probe. SYSTEM automatic launch/direct metadata/three SDK enumerations
+  and idle-exit checks passed; new report PID 8256 at 13:48:47Z, deviceType=409600,
+  two activations/seven enumerations/four capability reads, no effect calls and
+  references 1/1/1. Category published after tests; real inventory still has 17 HAL
+  registrations with one probe GUID. Normal update succeeded; failure restoration
+  branch was prepared but not exercised.
+- ASUS services retained PIDs 6456/6408. Their detailed inventory after replacement
+  still contains the cached old All classification/model, so no new tile result can
+  be inferred from this installation. No service/PC restart was performed. Next
+  normal user-triggered restart/scan must verify new service classification, tile
+  appearance, user selection and then incoming request details.
+- PulseDeck stayed connected: 1574 acknowledged frames, zero USB recoveries since
+  startup at the final display check. Agent binaries, configuration and startup task
+  unchanged; no physical RGB correspondence verified. Decompilation, package backup
+  and runtime logs remain outside Git.

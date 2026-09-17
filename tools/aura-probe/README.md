@@ -336,3 +336,29 @@ callback payloads are not recorded yet. The existing service capability getter
 still omits the probe name. E_NOTIMPL callbacks may matter to initialization, but
 that is an unverified hypothesis. No real RGB sample has been received/validated.
 See the dated validation record before interpreting the earlier negative results.
+
+### Detailed service inventory and device classification
+
+Use `Read-ServiceCapabilities.ps1 -Query Devices` for the separate, bounded,
+read-only `IServiceMediator.get_QueryAllDevice` method (DISPID 63, no arguments,
+BSTR return verified in the installed type library). The default Capabilities mode
+is unchanged. The detailed response identifies our manufacturer/model even where
+our HAL Name is absent. `ContainsProbeName` remains a literal string check only;
+`ProbeIdentityCount` and `ProbeDevices` report the matched inventory entries.
+
+On this PC the old type-0 prototype is present as Type/LightingName `All`, model
+Isolated test destination, manufacturer PulseDeck, one LED, among 15 entries.
+This supersedes the inference that a missing Name meant a missing device. Static
+inspection of LightingService 3.10.12 maps 0x64000 to EXTERNAL_GENERAL. The updated
+prototype uses that type and PulseDeck Virtual Probe as both name and model; its
+SDK test now asserts Type == 409600. No existing device category is impersonated.
+Static's synchronizable flag stays zero; tile eligibility is not established by
+changing it. The running service can retain its old inventory until a new scan.
+
+Installed JSON additionally records deviceType and the last incoming call shape:
+lastEffectMethod 1=SetEffect, 2=SetEffectOptSpeed, 3=SetEffect2,
+4=SetEffectOptSpeed2; lastEffectId/count/variant are raw metadata. Variant is zero
+for pointer-based methods, otherwise the unmodified VARTYPE including flags.
+These are incoming methods on our own destination, never outgoing calls by our
+probe. No color buffer is decoded by the added diagnostics. The installed host
+still returns E_NOTIMPL and cannot claim real colors or successful effect handling.

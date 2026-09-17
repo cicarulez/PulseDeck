@@ -222,14 +222,30 @@ selezionata per entrare in Aura Sync. Lo screenshot mostra sette schede selezion
 nessuna PulseDeck; il pulsante «Cerca dispositivi» appartiene alla sezione Hue.
 Le due callback iniziali non dimostrano quindi la partecipazione alla sincronizzazione.
 
-Prossimo passaggio: verificare il contratto dei metadati necessario alla comparsa e
-alla selezione della scheda. Il prototipo dichiara Static con `synchronizable=0`:
-è un possibile ostacolo da verificare, non una causa dimostrata né una correzione da
-applicare alla cieca. Preparare anche diagnostica delle callback (metodo, effect ID,
-formato e numero degli elementi); dopo la comparsa, far selezionare all'utente solo
-PulseDeck e verificare ricezione passiva e corrispondenza dei colori. Le callback
-attualmente restituiscono E_NOTIMPL nell'host installato; un possibile collegamento
-con la mancata comparsa è ancora un'ipotesi. Non occorre ripetere la
+**Identità nel servizio trovata:** il getter separato `get_QueryAllDevice` restituisce
+15 elementi, incluso produttore PulseDeck/modello Isolated test destination, tipo
+`All` e lightingname `All`. La risposta delle capacità aggrega gruppi/posizioni LED
+e non conserva necessariamente il nome dell'HAL: il precedente controllo per nome
+non provava l'assenza della periferica. La lettura ora riconosce anche la coppia
+produttore/modello e distingue le due risposte.
+
+Il tipo XML iniziale `0` era inadeguato a identificare una periferica concreta.
+La mappa del LightingService installato associa `0x64000` (409600) a
+`EXTERNAL_GENERAL`. La sonda ora usa questo tipo e il modello PulseDeck Virtual
+Probe; l'enumerazione SDK verifica esattamente il nuovo tipo. Il descrittore Static
+mantiene `synchronizable=0`: il servizio ne legge il valore per gli effetti, ma
+l'indagine non ne ha dimostrato il ruolo nella comparsa della scheda. Non dichiarare
+supporto alla sincronizzazione temporizzata senza implementarne il contratto.
+
+Prossimo passaggio: verificare che il servizio rilegga i metadati aggiornati alla
+prossima scansione/avvio normale, quindi controllare comparsa e selezione della
+scheda. Il nuovo rapporto distingue l'ultima callback (metodo, effect ID, numero
+elementi, VARTYPE) senza dereferenziare payload sconosciuti. Dopo la comparsa, far
+selezionare all'utente solo PulseDeck e verificare ricezione passiva e corrispondenza
+dei colori. Le callback restano E_NOTIMPL nell'host installato; non sono ancora un
+ricevitore RGB funzionante. `EXTERNAL_GENERAL` è un candidato verificato nella
+mappa locale, non una garanzia di una scheda supportata da Armoury Crate.
+Non occorre ripetere la
 registrazione o proporre altri riavvii prima di aver preparato questa verifica.
 Non riavviare i servizi ASUS né invocare setter RGB. Il plug-in ASUS Windows Dynamic
 Lighting appartiene all'integrazione ASUS/Windows e non identifica la nostra sonda.

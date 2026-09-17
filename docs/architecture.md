@@ -200,3 +200,12 @@ The temporary SYSTEM test task is removed. A persistent installation conflicts w
 the earlier temporary-class/absence tests: remove it before running those tests.
 No color reception, service acceptance or reboot behavior is established by the
 SYSTEM client test. This prototype still returns E_NOTIMPL for effect callbacks.
+
+The detailed read-only service inventory now uses a separate fixed getter,
+`get_QueryAllDevice`, rather than interpreting absence from the aggregate capability
+XML as device absence. Matching uses our manufacturer/model. The HAL advertises
+EXTERNAL_GENERAL (0x64000), as mapped in the installed service, instead of type 0
+(All). Name and model both identify PulseDeck. Incoming callback diagnostics capture
+only method/effect/count/VARTYPE, not colors, while unsupported callbacks continue
+to fail explicitly. Neither a registered device nor this generic classification
+guarantees an Armoury Crate tile or selection in the user's sync group.

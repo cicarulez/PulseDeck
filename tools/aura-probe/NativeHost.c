@@ -52,7 +52,7 @@ static BOOL scratch_path_valid(const char *path) {
 
 /* Read the running service's inventory only. The supervisor checks it is already
    running and bounds this disposable process. Never call profile/engine setters. */
-static int read_service_capabilities(void) {
+static int read_service_metadata(BOOL devices) {
     const GUID mediator_clsid = {0x95775dc4,0x77aa,0x4e94,{0x8c,0xf6,0x68,0x26,0x7e,0xef,0x18,0x56}};
     IDispatch *service = NULL;
     VARIANT result = {0};
@@ -62,7 +62,8 @@ static int read_service_capabilities(void) {
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (FAILED(hr)) return 3;
     hr = CoCreateInstance(&mediator_clsid, NULL, CLSCTX_LOCAL_SERVER, &IID_IDispatch, (void**)&service);
-    if (SUCCEEDED(hr)) hr = invoke(service, L"get_QueryAllDeviceCap", DISPATCH_METHOD, NULL, &result);
+    if (SUCCEEDED(hr)) hr = invoke(service, devices ? L"get_QueryAllDevice" : L"get_QueryAllDeviceCap",
+                                  DISPATCH_METHOD, NULL, &result);
     if (SUCCEEDED(hr) && result.vt == VT_BSTR && result.bstrVal) {
         UINT length = SysStringLen(result.bstrVal);
         if (length && length <= 1024 * 1024) {
@@ -132,7 +133,8 @@ int main(int argc, char **argv) {
         return RunComServer(argv[2], argv[3], argc == 5 ? argv[4] : "15");
     if (argc == 2 && !strcmp(argv[1], "--remote-contracts")) return CheckRemoteContracts();
     if (argc == 2 && !strcmp(argv[1], "--remote-absent")) return CheckRemoteAbsent();
-    if (argc == 2 && !strcmp(argv[1], "--service-capabilities")) return read_service_capabilities();
+    if (argc == 2 && !strcmp(argv[1], "--service-capabilities")) return read_service_metadata(FALSE);
+    if (argc == 2 && !strcmp(argv[1], "--service-devices")) return read_service_metadata(TRUE);
     if (argc > 1 && !strcmp(argv[1], "--receiver")) return RunReceiver(argc, argv);
     if (argc == 2 && !strcmp(argv[1], "--check-contracts")) return CheckProbeContracts();
     BOOL separate = (argc == 5 || argc == 6) && (!strcmp(argv[4], "separate") || !strcmp(argv[4], "transport-test"));
@@ -161,7 +163,7 @@ int main(int argc, char **argv) {
     int exit_code = 1;
     VARIANT info = {0}, item = {0}, hal = {0}, devices = {0}, index = {0};
     VARIANT count = {0}, guid = {0}, device = {0}, name = {0}, width = {0}, height = {0}, lights = {0};
-    VARIANT effects = {0}, effect = {0}, effect_name = {0}, effect_id = {0}, synchronized = {0};
+    VARIANT effects = {0}, effect = {0}, effect_name = {0}, effect_id = {0}, synchronized = {0}, device_type = {0};
     index.vt = VT_I4;
     index.lVal = 0;
 
@@ -207,6 +209,9 @@ int main(int argc, char **argv) {
             DISPATCH(device);
             GET(device.pdispVal, "Name", &name);
             REQUIRE(name.vt == VT_BSTR && name.bstrVal && !wcscmp(name.bstrVal, PROBE_DEVICE_NAME));
+            GET(device.pdispVal, "Type", &device_type);
+            REQUIRE(device_type.vt == VT_UI4 && device_type.ulVal == PROBE_DEVICE_TYPE);
+            VariantClear(&device_type);
             GET(device.pdispVal, "Width", &width);
             GET(device.pdispVal, "Height", &height);
             REQUIRE(width.vt == VT_UI4 && width.ulVal == 1 && height.vt == VT_UI4 && height.ulVal == 1);
@@ -245,6 +250,7 @@ int main(int argc, char **argv) {
 
 cleanup:
     if (redirected && RegOverridePredefKey(HKEY_CLASSES_ROOT, NULL)) exit_code = 1;
+    VariantClear(&device_type);
     VariantClear(&synchronized); VariantClear(&effect_id); VariantClear(&effect_name);
     VariantClear(&effect); VariantClear(&effects);
     VariantClear(&count); VariantClear(&lights); VariantClear(&height);

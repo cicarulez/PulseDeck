@@ -149,8 +149,12 @@ Windows ne ha verificato l'avvio COM su richiesta come SYSTEM, senza un host gi�
 aperto nella sessione utente. Disinstallazione e reinstallazione sono state provate.
 Dopo il riavvio dell'utente, la sonda si è avviata in sessione 0 e ha registrato
 un'enumerazione del dispositivo e due richieste di effetto, prima dei nostri test.
-L'utente non vede ancora PulseDeck in Aura Sync e il servizio non ne restituisce
-il nome nelle capacità. Le richieste sono contate ma non ancora gestite:
+L'utente non vede ancora PulseDeck in Aura Sync. Una successiva lettura dell'elenco
+dettagliato ha però trovato il dispositivo con produttore PulseDeck, classificato
+come `All`: l'assenza del nome nelle capacità non significava assenza dal servizio.
+La sonda ora dichiara il tipo esterno generico `EXTERNAL_GENERAL` e usa il nome
+PulseDeck anche come modello; la comparsa della scheda resta da verificare.
+Le richieste sono contate ma non ancora gestite:
 non sono disponibili colori Aura e l'agent rimane invariato.
 
 ## Avvio automatico senza finestre

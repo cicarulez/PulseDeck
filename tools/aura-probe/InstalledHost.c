@@ -19,10 +19,13 @@ static void Report(const wchar_t *path, const char *state, HRESULT hr) {
         "\"utc\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\",\"pid\":%lu,\"session\":%lu,"
         "\"hresult\":\"0x%08lx\",\"activations\":%ld,\"enumerations\":%ld,"
         "\"capabilities\":%ld,\"effectRequests\":%ld,\"syncRequests\":%ld,"
-        "\"halRefs\":%ld,\"deviceRefs\":%ld,\"factoryRefs\":%ld}", state,
+        "\"halRefs\":%ld,\"deviceRefs\":%ld,\"factoryRefs\":%ld,"
+        "\"deviceType\":%lu,\"lastEffectMethod\":%ld,\"lastEffectId\":%lu,"
+        "\"lastEffectCount\":%lu,\"lastEffectVariant\":%lu}", state,
         utc.wYear, utc.wMonth, utc.wDay, utc.wHour, utc.wMinute, utc.wSecond,
         GetCurrentProcessId(), session, hr, s.activations, s.enumerations,
-        s.capabilities, s.effect_requests, s.sync_requests, s.hal_refs, s.device_refs, s.factory_refs);
+        s.capabilities, s.effect_requests, s.sync_requests, s.hal_refs, s.device_refs, s.factory_refs,
+        PROBE_DEVICE_TYPE, s.last_effect_method, s.last_effect_id, s.last_effect_count, s.last_effect_variant);
     fclose(file);
     MoveFileExW(temporary, path, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
 }
