@@ -42,6 +42,14 @@ public sealed record HardwareSnapshot(IReadOnlyList<Metric> Metrics, string Stat
 public sealed record MediaSnapshot(bool Playing, string Title, string Artist, string App, double PositionSeconds, double DurationSeconds, string Status);
 public sealed record VoiceMember(string Id, string Name, bool Mute, bool Deaf);
 public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMember? Tracked, string Status, string? Detail = null);
-public sealed record DisplaySnapshot(bool Connected, string Port, string? DeviceId, string Status, string? Error = null);
+public sealed record DisplaySnapshot(bool Connected, string Port, string? DeviceId, string Status, string? Error = null)
+{
+    public int RecoveryAttempts { get; init; }
+    public int Recoveries { get; init; }
+    public long AcknowledgedFrames { get; init; }
+    public string? LastTransportError { get; init; }
+    public DateTimeOffset? LastAcknowledgedAt { get; init; }
+    public bool UserDisconnected { get; init; }
+}
 public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string ForegroundApp, HardwareSnapshot Hardware,
     MediaSnapshot Media, DiscordSnapshot Discord, DisplaySnapshot Display, string FpsStatus = "not-configured");

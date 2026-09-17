@@ -1,5 +1,56 @@
 # Validation — updated 2026-09-17
 
+## Bounded USB recovery — 2026-09-17 (0.1.1)
+
+- Initial repository clean at `bd40513`. Installed agent running hidden/elevated in
+  interactive session 1, COM5 identified as `chs_88inch.dev1_rom1.90`; no TURZX
+  process, legacy task disabled. The old build timed out during preparation;
+  explicit connection restored output. Existing configuration/credentials preserved.
+- 45 Core tests passed (27 existing plus 18 recovery cases). Deterministic fake
+  transport/clock checks cover read/write timeouts, full-frame resend of the latest
+  pixels, resumption of partial frames, invalid acknowledgements, failed reopen or
+  enumeration, two-attempt exhaustion, intermittent failures, renewal only after
+  60 acknowledged frames, and cancellation during backoff/reopen/transfer. Existing
+  full-frame and shutdown packet regression tests remain unchanged.
+- Self-contained Windows Release publish and Angular production build passed.
+  SDK 10.0.401 and Node 24.15.0 used; PowerShell launcher parser check passed.
+- Windows deployment stopped the agent and waited for both process and launcher
+  exit before replacing files. App, configuration, encrypted credentials and task
+  XML backed up under `%LOCALAPPDATA%\PulseDeck`, outside Git. The existing startup
+  task was reused, with no task replacement. Configuration and credential SHA-256
+  values matched before/after (values and credentials are not included here).
+- Actual manual disconnection remained idle for 12 seconds: no new acknowledged
+  frames; `connect?startup=true` returned 409 and did not reopen the port. Explicit
+  connection then restored output. One hidden elevated agent, PawnIO available,
+  616 sensor/parameter entries at this check, media and embedded Discord connected.
+- Installed UI/preview checked at 1500x1000 and 390x844: no horizontal overflow,
+  preview 1920x480, no page runtime errors. Recovery presentation additionally
+  checked with an isolated browser API/WebSocket mock: **Scollega display** remained
+  enabled and sent disconnect. The mock was confined to that test browser context;
+  no simulated readings or fault-injection endpoints were added to the agent.
+- **Real USB timeout recovered:** at 10:30 local time, the new agent timed out after
+  80 acknowledged frames, entered `recovering`, reopened/revalidated COM5 and
+  acknowledged a full frame on retry 1 (`recoveries=1`, frame 81). Subsequent live
+  partial updates continued without an explicit connection command. API and agent
+  logs agree; the retry budget reset after 60 further consecutive confirmations,
+  with updates observed through frame 187. This is actual hardware recovery
+  evidence, not an injected timeout.
+- Final deployment also exercised normal stop: screen-off logged, old process and
+  launcher exited, COM5 disappeared and only the identified standby COM3 remained.
+  The reused hidden startup task opened standby COM3 and restored COM5; first frame
+  confirmed at 10:32:56, about 23 seconds after agent startup. Final installed Core
+  DLL matches the tested publish. Both deployment backups remain outside Git.
+- Physical image correctness after recovery has not yet been visually confirmed
+  by the user in this session. USB acknowledgements and preview checks are separate
+  evidence. Synthetic Windows session-end messages were not repeated for 0.1.1;
+  their previous validation is recorded below. Shutdown while the port is already
+  lost cannot send screen-off: recovery deliberately does not reopen during shutdown.
+- `needReSend:1`, persistent failure exhaustion and cancellation during a recovery
+  operation are covered by simulated transport tests; they have not yet all been
+  observed on the physical device with this build. Physical cable unplug/replug,
+  suspend/resume and actual Windows shutdown/logoff remain outstanding. No PC
+  shutdown/restart, firmware change, ASUS control or TURZX launch was performed.
+
 ## Automated
 
 - Windows agent Release build and self-contained win-x64 publish succeeded.

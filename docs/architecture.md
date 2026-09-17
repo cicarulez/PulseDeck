@@ -12,8 +12,30 @@ the browser and passed to `TurzxDisplay` for USB serial output. Angular edits
 settings and displays that PNG; it does not duplicate the theme rendering rules.
 The native adapter validates VID/PID and the device ID, initializes the display
 without writing startup options, sends an initial full frame, and computes the
-bounding rectangle of subsequent pixel changes. Transport errors release the
-port and require an explicit reconnect.
+bounding rectangle of subsequent pixel changes. `TurzxFrameDelivery` owns the
+acknowledged frame baseline and bounded recovery policy in portable Core code.
+A complete `needReSend:1` reply invalidates that baseline and schedules a full frame
+on the open port. Timeouts, malformed replies and I/O failures close the port;
+recovery revalidates VID/PID and the original HELLO identity before reinitializing.
+Recovery never wakes standby devices. Explicit connection retains the wake path.
+
+Retries use monotonic time on later render ticks (at least 2 then 5 seconds), using
+the newest pixels, with no sleeping retry loop or frame queue. Two attempts are
+allowed until 60 consecutive acknowledged frames restore the budget. One successful
+recovery cannot create an endless intermittent-error loop. Exhaustion releases the
+port and requires explicit connection. A failed frame is never a partial-update base.
+The existing 2-second read and 10-second write limits still apply per operation;
+backoff does not impose an overall operation deadline or isolate the render loop.
+
+The Windows adapter serializes connection, delivery and shutdown. A generation
+change invalidates in-flight delivery when an explicit connect/disconnect arrives;
+shutdown sets its stop flag before waiting for the USB lock. Cancellation is checked
+between operations; an already running serial call retains its timeout. There is no
+background recovery task to resurrect a disconnected/stopping device. The startup
+launcher uses `connect?startup=true`, which respects manual disconnection and active
+recovery. Diagnostic counters and the last acknowledgement/error are additive API
+fields; the configuration schema remains unchanged. Angular's display controls
+show recovery status and keep Disconnect available while recovery is pending.
 
 `WindowsSessionLifetime` owns an invisible top-level Win32 window on a dedicated
 message thread. It accepts `WM_QUERYENDSESSION` immediately and acts only on
@@ -73,7 +95,7 @@ contains the integration mode and tracked user, never the token.
 2. Discord speaking proof: test a bot voice connection in the target server;
    keep unsupported/offline activity separate from silence and mute.
 3. Album artwork and media-driven theme variations.
-4. Tray lifecycle and explicit recovery after a later device disconnection.
+4. Tray lifecycle and physical unplug/replug and suspend/resume validation of bounded USB recovery.
 5. Extend the fixed-slot sensor editor to per-display themes and layouts. Add video only after throughput
    and CPU/GPU overhead measurements on the actual display.
 

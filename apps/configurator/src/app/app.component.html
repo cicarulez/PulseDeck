@@ -11,7 +11,7 @@
     @if (deck.error()) { <div class="notice notice--error" role="alert">{{ deck.error() }}</div> }
     @if (saved()) { <div class="notice" role="status">Configurazione salvata.</div> }
     @if (tab() === 'overview') {
-      <section class="panel preview-panel"><div class="panel-heading"><div><span class="eyebrow">LIVE CANVAS</span><h2>Recon <span>/ 1920 × 480</span></h2></div><div class="display-actions"><pd-status [label]="deck.state()?.display?.connected ? 'Output USB attivo' : 'Solo anteprima'" [active]="deck.state()?.display?.connected ?? false" /><button class="button" [disabled]="!deck.connected() || deck.busy()" (click)="deck.display(deck.state()?.display?.connected ? 'disconnect' : 'connect')">{{ deck.busy() ? 'Attendi…' : deck.state()?.display?.connected ? 'Scollega display' : 'Collega display' }}</button></div></div>
+      <section class="panel preview-panel"><div class="panel-heading"><div><span class="eyebrow">LIVE CANVAS</span><h2>Recon <span>/ 1920 × 480</span></h2></div><pd-display-controls [display]="deck.state()?.display ?? null" [online]="deck.connected()" [busy]="deck.busy()" (action)="deck.display($event)" /></div>
         <div class="screen">@if (deck.state() && deck.connected()) { <img [src]="preview()" alt="Anteprima live del pannello PulseDeck" width="1920" height="480"> } @else { <div class="screen-empty"><span>◫</span>Il tuo pannello apparirà qui quando l’agent sarà pronto.</div> }</div>
         <div class="preview-footer"><span>L’anteprima usa lo stesso rendering inviato al display.</span><span>Chiudi TURZX prima di collegare.</span></div>
       </section>
@@ -30,6 +30,6 @@
     } @else {
       @if (deck.config(); as config) { <pd-settings [config]="config" [busy]="deck.busy()" (save)="save($event)" /> }
     }
-    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.1 · Windows</span></footer>
+    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.1.1 · Windows</span></footer>
   </main>
 </div>

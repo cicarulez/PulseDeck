@@ -21,6 +21,7 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
 - Profili Desktop, Gaming e Musica; selezione manuale o automatica con ritardo configurabile.
 - Bot Discord integrato: partecipanti del canale, mute/deaf e utente da evidenziare.
 - Collegamento TURZX con verifica dell'identità e aggiornamenti completi/parziali.
+- Recupero USB limitato per timeout e `needReSend:1`, con reinvio completo e diagnostica.
 - Avvio nascosto all'accesso Windows, con permessi amministrativi e log su file.
 - Comando di spegnimento del TURZX all'arresto di PulseDeck e alla fine della sessione Windows.
 
@@ -90,6 +91,22 @@ alla porta attiva configurata, COM5. Non occorre impostare COM3 nel configurator
 Il risveglio può richiedere alcuni secondi e un tentativo aggiuntivo: l'avvio
 automatico gestisce i tentativi; dalla pagina usa di nuovo **Collega display** se
 compare ancora il messaggio di risveglio.
+
+In caso di `needReSend:1`, PulseDeck scarta la base degli aggiornamenti parziali e
+ritenta con il fotogramma completo più recente. Dopo un timeout o una risposta
+non valida, chiude la porta e verifica nuovamente VID/PID e identità prima del reinvio.
+Sono consentiti **due tentativi**, con attese minime di 2 e 5 secondi sui successivi
+aggiornamenti del renderer; nessuna coda di fotogrammi. Il budget si rinnova solo dopo
+60 fotogrammi consecutivi confermati. Esauriti i tentativi, usa **Collega display**.
+Il recupero automatico non risveglia dispositivi in standby. **Scollega display**
+annulla anche i tentativi pendenti e quelli del launcher di avvio; l'arresto li blocca.
+
+`GET /api/display` espone `status` (`recovering` durante il recupero),
+`recoveryAttempts`, `recoveries`, `acknowledgedFrames`, `lastAcknowledgedAt` e
+`lastTransportError`. Questi contatori valgono dalla connessione esplicita più recente;
+`recoveryAttempts` è il budget consumato, azzerato dopo 60 conferme consecutive.
+Gli esiti sono anche nel log dell'agent. Le conferme USB non sostituiscono una verifica
+visiva del pannello; vedi [validazione](docs/validation.md).
 
 ## Scegliere i widget
 

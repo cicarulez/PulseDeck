@@ -14,6 +14,8 @@ nella sessione Windows dell'utente, senza console aperta.
 
 - Agent C#/.NET 10, configuratore Angular 22, rendering unico con SkiaSharp.
 - Trasporto TURZX verificato sul dispositivo, aggiornamenti completi e parziali.
+- Recupero USB limitato: due tentativi con frame completo, identità verificata alla
+  riapertura e cancellazione per disconnessione volontaria/arresto; diagnostica API/log.
 - Inventario con 617 sensori/parametri rilevati su questo PC; ricerca e filtri.
 - Selezione dei sensori nelle otto posizioni del layout, etichette, scale e visibilità;
   configurazione persistente e valori originali per le configurazioni precedenti.
@@ -31,6 +33,7 @@ nella sessione Windows dell'utente, senza console aperta.
 | Priorità | Attività | Risultato atteso | Verifica per considerarla conclusa |
 | --- | --- | --- | --- |
 | P0 | Prove della base | Avvio quotidiano affidabile | Accesso Windows reale, arresto volontario, Spotify, display; ingresso/uscita e mute/deaf con partecipanti Discord |
+| P0 | Affidabilità USB | Recupero limitato implementato; completare prove fisiche | Errori reali, scollegamento/ricollegamento USB, sospensione/ripresa e immagine corretta dopo recupero |
 | P1 | Ricerca di una sorgente Aura in lettura | Superare l'esito negativo della prima prova SDK | Colori dell'effetto ASUS osservabili senza acquisire il controllo né alterare i LED |
 | P1 | Architettura per più display | Uno stato condiviso, schermi indipendenti | Due configurazioni con dimensioni, driver e contenuti separati; errore USB isolato per dispositivo |
 | P2 | Layout oltre le otto posizioni disponibili | Disporre anche musica e Discord per display/profilo | Configurazione persistente e composizione leggibile alle dimensioni di ogni schermo |
@@ -41,11 +44,16 @@ nella sessione Windows dell'utente, senza console aperta.
 | P3 | Regole contestuali avanzate | Widget/profili diversi per app attiva | Priorità esplicite e nessun cambio continuo durante Alt-Tab |
 | P3 | Gestione quotidiana | Icona nella tray, recupero del display e aggiornamenti | Uscita senza processi residui, scollegamento USB, sospensione/ripresa, ripristino del colore |
 
-Durante la prova widget è stato osservato un `needReSend:1` dal display: il trasporto
-attuale passa in errore e richiede **Collega display**. La riconnessione esplicita ha
-ripristinato gli aggiornamenti. Aggiungere un recupero limitato del fotogramma completo,
-con test del protocollo, senza trasformare una disconnessione volontaria in un ciclo
-di riconnessione automatica.
+Il `needReSend:1` osservato durante la prova widget è ora gestito reinviando il
+fotogramma completo più recente; i timeout richiedono riapertura e nuova verifica
+dell'identità. Due tentativi, dopo almeno 2 e 5 secondi, poi **Collega display**.
+Il budget si rinnova dopo 60 frame consecutivi confermati, non dopo un singolo
+successo. Disconnessione volontaria e arresto annullano il recupero; nessun risveglio
+automatico in questa fase. Test con trasporto simulato coprono fallimenti e cancellazione;
+le evidenze Windows e i limiti delle prove fisiche sono in `docs/validation.md`.
+La 0.1.1 installata ha recuperato autonomamente un timeout reale al primo tentativo;
+verificati anche arresto dell'agent e risveglio COM3 → COM5. Restano il controllo
+visivo dopo recupero, una richiesta di reinvio reale e le prove di cavo/sospensione.
 
 La prova Aura precede il lavoro grafico esteso: evita di progettare un tema attorno
 a una sorgente di colore che potrebbe non essere leggibile.
@@ -224,7 +232,8 @@ Non dedurre la voce attiva da mute=false. In caso di incompatibilità mostrare
 ## Come riprendere
 
 Leggere `AGENTS.md` e `docs/validation.md`, verificare che non ci siano modifiche
-locali da sovrascrivere, poi scegliere tra architettura multi-display e ricerca di
-una sorgente Aura passiva alternativa, tenendo conto dell'esito SDK sopra. Aggiornare
+locali da sovrascrivere, poi completare le prove fisiche USB e proseguire con
+l'architettura multi-display, FPS/Discord e temi/regole. La ricerca di una sorgente
+Aura passiva resta isolata dall'agent, tenendo conto dell'esito SDK sopra. Aggiornare
 questo piano con risultati e limiti osservati. Ogni incremento deve lasciare il
 pannello utilizzabile e avere un commit semantico con la validazione pertinente.

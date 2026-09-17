@@ -34,8 +34,9 @@ try {
     for ($attempt = 0; $attempt -lt 24; $attempt++) {
         try {
             $display = Invoke-RestMethod "$baseUrl/api/display" -TimeoutSec 5
+            if ($display.userDisconnected) { Write-StartupLog 'Display deliberately disconnected; cancelling startup connection attempts.'; break }
             if (-not $display.connected) {
-                $display = Invoke-RestMethod "$baseUrl/api/display/connect" -Method Post `
+                $display = Invoke-RestMethod "$baseUrl/api/display/connect?startup=true" -Method Post `
                     -Headers @{ 'X-PulseDeck-Client' = 'configurator' } -TimeoutSec 20
             }
             if ($display.connected) { $connected = $true; Write-StartupLog 'Display connected.'; break }

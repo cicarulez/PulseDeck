@@ -6,8 +6,9 @@ import { SettingsComponent } from './settings/settings.component';
 import { SensorsComponent } from './sensors/sensors.component';
 import { WidgetsComponent } from './widgets/widgets.component';
 import { DeckConfig } from './models';
+import { DisplayControlsComponent } from './display/display-controls.component';
 
-@Component({ selector: 'pd-root', standalone: true, imports: [StatusBadgeComponent, MetricCardComponent, SettingsComponent, SensorsComponent, WidgetsComponent], templateUrl: './app.component.html', styleUrl: './app.component.scss' })
+@Component({ selector: 'pd-root', standalone: true, imports: [StatusBadgeComponent, MetricCardComponent, SettingsComponent, SensorsComponent, WidgetsComponent, DisplayControlsComponent], templateUrl: './app.component.html', styleUrl: './app.component.scss' })
 export class AppComponent {
   readonly deck = inject(DeckService);
   readonly tab = signal<'overview' | 'sensors' | 'widgets' | 'settings'>('overview');

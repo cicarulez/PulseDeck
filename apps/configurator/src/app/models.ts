@@ -10,7 +10,11 @@ export interface Metric { id: string; label: string; value: number | null; unit:
 export interface SensorReading { id: string; name: string; hardwareId: string; hardwareName: string; hardwareType: string; sensorType: string; value: number | null; minimum: number | null; maximum: number | null; unit: string; }
 export interface HardwareState { metrics: Metric[]; sensors: SensorReading[]; status: string; detail: string | null; isAdministrator: boolean; pawnIoInstalled: boolean; }
 export interface VoiceMember { id: string; name: string; mute: boolean; deaf: boolean; }
-export interface DisplayState { connected: boolean; port: string; deviceId: string | null; status: string; error: string | null; }
+export interface DisplayState {
+  connected: boolean; port: string; deviceId: string | null; status: string; error: string | null;
+  recoveryAttempts: number; recoveries: number; acknowledgedFrames: number;
+  lastAcknowledgedAt: string | null; lastTransportError: string | null; userDisconnected: boolean;
+}
 export interface DeckState {
   timestamp: string; profile: string; foregroundApp: string;
   hardware: HardwareState;

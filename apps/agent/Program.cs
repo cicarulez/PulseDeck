@@ -36,7 +36,7 @@ app.Use(async (context, next) =>
 });
 app.UseDefaultFiles();
 app.UseStaticFiles();
-app.MapGet("/api/health", () => new { ok = true, app = "PulseDeck", version = "0.1.0" });
+app.MapGet("/api/health", () => new { ok = true, app = "PulseDeck", version = typeof(DeckRuntime).Assembly.GetName().Version?.ToString(3) });
 app.MapGet("/api/state", (DeckRuntime runtime) => runtime.State);
 app.MapGet("/api/widget-slots", () => new { slots = WidgetCatalog.Slots, defaults = WidgetCatalog.Defaults() });
 app.MapGet("/api/sensors", (DeckRuntime runtime) => runtime.State.Hardware);
@@ -50,9 +50,9 @@ app.MapPut("/api/config", (DeckConfig config, ConfigStore store) =>
 app.MapGet("/api/preview.png", (DeckRuntime runtime) => runtime.Preview is { } png ? Results.File(png, "image/png") : Results.StatusCode(503));
 app.MapGet("/api/display", (TurzxDisplay display) => display.Status);
 app.MapGet("/api/display/ports", TurzxDisplay.Ports);
-app.MapPost("/api/display/connect", (ConfigStore store, TurzxDisplay display) =>
+app.MapPost("/api/display/connect", (ConfigStore store, TurzxDisplay display, bool? startup) =>
 {
-    var result = display.Connect(store.Current.DisplayPort);
+    var result = display.Connect(store.Current.DisplayPort, startup == true);
     return result.Connected ? Results.Ok(result) : Results.Conflict(result);
 });
 app.MapPost("/api/display/disconnect", (TurzxDisplay display) => { display.Disconnect(); return Results.Ok(display.Status); });
