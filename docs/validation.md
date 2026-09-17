@@ -202,6 +202,39 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   another timeout recovered within budget, with acknowledged frames progressing.
   No new physical-panel confirmation was requested during Aura work.
 
+## Aura native virtual-device enumeration — 2026-09-17
+
+- Replaced the disposable managed host/HAL with our own native C x86 executable,
+  cross-built with MinGW-w64 GCC 13.2.0 (`-Wall -Wextra -Werror`). No vendor code or
+  binaries copied into the repository; build output and diagnostics remain local.
+- Keeping an extra COM reference did not resolve the old crash. A native HAL
+  called from the managed host still crashed; the fully native host/HAL passed.
+  This avoids the failing managed path, without establishing its exact root cause.
+- **Actual SDK device enumeration passed:** three consecutive `EumerateDevices`
+  calls returned exactly one `PulseDeck Virtual Probe`, width/height 1x1 and one
+  LED. Native callbacks recorded one factory activation, six enumeration calls
+  (count/data phases) and three capability reads. All names, counts, dimensions,
+  expected GUID and variant types are asserted by the executable.
+- Empty HAL case passed: three enumerations, zero devices, zero capability reads.
+  Neither case requested an effect or synchronization callback. No RGB getter,
+  setter, Apply or SwitchMode invoked; the virtual device advertises no effects.
+- Reference lifetime remains a limitation: after releasing SDK objects and
+  uninitializing COM, the one-device case reported HAL=5/device=4/factory=1; empty
+  case 2/1/1. Each singleton retains one intentional root reference. These counts
+  are reported, not hidden by extra Release calls. Each probe process fully exits;
+  this is not evidence that a persistent host has bounded resource use.
+- Supervisor failure tests used a separate local fixture: child exit 7 and a
+  one-second timeout both reported failure and left no child or private registry
+  key. The native executable rejected `Software\ASUS` as a scratch path with exit
+  2. Final checks found zero probe processes and zero scratch-key children.
+- Existing LightingService and ArmouryCrateService stayed Running with unchanged
+  PIDs. Configurator HTTP 200; display connected on the existing agent 0.1.1, with
+  acknowledged frames advancing from 1957 to 2687 during this work. No deployment,
+  display reconnect, ASUS setting change or service restart was needed.
+- **Still unverified:** registration/discovery in the live ASUS service, appearance
+  in Armoury Crate, actual color reception, dynamic effects and physical LED color
+  matching. No user action in Armoury Crate is required for this isolated milestone.
+
 ## Windows shutdown and display power — 2026-09-17
 
 - Root cause: the runtime only released the serial port at exit, and the hidden

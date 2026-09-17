@@ -127,13 +127,21 @@ tramite `EumerateHalInfo` e carica il modulo tramite `CreateHal`: prova superata
 senza hardware aggiuntivo, privilegi amministrativi o registrazione nel sistema.
 Questo verifica il primo livello software, non la comparsa tra i dispositivi Aura.
 
-Il passo `EumerateDevices` provoca invece `0xC0000005` nella sonda .NET Framework,
-prima della callback del nostro HAL; Windows segnala `clr.dll`. Causa ancora da
-determinare. La prova predefinita si ferma al caricamento; la riproduzione del crash
-è esplicita e resta in un processo figlio con timeout e pulizia della chiave privata.
-Non caricare questo prototipo nel servizio ASUS. Prossimo passo: risolvere il confine
-COM nell'host isolato, valutando un host nativo; poi esporre un vero destinatario
-virtuale di colori e verificare un percorso di rilevamento nel servizio attivo.
+**Proseguimento della prova:** host e HAL nativi x86 hanno superato quel limite:
+`EumerateDevices` restituisce **PulseDeck Virtual Probe**, dispositivo 1×1 con un
+LED virtuale. Verificati nome, dimensioni e numero di LED in tre enumerazioni
+consecutive, più il caso di HAL senza dispositivi. Nessuna richiesta di effetto
+colore o sincronizzazione ricevuta; il prototipo non dichiara effetti supportati.
+Il crash `0xC0000005` resta riproducibile nel vecchio host .NET anche con HAL nativo:
+il percorso interamente nativo lo evita, senza stabilire la causa esatta.
+
+Dopo il rilascio delle collezioni restano riferimenti COM aperti (HAL=5, dispositivo=4
+alla terza enumerazione, inclusa una radice intenzionale ciascuno). Il processo breve
+ne limita la durata; non forzare rilasci aggiuntivi né considerare verificato un host
+continuativo. Prossimo passo: chiarire la proprietà dei riferimenti e verificare un
+ricevitore in processo separato, poi il rilevamento nel servizio Aura attivo. La sonda
+ha timeout, controlli espliciti e pulizia della chiave privata; non viene installata
+nel servizio ASUS o nell'agent.
 
 Il modulo GmAcc installato include già una modalità virtuale, ma usa il canale
 locale 11000 occupato da Aura Wallpaper e quel ramo precede quello Wallpaper.

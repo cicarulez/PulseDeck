@@ -129,9 +129,10 @@ La sincronizzazione non è quindi attiva: il colore resta quello manuale scelto
 in **Configurazione**. Dettagli e prossimi passi nel [piano](docs/roadmap.md#aura-sync-il-pannello-segue-il-pc).
 
 Una [sonda HAL separata](tools/aura-probe/README.md) ha verificato che l'SDK scopre
-e carica il nostro modulo software in un processo isolato. L'enumerazione dei
-dispositivi termina però la sonda: nessun dispositivo PulseDeck è stato aggiunto
-ad Armoury Crate e nessun colore Aura viene ancora ricevuto.
+e carica il nostro modulo software in un processo isolato. Con un host nativo x86
+l'SDK enumera anche **PulseDeck Virtual Probe**, un dispositivo virtuale 1×1 con
+un LED, superando il crash della sonda .NET. La comparsa in Armoury Crate e la
+ricezione dei colori Aura restano da verificare; nessun provider è attivo nell'agent.
 
 ## Avvio automatico senza finestre
 

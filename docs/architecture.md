@@ -118,6 +118,12 @@ and constrains labels to the slot width. Music and Discord keep their fixed area
 
 Aura SDK passive sampling has not produced trustworthy live colors on the tested
 installation. It remains outside the runtime; see the evidence in the roadmap.
+The Aura experiment now hosts the SDK and a minimal virtual HAL in a disposable
+native x86 process. It validates discovery and device metadata using a process-local
+registry view; it does not register a device with the running ASUS service. The
+PowerShell parent enforces a deadline and removes its private registry tree. SDK
+references retained after enumeration are reported and contained by process exit;
+live RGB reception and a continuous receiver remain unverified.
 
 ## Windows startup
 
