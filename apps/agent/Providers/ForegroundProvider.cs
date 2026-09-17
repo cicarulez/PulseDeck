@@ -6,7 +6,7 @@ using PulseDeck.Core;
 
 namespace PulseDeck.Agent.Providers;
 
-public sealed class ForegroundProvider
+public sealed class ForegroundProvider(InstalledGameCatalog catalog)
 {
     private sealed record Entry(string Name, ApplicationIcon? Icon, DateTimeOffset Expires);
     private readonly Dictionary<string, Entry> cache = new(StringComparer.OrdinalIgnoreCase);
@@ -26,7 +26,10 @@ public sealed class ForegroundProvider
             var snapshot = new ForegroundSnapshot((int)id, name, name, ProfileSelector.IsGame(config, name), null, "unavailable");
             try
             {
-                var path = process.MainModule?.FileName;
+                string? path = null;
+                try { path = process.MainModule?.FileName; } catch { }
+                var installed = snapshot.IsGame ? catalog.Find(name, path) : null;
+                path ??= installed?.Executable;
                 if (string.IsNullOrEmpty(path) || path.StartsWith(@"\\", StringComparison.Ordinal)) return snapshot;
                 if (!cache.TryGetValue(path, out var entry) || entry.Expires <= DateTimeOffset.UtcNow)
                 {
@@ -35,7 +38,7 @@ public sealed class ForegroundProvider
                     cache[path] = entry;
                 }
                 Icon = entry.Icon;
-                return snapshot with { DisplayName = entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
+                return snapshot with { DisplayName = installed?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
             }
             catch { return snapshot; } // Restricted processes still keep their actual process name.
         }

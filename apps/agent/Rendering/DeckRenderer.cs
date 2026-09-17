@@ -12,6 +12,7 @@ public sealed class DeckRenderer : IDisposable
     private readonly SKTypeface typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
     private readonly SKTypeface bold = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
     private readonly StaticBackground backgrounds = new();
+    private readonly StaticBackground gameArtwork = new();
     public string BackgroundStatus => backgrounds.Status;
     public int BackgroundFrameCount => backgrounds.Count;
     private SKBitmap? cover;
@@ -190,23 +191,66 @@ public sealed class DeckRenderer : IDisposable
                 if (state.Discord.Members.Count > 3) Text($"+{state.Discord.Members.Count - 3} partecipanti", x, y + 114, 13, muted);
             }
         }
-        void GameSummary()
+        void GamingDiscord()
+        {
+            Text("DISCORD", 48, 113, 18, accent, true);
+            var online = state.Discord.Status == "connected";
+            if (!online) { Text("Discord non collegato", 48, 166, 21, muted, maxWidth: 300); return; }
+            var members = state.Discord.Members.OrderByDescending(m => state.Discord.SpeakingStatus == "connected" && m.Speaking == true)
+                .ThenByDescending(m => m.Id == config.TrackedMemberId).ThenBy(m => m.Name).ToArray();
+            Text($"{members.Length} partecipanti", 48, 139, 16, muted);
+            const int capacity = 8;
+            var pages = Math.Max(1, (members.Length + capacity - 1) / capacity);
+            var page = (int)(state.Timestamp.ToUnixTimeSeconds() / 8 % pages);
+            var visible = members.Skip(page * capacity).Take(capacity).ToArray();
+            if (members.Length == 0) Text("Nessun partecipante", 48, 183, 20, muted, maxWidth: 300);
+            for (var i = 0; i < visible.Length; i++)
+            {
+                var member = visible[i]; var y = 171 + i * 30;
+                var speaking = state.Discord.SpeakingStatus == "connected" && member.Speaking == true && !member.Mute && !member.Deaf;
+                if (speaking)
+                {
+                    using var highlight = new SKPaint { Color = accent.WithAlpha(40), IsAntialias = true };
+                    canvas.DrawRoundRect(SKRect.Create(42, y - 22, 312, 28), 5, 5, highlight);
+                    canvas.DrawCircle(51, y - 7, 4, accentPaint);
+                }
+                Text(member.Name, 62, y, 20, speaking ? accent : SKColors.White, speaking, maxWidth: 205);
+                Text(member.Deaf ? "DEAF" : member.Mute ? "MUTO" : speaking ? "VOCE" : "", 277, y, 13, speaking ? accent : muted, maxWidth: 70);
+            }
+            Text(state.Discord.SpeakingStatus == "connected" ? "Attività vocale collegata"
+                : state.Discord.SpeakingStatus == "connecting" ? "Collegamento voce…" : "Attività vocale non disponibile", 48, 422, 14, muted, maxWidth: 300);
+            if (pages > 1) Text($"{page + 1}/{pages}", 296, 139, 14, muted, maxWidth: 50);
+        }
+        void GamePanel(float x, float width)
         {
             var game = state.Game;
-            Text("GAMING", 48, 113, 15, accent, true);
-            if (gameIcon is not null) canvas.DrawBitmap(gameIcon, SKRect.Create(48, 132, 64, 64));
-            Text(game is null ? "Nessun gioco" : game.DisplayName, 48, 232, 25, heavy: true, maxWidth: 300);
-            Text(game is null ? "in primo piano" : game.ProcessName, 48, 260, 16, muted, maxWidth: 300);
-            Text(game is null ? config.ProfileMode == "gaming" ? "Profilo Gaming manuale" : "Identità gioco non disponibile" : state.Foreground.IsGame ? "GIOCO IN PRIMO PIANO" : "CAMBIO PROFILO IN ATTESA",
-                48, 284, 12, muted, maxWidth: 300);
-            canvas.DrawLine(48, 302, 348, 302, line);
-            var gpu = state.Hardware.Status == "connected"
-                ? state.Hardware.Sensors.FirstOrDefault(s => s.HardwareType.StartsWith("Gpu", StringComparison.Ordinal)) : null;
-            var nvidia = gpu?.HardwareType == "GpuNvidia";
-            Text(nvidia ? "NVIDIA" : "GPU", 48, 332, 22, nvidia ? new SKColor(118, 185, 0) : accent, true);
-            Text(gpu?.HardwareName ?? "GPU non disponibile", 48, 359, 16, muted, maxWidth: 300);
-            Text("FPS  —", 48, 402, 27, heavy: true);
-            Text("PresentMon non ancora integrato", 48, 427, 13, muted, maxWidth: 300);
+            var theme = GameTheme.BackgroundFor(state, config);
+            var explicitTheme = theme != config.BackgroundPath ? theme : "";
+            var picture = gameArtwork.Get(explicitTheme.Length > 0 ? explicitTheme : state.GameArtwork.Path ?? "");
+            var bounds = SKRect.Create(x + 12, 98, width - 24, 173);
+            canvas.Save(); canvas.ClipRect(bounds);
+            if (picture is not null)
+            {
+                var scale = Math.Min(bounds.Width / picture.Width, bounds.Height / picture.Height);
+                canvas.DrawBitmap(picture, SKRect.Create(bounds.MidX - picture.Width * scale / 2,
+                    bounds.MidY - picture.Height * scale / 2, picture.Width * scale, picture.Height * scale));
+            }
+            else
+            {
+                if (gameIcon is not null) canvas.DrawBitmap(gameIcon, SKRect.Create(bounds.MidX - 40, 112, 80, 80));
+                Text(state.GameArtwork.Status == "loading" ? "Recupero copertina…" : "Copertina non disponibile", x + 24, 248, 18, muted, maxWidth: width - 48);
+            }
+            canvas.Restore();
+            Text(game?.DisplayName ?? "Nessun gioco in primo piano", x + 14, 306, 27, heavy: true, maxWidth: width - 28, minimumSize: 20);
+            var duration = state.GameSession is { } session ? TimeSpan.FromSeconds(session.ElapsedSeconds) : (TimeSpan?)null;
+            var time = duration is { } elapsed ? $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}" : "—";
+            Text("SESSIONE", x + 14, 337, 14, muted);
+            Text(time, x + 14, 374, 30, heavy: true);
+            var fps = state.Fps;
+            Text("FPS APP", x + width / 2, 337, 14, muted);
+            Text(fps.Status == "connected" && fps.FramesPerSecond is { } value ? value.ToString("0") : "—", x + width / 2, 374, 30, heavy: true);
+            Text(fps.Status == "connected" && fps.FrameTimeMs is { } ms ? $"{ms:0.0} ms · PresentMon"
+                : fps.Status == "waiting" ? "FPS: in attesa del gioco" : "FPS non disponibili", x + 14, 412, 17, muted, maxWidth: width - 28);
         }
         void WeatherPanel()
         {
@@ -242,34 +286,41 @@ public sealed class DeckRenderer : IDisposable
             if (gaming || weatherLayout)
             {
                 canvas.DrawRoundRect(SKRect.Create(32, 86, 332, 356), 8, 8, card);
-                if (weatherLayout) WeatherPanel(); else GameSummary();
+                if (gaming) GamingDiscord(); else WeatherPanel();
             }
             canvas.DrawRoundRect(SKRect.Create(mediaX, 86, mediaWidth, 356), 8, 8, card);
             for (int i = 0; i < (weatherLayout ? 12 : WidgetCatalog.Slots.Count); i++)
                 WidgetCard(i, startX + i % columns * (cellWidth + 12), 86 + i / columns * 92, cellWidth);
-            Media(mediaX + 12, 108, mediaWidth - 24);
-            canvas.DrawLine(mediaX + 12, 296, 1888, 296, line);
-            Discord(mediaX + 12, 322, mediaWidth - 24);
+            if (gaming) GamePanel(mediaX, mediaWidth);
+            else
+            {
+                Media(mediaX + 12, 108, mediaWidth - 24);
+                canvas.DrawLine(mediaX + 12, 296, 1888, 296, line);
+                Discord(mediaX + 12, 322, mediaWidth - 24);
+            }
             Text(BackgroundStatus == "unavailable" ? "Sfondo non disponibile" : "ACTIVE / " + (state.ForegroundApp.Length > 0 ? state.ForegroundApp : "Desktop"), 32, 469, 13, muted, maxWidth: 850);
             Text(state.Hardware.Status == "connected" ? "SENSORI LIVE" : "SENSORI NON DISPONIBILI", 920, 469, 13, muted, maxWidth: 400);
-            if (state.Profile == "gaming") Text("FPS non disponibili", mediaX + 12, 469, 13, muted);
+
         }
         void VoiceHeader()
         {
             var voice = TrackedVoiceHeader.Resolve(state.Discord, config.TrackedMemberId);
             var color = voice.Muted is null ? muted : voice.Muted == true || voice.Deaf ? new SKColor(255, 146, 131) : accent;
             using var panel = new SKPaint { Color = new SKColor(12, 24, 28, 220), IsAntialias = true };
-            canvas.DrawRoundRect(SKRect.Create(1180, 10, 552, 46), 7, 7, panel);
-            Text(voice.Name, 1194, 40, 20, heavy: true, maxWidth: 296);
-            Text(voice.Status, 1510, 40, 15, color, true, maxWidth: 208);
+            canvas.DrawRoundRect(SKRect.Create(1180, 10, 340, 46), 7, 7, panel);
+            Text(voice.Name, 1194, 40, 20, heavy: true, maxWidth: 194);
+            Text(voice.Status, 1400, 40, 14, color, true, maxWidth: 108);
         }
         Text("PULSEDECK", 32, 42, 23, accent, true);
         Text("RECON / " + state.Profile.ToUpperInvariant(), 320, 42, 18, muted);
         if (appIcon is not null) canvas.DrawBitmap(appIcon, SKRect.Create(642, 14, 40, 40));
-        else Text("APP", 643, 41, 13, muted);
+
         Text(state.Foreground.DisplayName, 698, 44, 28, maxWidth: 450);
         Text(state.Timestamp.ToLocalTime().ToString("HH:mm:ss"), 1760, 42, 22);
         VoiceHeader();
+        var volume = state.Volume;
+        Text(volume.Status == "connected" ? volume.Muted ? "MUTO" : $"VOL {volume.Percent:0}%" : "VOL —",
+            1550, 41, 21, volume.Muted ? new SKColor(255, 146, 131) : muted, maxWidth: 180);
         canvas.DrawLine(32, 66, 1888, 66, line);
         var gaming = config.GamingLayout && state.Profile == "gaming";
         if (gaming || config.Layout is "compact" or "weather") Compact(gaming);
@@ -341,5 +392,5 @@ public sealed class DeckRenderer : IDisposable
         var pixels = new byte[1920 * 480 * 4]; Marshal.Copy(bitmap.GetPixels(), pixels, 0, pixels.Length);
         return new(encoded.ToArray(), pixels);
     }
-    public void Dispose() { gameIcon?.Dispose(); appIcon?.Dispose(); cover?.Dispose(); backgrounds.Dispose(); baseGradient.Dispose(); typeface.Dispose(); bold.Dispose(); }
+    public void Dispose() { gameIcon?.Dispose(); appIcon?.Dispose(); cover?.Dispose(); backgrounds.Dispose(); gameArtwork.Dispose(); baseGradient.Dispose(); typeface.Dispose(); bold.Dispose(); }
 }

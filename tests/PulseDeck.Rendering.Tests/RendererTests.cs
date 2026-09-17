@@ -44,10 +44,48 @@ public class RendererTests
         Assert.NotEqual(live.Pixels, renderer.Render(State, config).Pixels);
         Assert.Equal(renderer.Render(State, config).Pixels, renderer.Render(State with { Weather = weather with { Status = "unavailable" } }, config).Pixels);
         Assert.Equal(renderer.Render(State, config).Pixels, renderer.Render(State with { Weather = weather with { LocationName = "Different city" } }, config).Pixels);
-        // Switching profiles keeps the weather column and all twelve sensor positions.
+        // Gaming replaces the side panels while preserving all twelve sensor positions.
         var gaming = renderer.Render(State with { Profile = "gaming", Weather = weather }, config);
-        for (var y = 86; y < 442; y++) Assert.True(live.Pixels.AsSpan(y * 1920 * 4, 1340 * 4).SequenceEqual(gaming.Pixels.AsSpan(y * 1920 * 4, 1340 * 4)));
+        for (var y = 86; y < 442; y++) Assert.True(live.Pixels.AsSpan((y * 1920 + 380) * 4, 960 * 4).SequenceEqual(gaming.Pixels.AsSpan((y * 1920 + 380) * 4, 960 * 4)));
+        Assert.NotEqual(live.Pixels, gaming.Pixels);
+        var fixedLayout = renderer.Render(State with { Profile = "gaming", Weather = weather }, config with { GamingLayout = false });
+        for (var y = 86; y < 442; y++) Assert.True(live.Pixels.AsSpan(y * 1920 * 4, 1920 * 4).SequenceEqual(fixedLayout.Pixels.AsSpan(y * 1920 * 4, 1920 * 4)));
     }
+    [Fact]
+    public void SpeakingOnlyChangesGamingRosterAndUnavailableClearsHighlight()
+    {
+        using var renderer = new DeckRenderer();
+        var members = Enumerable.Range(0, 8).Select(i => new VoiceMember(i.ToString(), "Player " + i, false, false)).ToArray();
+        var state = State with { Discord = new(members, null, "connected") { SpeakingStatus = "connected" } };
+        var config = new DeckConfig { Layout = "weather" };
+        var desktop = renderer.Render(state, config);
+        var gaming = renderer.Render(state with { Profile = "gaming" }, config);
+        members[7] = members[7] with { Speaking = true };
+        Assert.Equal(desktop.Pixels, renderer.Render(state, config).Pixels);
+        var speaking = renderer.Render(state with { Profile = "gaming" }, config);
+        Assert.NotEqual(gaming.Pixels, speaking.Pixels);
+        for (var y = 86; y < 442; y++) Assert.True(gaming.Pixels.AsSpan((y * 1920 + 380) * 4, 1520 * 4).SequenceEqual(speaking.Pixels.AsSpan((y * 1920 + 380) * 4, 1520 * 4)));
+        var unavailable = state with { Profile = "gaming", Discord = state.Discord with { SpeakingStatus = "unavailable" } };
+        var stale = renderer.Render(unavailable, config);
+        members[7] = members[7] with { Speaking = null };
+        Assert.Equal(stale.Pixels, renderer.Render(unavailable, config).Pixels);
+    }
+
+    [Fact]
+    public void VolumeChangesOnlyItsHeaderRegionAndMuteIsExplicit()
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig();
+        var initial = renderer.Render(State with { Volume = new("connected", 35) }, config);
+        var muted = renderer.Render(State with { Volume = new("connected", 35, true) }, config);
+        Assert.NotEqual(initial.Pixels, muted.Pixels);
+        for (var y = 0; y < 480; y++)
+        {
+            Assert.True(initial.Pixels.AsSpan(y * 1920 * 4, 1540 * 4).SequenceEqual(muted.Pixels.AsSpan(y * 1920 * 4, 1540 * 4)));
+            Assert.True(initial.Pixels.AsSpan((y * 1920 + 1740) * 4, 180 * 4).SequenceEqual(muted.Pixels.AsSpan((y * 1920 + 1740) * 4, 180 * 4)));
+        }
+    }
+
     private static readonly DeckState State = new(DateTimeOffset.UnixEpoch, "desktop", "",
         new([new("cpu.load", "CPU", 50, "%")], "connected"), new(true, "Synthetic test track", "Test artist", "Test", 5, 10, "connected"),
         new([], null, "connected"), new(false, "COM5", null, "disconnected"));

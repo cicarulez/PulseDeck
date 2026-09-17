@@ -12,10 +12,16 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<ConfigStore>();
 builder.Services.AddSingleton<HardwareProvider>();
 builder.Services.AddSingleton<MediaProvider>();
+builder.Services.AddSingleton<InstalledGameCatalog>();
 builder.Services.AddSingleton<ForegroundProvider>();
+builder.Services.AddSingleton<GameSessionProvider>();
+builder.Services.AddSingleton<PresentMonProvider>();
+builder.Services.AddSingleton<VolumeProvider>();
+builder.Services.AddHttpClient("game-artwork", client => { client.Timeout = TimeSpan.FromSeconds(10); client.MaxResponseContentBufferSize = 4 * 1024 * 1024; });
+builder.Services.AddSingleton(provider => new GameArtworkProvider(provider.GetRequiredService<IHttpClientFactory>().CreateClient("game-artwork"), provider.GetRequiredService<ConfigStore>()));
 builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });
 builder.Services.AddSingleton(provider => new WeatherFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("weather")));
-builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.2.7"); })
+builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.3.0"); })
     .ConfigurePrimaryHttpMessageHandler(NewsHttp.CreateHandler);
 builder.Services.AddSingleton(provider => new NewsFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("news")));
 builder.Services.AddSingleton<EmbeddedDiscordService>();

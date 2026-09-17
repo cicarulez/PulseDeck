@@ -15,6 +15,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Rendering tests failed' }
     dotnet publish apps/agent/PulseDeck.Agent.csproj -c Release -r win-x64 --self-contained true -o artifacts/windows
     if ($LASTEXITCODE -ne 0) { throw 'Agent publish failed' }
+    & ./scripts/Get-GamingDependencies.ps1 -OutputDirectory (Join-Path $repoDir 'artifacts/windows')
     New-Item -ItemType Directory -Force artifacts/windows/wwwroot | Out-Null
     Copy-Item artifacts/configurator/browser/* artifacts/windows/wwwroot -Recurse -Force
     Copy-Item scripts/Start-PulseDeck.ps1,scripts/Start-PulseDeck.cmd,scripts/Import-Discord.ps1,scripts/Start-PulseDeck.Background.ps1,scripts/Install-PulseDeckStartup.ps1,LICENSE,THIRD-PARTY-NOTICES.md artifacts/windows -Force

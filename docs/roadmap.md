@@ -567,3 +567,36 @@ esterni nel browser e chiusura indipendente dall’agent. Avvio tramite l’atti
 PulseDeck esistente se il backend non risponde. Pacchetto e aggiornamento separati:
 nessuna seconda acquisizione o connessione USB. Firma e aggiornamenti automatici
 restano attività future.
+
+## Gaming contestuale e volume (0.3.0)
+
+Su richiesta dell’utente il profilo Gaming ora sostituisce le due colonne laterali:
+Discord a sinistra (otto partecipanti per pagina, rotazione ogni otto secondi),
+copertina/nome/sessione/FPS a destra. I dodici sensori del layout Meteo rimangono
+nelle stesse posizioni; gli altri layout conservano le sedici posizioni Gaming.
+Alt-Tab torna al layout abituale dopo il ritardo configurato. La durata deriva
+dall’ora di avvio del processo Windows, include il tempo in background e non si
+azzera al cambio profilo o al riavvio dell’agent. Un nuovo processo avvia una nuova
+sessione. Se Windows ne impedisce la lettura, viene mostrato un trattino.
+
+Fallback nome/icona dal catalogo NVIDIA locale, solo con EXE esistente e associazione
+univoca (percorso esatto se disponibile). Copertine automatiche da Steam Store con
+corrispondenza esatta del titolo normalizzato e verifica del tipo gioco, cache locale
+30 giorni, timeout/dimensioni limitati. Nessun abbinamento per somiglianza; override
+manuale conservato. Queste sorgenti non sono API pubbliche garantite.
+
+PresentMon 2.5.1: collector isolato per PID, swap chain con più campioni, media degli
+intervalli Present su finestra di due secondi, reset al cambio processo e scadenza
+delle letture. Sono FPS dell’applicazione, non un conteggio dei frame generati o
+effettivamente visualizzati. Nessuna iniezione né overlay.
+
+Discord Voice con DAVE, bot muto nel canale configurato solo con layout Gaming e
+opzione attiva, evidenzia eventi vocali reali. L’audio ricevuto dalla libreria viene
+scartato, mai riprodotto/registrato; nessun messaggio o audio inviato. Partecipanti
+e mute/deaf restano disponibili se Voice non si collega. Cadenza display circa 1 Hz.
+L’ingresso del bot e le dipendenze native non dimostrano da soli che siano state
+osservate transizioni vocali: vedere la validazione effettiva.
+
+Volume master di Windows nell’header di tutti i layout, accanto all’orologio; spazio
+nickname/stato Discord ridotto. Lettura del dispositivo multimediale predefinito,
+senza modificare volume o mute.

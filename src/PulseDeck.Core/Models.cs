@@ -16,6 +16,7 @@ public sealed record DeckConfig
     public WeatherLocation? WeatherLocation { get; init; }
     public NewsOptions News { get; init; } = new();
     public bool GamingLayout { get; init; } = true;
+    public bool GamingVoiceActivity { get; init; } = true;
     public GameTheme[] GameThemes { get; init; } = [];
 
     public WidgetConfig[] Widgets { get; init; } = WidgetCatalog.Defaults();
@@ -39,6 +40,8 @@ public sealed record DeckConfig
     }
 }
 
+public sealed record VolumeSnapshot(string Status = "unavailable", double? Percent = null, bool Muted = false);
+
 public sealed record Metric(string Id, string Label, double? Value, string Unit);
 public sealed record SensorReading(string Id, string Name, string HardwareId, string HardwareName,
     string HardwareType, string SensorType, double? Value, double? Minimum, double? Maximum, string Unit);
@@ -56,8 +59,14 @@ public sealed record ForegroundSnapshot(int ProcessId, string ProcessName, strin
 {
     public static ForegroundSnapshot Empty { get; } = new(0, "", "Non disponibile", false, null, "unavailable");
 }
-public sealed record VoiceMember(string Id, string Name, bool Mute, bool Deaf);
-public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMember? Tracked, string Status, string? Detail = null);
+public sealed record VoiceMember(string Id, string Name, bool Mute, bool Deaf)
+{
+    public bool? Speaking { get; init; }
+}
+public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMember? Tracked, string Status, string? Detail = null)
+{
+    public string SpeakingStatus { get; init; } = "unavailable";
+}
 public sealed record DisplaySnapshot(bool Connected, string Port, string? DeviceId, string Status, string? Error = null)
 {
     public int RecoveryAttempts { get; init; }
@@ -74,6 +83,10 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
 {
     public ForegroundSnapshot Foreground { get; init; } = ForegroundSnapshot.Empty;
     public ForegroundSnapshot? Game { get; init; }
+    public GameSession? GameSession { get; init; }
+    public GameArtworkSnapshot GameArtwork { get; init; } = new();
+    public FpsSnapshot Fps { get; init; } = new("unavailable");
+    public VolumeSnapshot Volume { get; init; } = new();
     public WeatherSnapshot Weather { get; init; } = new();
     public NewsSnapshot News { get; init; } = new();
 }

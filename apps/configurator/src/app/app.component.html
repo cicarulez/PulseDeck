@@ -22,7 +22,7 @@
         <section class="panel source"><div class="panel-heading"><span class="eyebrow">NOW PLAYING</span><pd-status [label]="deck.state()?.media?.playing ? 'In riproduzione' : 'In pausa / inattivo'" [active]="deck.state()?.media?.playing ?? false" /></div><h3>{{ deck.state()?.media?.title || 'Aspettando la prossima traccia' }}</h3><p>{{ deck.state()?.media?.artist || 'Avvia Spotify o un player compatibile con Windows.' }}</p><div class="source-bottom">{{ mediaSource() }}</div></section>
         <section class="panel source"><div class="panel-heading"><span class="eyebrow">VOICE CHANNEL</span><pd-status [label]="deck.state()?.discord?.status === 'connected' ? 'Discord collegato' : 'Discord non collegato'" [active]="deck.state()?.discord?.status === 'connected'" /></div><h3>La tua squadra.</h3><div class="members">@for (member of deck.state()?.discord?.members ?? []; track member.id) { <span>{{ member.name }} <b>{{ member.deaf ? 'DEAF' : member.mute ? 'MUTE' : 'ON' }}</b></span> } @empty { <p>Nessun partecipante disponibile.</p> }</div><div class="source-bottom">{{ deck.state()?.discord?.detail || 'In attesa di Discord.' }}</div></section>
       </div>
-      <section class="roadmap"><span class="eyebrow">NEXT UP</span><p><strong>FPS e attività vocale</strong> richiedono ancora le integrazioni PresentMon e Discord Voice. Nessun valore dimostrativo viene mostrato come dato reale.</p></section>
+      <section class="roadmap"><span class="eyebrow">NEXT UP</span><p><strong>Gaming</strong> · FPS: {{ deck.state()?.fps?.status || 'in attesa' }} · Attività vocale: {{ deck.state()?.discord?.speakingStatus || 'non disponibile' }}. Gli FPS misurano i fotogrammi presentati dall’applicazione; la sessione continua durante Alt-Tab.</p></section>
     } @else if (tab() === 'sensors') {
       <pd-sensors [hardware]="deck.state()?.hardware ?? null" [online]="deck.connected()" />
     } @else if (tab() === 'widgets') {
@@ -30,6 +30,6 @@
     } @else {
       @if (deck.config(); as config) { <pd-settings [newsState]="deck.state()?.news ?? null" [config]="config" [busy]="deck.busy()" (save)="save($event)" /> }
     }
-    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.2.7 · Windows</span></footer>
+    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.3.0 · Windows</span></footer>
   </main>
 </div>

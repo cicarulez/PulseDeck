@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using Discord.Audio;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Discord;
@@ -7,7 +9,7 @@ using PulseDeck.Core;
 
 namespace PulseDeck.Agent.Providers;
 
-// Owns the Gateway connection for the lifetime of PulseDeck. No audio connection or messages.
+// Owns Gateway and an optional Gaming-only voice connection. Never sends or records audio/messages.
 public sealed class EmbeddedDiscordService(ConfigStore config) : BackgroundService
 {
     private DiscordSocketClient? client;
@@ -16,6 +18,60 @@ public sealed class EmbeddedDiscordService(ConfigStore config) : BackgroundServi
     private volatile bool ready;
     private string detail = "Connessione a Discord in preparazione.";
     private string status = "starting";
+    private volatile bool gaming;
+    private IAudioClient? voice;
+    private CancellationTokenSource? voiceLifetime;
+    private readonly ConcurrentDictionary<ulong, bool> speaking = new();
+    private string speakingStatus = "inactive";
+    private DateTimeOffset voiceRetryAt;
+    public void SetGaming(bool value) => gaming = value;
+
+    private async Task UpdateVoice(CancellationToken token)
+    {
+        if (!gaming || !config.Current.GamingVoiceActivity || !ready)
+        {
+            await StopVoice(); speakingStatus = "inactive"; return;
+        }
+        if (voice?.ConnectionState == ConnectionState.Connected) return;
+        if (DateTimeOffset.UtcNow < voiceRetryAt) return;
+        await StopVoice();
+        voiceRetryAt = DateTimeOffset.UtcNow.AddSeconds(30);
+        var channel = client?.GetGuild(guildId)?.GetVoiceChannel(channelId);
+        if (channel is null) { speakingStatus = "unavailable"; return; }
+        speakingStatus = "connecting";
+        try
+        {
+            // StopAsync in the catch also cancels an incomplete voice handshake.
+            voice = await channel.ConnectAsync(selfDeaf: false, selfMute: true).WaitAsync(TimeSpan.FromSeconds(15), token);
+            voiceLifetime = CancellationTokenSource.CreateLinkedTokenSource(token);
+            var drainToken = voiceLifetime.Token;
+            voice.StreamCreated += (id, stream) => { _ = Drain(stream, drainToken); return Task.CompletedTask; };
+            foreach (var stream in voice.GetStreams().Values) _ = Drain(stream, drainToken);
+            voice.SpeakingUpdated += (id, active) => { speaking[id] = active; return Task.CompletedTask; };
+            voice.ClientDisconnected += id => { speaking.TryRemove(id, out _); return Task.CompletedTask; };
+            voice.Disconnected += _ => { speaking.Clear(); speakingStatus = "unavailable"; return Task.CompletedTask; };
+            speakingStatus = "connected";
+        }
+        catch
+        {
+            try { await channel.DisconnectAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch { }
+            await StopVoice(); speakingStatus = "unavailable";
+        }
+    }
+
+    private static async Task Drain(AudioInStream stream, CancellationToken token)
+    {
+        try { await stream.CopyToAsync(Stream.Null, 4096, token); } catch { }
+    }
+
+    private async Task StopVoice()
+    {
+        voiceLifetime?.Cancel(); voiceLifetime?.Dispose(); voiceLifetime = null;
+        var old = voice; voice = null; speaking.Clear();
+        if (old is null) return;
+        try { await old.StopAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch { }
+        old.Dispose();
+    }
 
     public DiscordSnapshot Read(DeckConfig settings)
     {
@@ -28,11 +84,14 @@ public sealed class EmbeddedDiscordService(ConfigStore config) : BackgroundServi
         var channel = guild.GetVoiceChannel(channelId);
         if (channel is null)
             return new([], null, "unavailable", "Il canale vocale configurato non è disponibile per il bot.");
-        var members = channel.ConnectedUsers.Select(u => new VoiceMember(u.Id.ToString(), u.DisplayName,
-            u.IsMuted || u.IsSelfMuted, u.IsDeafened || u.IsSelfDeafened))
+        var voiceAvailable = gaming && settings.GamingVoiceActivity && voice?.ConnectionState == ConnectionState.Connected;
+        var members = channel.ConnectedUsers.Where(u => u.Id != socket.CurrentUser.Id).Select(u => new VoiceMember(u.Id.ToString(), u.DisplayName,
+            u.IsMuted || u.IsSelfMuted, u.IsDeafened || u.IsSelfDeafened)
+            { Speaking = voiceAvailable ? speaking.GetValueOrDefault(u.Id) : null })
             .OrderBy(u => u.Name, StringComparer.OrdinalIgnoreCase).ToArray();
         return new(members, members.FirstOrDefault(m => m.Id == settings.TrackedMemberId), "connected",
-            $"{guild.Name} / {channel.Name} · Discord integrato");
+            $"{guild.Name} / {channel.Name} · Discord integrato" + (voiceAvailable ? " · bot nel canale vocale" : ""))
+            { SpeakingStatus = !gaming || !settings.GamingVoiceActivity ? "inactive" : voiceAvailable ? "connected" : speakingStatus };
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -78,7 +137,8 @@ public sealed class EmbeddedDiscordService(ConfigStore config) : BackgroundServi
             using var socket = new DiscordSocketClient(new DiscordSocketConfig
             {
                 GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildVoiceStates,
-                AlwaysDownloadUsers = false, MessageCacheSize = 0, LogLevel = LogSeverity.Error
+                AlwaysDownloadUsers = false, MessageCacheSize = 0, LogLevel = LogSeverity.Error,
+                EnableVoiceDaveEncryption = true
             });
             client = socket;
             socket.Ready += () => { ready = true; status = "connecting"; return Task.CompletedTask; };
@@ -96,7 +156,10 @@ public sealed class EmbeddedDiscordService(ConfigStore config) : BackgroundServi
                 await socket.LoginAsync(TokenType.Bot, token).WaitAsync(stoppingToken);
                 await socket.StartAsync().WaitAsync(stoppingToken);
                 while (config.Current.DiscordMode == "embedded")
-                    await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+                {
+                    await UpdateVoice(stoppingToken);
+                    await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch
@@ -107,6 +170,7 @@ public sealed class EmbeddedDiscordService(ConfigStore config) : BackgroundServi
             finally
             {
                 ready = false;
+                await StopVoice();
                 client = null;
                 try { await socket.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); } catch { }
             }

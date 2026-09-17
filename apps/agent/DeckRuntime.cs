@@ -10,7 +10,7 @@ namespace PulseDeck.Agent;
 public sealed class DeckHub : Hub;
 
 public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, MediaProvider media,
-    DiscordProvider discord, ForegroundProvider foreground, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
+    DiscordProvider discord, EmbeddedDiscordService embeddedDiscord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
     ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly ProfileSelector selector = new();
@@ -36,9 +36,15 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     var now = DateTimeOffset.UtcNow;
                     var active = foreground.Read(settings);
                     var profile = selector.Select(settings, active.ProcessName, mediaTask.Result.Playing, now);
+                    var game = gameSelector.Select(settings, profile, active, now);
+                    var session = sessions.Read(game, now);
+                    if (game is not null && session is null && active.ProcessId != game.ProcessId) game = null;
+                    embeddedDiscord.SetGaming(settings.GamingLayout && profile == "gaming");
+                    var frameRate = fps.Read(profile == "gaming" ? session : null, now);
                     var next = new DeckState(now, profile, active.ProcessName,
-                        hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status)
-                        { Foreground = active, Game = gameSelector.Select(settings, profile, active, now),
+                        hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status, frameRate.Status)
+                        { Foreground = active, Game = game, GameSession = session, Fps = frameRate, Volume = volume.Read(),
+                            GameArtwork = gameArtwork.Read(game, stoppingToken),
                             News = news.Read(settings.News, stoppingToken),
                             Weather = weather.Read(settings.WeatherLocation, settings.Layout == "weather", stoppingToken) };
                     var rendered = renderer.Render(next, settings, media.Artwork, foreground.Icon);
@@ -52,6 +58,6 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
             } while (await timer.WaitForNextTickAsync(stoppingToken));
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
-        finally { display.Shutdown(); }
+        finally { embeddedDiscord.SetGaming(false); fps.Dispose(); display.Shutdown(); }
     }
 }

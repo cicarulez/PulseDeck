@@ -1058,3 +1058,53 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   against the live installation; the panel was kept running. External-link browser
   handoff, a fresh Windows login and user acceptance remain unverified. This package
   is unsigned and has no auto-updater. No additional USB/physical-panel claim.
+
+## Gaming layout, sessions, artwork, FPS, voice and master volume — 2026-09-17 (0.3.0)
+
+- Shared renderer now replaces the weather/left column with eight Discord rows
+  (additional pages rotate every eight seconds), and media/right column with game
+  artwork, full name, process-session duration and application FPS/frame time.
+  Weather layout keeps the same twelve sensor positions. Speaking highlights only
+  apply in the dedicated Gaming roster, never to the desktop roster/header.
+- Windows process start time supplies session elapsed time. A signed-in Windows
+  harness confirmed the same process/start time survives a read with no selected
+  game and elapsed time continues. BF6 Alt-Tab/relaunch has not yet been observed.
+- Local NVIDIA catalog resolved verified existing EXEs to Battlefield 6 and
+  EA SPORTS FC 26. Windows artwork requests matched Steam apps 2807960 and 3405690
+  respectively and downloaded their actual covers into `%LOCALAPPDATA%\PulseDeck\game-artwork`.
+  A Windows preview using those resolved identities/covers and a live hardware
+  snapshot was inspected; its game selection was a fixture, not proof of a live game.
+- Windows master-output volume read 62%, unmuted. Actual deployed preview shows
+  the volume beside the clock and the shorter nickname/status area without overlap.
+  This implementation only reads volume/mute and follows the default multimedia
+  endpoint. Manual volume/mute and output-device transitions remain unverified.
+- PresentMon 2.5.1 console is packaged with pinned SHA-256, filtered by selected PID,
+  private trace-session name and bounded two-second sample window. Tests reject
+  other PIDs, malformed/NaN/zero frame times, separate swap chains and clear stale
+  data. Binary execution/help verified on Windows. No BF6/FC26 FPS samples have
+  yet been observed, so in-game compatibility and sampling overhead are unverified.
+- Discord.Net 3.20.1 Voice integration forces DAVE, self-mutes the bot, consumes
+  SpeakingUpdated, and discards input streams without storage/playback. It joins
+  only with dedicated Gaming plus the enabled option, disconnects outside Gaming,
+  and retries failures at most every 30 seconds. libdave/Opus/libsodium loaded in
+  a signed-in Windows harness; this is not proof of a successful Voice handshake
+  or speaking transitions. Those checks remain pending with a game/call active.
+- 72 Core tests and 17 actual-renderer tests passed, including Gaming side-column
+  replacement, fixed sensor positions, eight-member roster, speaking isolation and
+  stale-highlight clearing, and volume changes confined to its header region.
+  Angular 22 production build and self-contained win-x64 publish passed. Both
+  Python and PowerShell dependency packaging downloaded and checked the pinned
+  binaries successfully. The normal transport/protocol implementation is unchanged.
+- Updated the running installation only after old agent and launcher/task exited.
+  Backup: `%LOCALAPPDATA%\PulseDeck\before-gaming-030-20260917-223459`.
+  Runtime configuration and encrypted credential hashes remained unchanged. Reused
+  the existing elevated interactive-user task without modifying it. Agent 0.3.0
+  reconnected to COM5, identity `chs_88inch.dev1_rom1.90`; at 37 acknowledged frames
+  it had zero recoveries and no reported error. Actual Windows PNG inspected with
+  music/weather/Discord connected; Voice inactive outside Gaming. Physical layout
+  acceptance, FPS during BF6 and voice transitions remain pending.
+
+Sources: [PresentMon console](https://github.com/GameTechDev/PresentMon/blob/v2.5.1/README-ConsoleApplication.md),
+[Discord.Net audio events](https://docs.discordnet.dev/api/Discord.Audio.IAudioClient.html),
+[DAVE setup](https://docs.discordnet.dev/guides/voice/libdave.html),
+[Windows endpoint volume](https://learn.microsoft.com/en-us/windows/win32/api/endpointvolume/nn-endpointvolume-iaudioendpointvolume).

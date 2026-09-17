@@ -49,3 +49,17 @@ time and links to the original articles. Feed content is fetched only after opt-
 kept in memory and is not bundled in the application or repository. No article text
 or publisher images are included in the distribution. Availability and publisher
 terms may change; users can disable or replace any preset.
+
+## Gaming telemetry and voice
+
+Windows builds package PresentMon 2.5.1 (MIT), libdave 1.2.0 (MIT, including
+BoringSSL/MLS++/nlohmann notices), and Discord.Net's Windows Opus and libsodium
+binaries (BSD/ISC). `scripts/gaming-dependencies.json` pins the upstream downloads
+and SHA-256 digests. Their license files accompany the binaries under `licenses/`.
+No PresentMon service or overlay is installed: PulseDeck runs the console collector
+only for the selected game process.
+
+Game covers can be fetched from Steam Store by exact title match. Artwork remains
+owned by its publisher, cached under the user's PulseDeck data directory, and is
+not redistributed with the application. Store endpoints and NVIDIA's local catalog
+are optional, undocumented formats; missing or ambiguous matches remain unavailable.

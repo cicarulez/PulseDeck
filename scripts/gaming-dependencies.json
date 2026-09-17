@@ -1,0 +1,82 @@
+[
+  {
+    "url": "https://github.com/GameTechDev/PresentMon/releases/download/v2.5.1/PresentMon-2.5.1-x64.exe",
+    "sha256": "9bec3083069f58f911e6a512f4806db51a27bd096103087bc1d05ef54c80a191",
+    "files": [
+      {
+        "source": "",
+        "target": "tools/PresentMon.exe"
+      }
+    ]
+  },
+  {
+    "url": "https://github.com/discord/libdave/releases/download/v1.2.0/cpp/libdave-Windows-X64-boringssl.zip",
+    "sha256": "f4cade98328fce51ea6e17fcc3c7bd39447999a554dbf383f7f63b89f0bbd714",
+    "files": [
+      {
+        "source": "bin/libdave.dll",
+        "target": "libdave.dll"
+      },
+      {
+        "source": "licenses/boringssl",
+        "target": "licenses/dave-boringssl.txt"
+      },
+      {
+        "source": "licenses/libdave",
+        "target": "licenses/dave-libdave.txt"
+      },
+      {
+        "source": "licenses/mlspp",
+        "target": "licenses/dave-mlspp.txt"
+      },
+      {
+        "source": "licenses/nlohmann-json",
+        "target": "licenses/dave-nlohmann-json.txt"
+      }
+    ]
+  },
+  {
+    "url": "https://raw.githubusercontent.com/discord-net/Discord.Net/b5c150dc166f288ab4a400097259a1ecda5ce399/voice-natives/vnext_natives_win32_x64.zip",
+    "sha256": "b48a59895ab70643d77e954d589b7cde033581099431a42c2fcce70042fdd665",
+    "files": [
+      {
+        "source": "libopus.dll",
+        "target": "opus.dll"
+      },
+      {
+        "source": "libsodium.dll",
+        "target": "libsodium.dll"
+      }
+    ]
+  },
+  {
+    "url": "https://raw.githubusercontent.com/GameTechDev/PresentMon/v2.5.1/LICENSE.txt",
+    "sha256": "4c949341b1893c8c6ad82f7fb4eedf622cd1fd9c22a9af8f19b2dac19d1947b6",
+    "files": [
+      {
+        "source": "",
+        "target": "licenses/PresentMon.txt"
+      }
+    ]
+  },
+  {
+    "url": "https://raw.githubusercontent.com/jedisct1/libsodium/1.0.20-RELEASE/LICENSE",
+    "sha256": "43964d976a6db3fb986af689d05f8ca0e9971878bccae709750dac8fdc4a99cf",
+    "files": [
+      {
+        "source": "",
+        "target": "licenses/libsodium.txt"
+      }
+    ]
+  },
+  {
+    "url": "https://raw.githubusercontent.com/xiph/opus/v1.5.2/COPYING",
+    "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+    "files": [
+      {
+        "source": "",
+        "target": "licenses/opus.txt"
+      }
+    ]
+  }
+]

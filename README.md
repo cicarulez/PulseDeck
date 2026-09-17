@@ -356,7 +356,8 @@ le origini browser esterne sono respinte. Non esporre questa API come servizio d
 
 Servono **Node.js 24.15+** compatibile con Angular 22 e **SDK .NET 10**. La versione Node
 è in `.nvmrc`, la selezione SDK in `global.json`, i pacchetti .NET nei `.csproj` e quelli
-frontend in `package.json`/`package-lock.json`.
+frontend in `package.json`/`package-lock.json`. Su Linux/WSL serve anche Python 3
+per scaricare e verificare le dipendenze native Gaming.
 
 PowerShell su Windows:
 
@@ -373,6 +374,9 @@ Linux/WSL, per compilare e poi eseguire il pacchetto su Windows:
 
 Gli script eseguono i test Core e di rendering, pubblicano l'agent win-x64 con runtime e copiano
 interfaccia, licenze e script di avvio/importazione/installazione in `artifacts/windows`.
+Scaricano inoltre PresentMon e le librerie Discord Voice da versioni e SHA-256
+fissati in `scripts/gaming-dependencies.json`; richiedono accesso HTTPS a GitHub.
+Non installano servizi o driver aggiuntivi.
 Per i test reali servono Windows e i dispositivi: la sola build in WSL non verifica
 Spotify, sensori, Discord o USB. La raggiungibilità del loopback Windows da WSL dipende
 dalla configurazione locale.
