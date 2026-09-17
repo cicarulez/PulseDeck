@@ -100,6 +100,25 @@ operazioni rende questa strada insufficiente per la modalità passiva richiesta.
 Un'alternativa dovrà essere verificata separatamente senza cambiare l'illuminazione.
 Qualunque ulteriore sonda nativa deve restare in un processo isolato dall'agent.
 
+### Nuova pista passiva: file degli effetti — 17 settembre 2026
+
+L'ispezione in sola lettura di
+`C:\Program Files (x86)\LightingService\script\LastScript.xml` ha trovato 11 effetti
+`StaticSingleEff`, tutti con `initColor` HSL `(0.166667, 1, 0.5)`: conversione
+`#FFFF00`, coerente con il giallo fisso confermato in precedenza dall'utente.
+Il file contiene trigger `OneTime` e onde `ConstantWave`. Questa sorgente è più
+promettente dei getter SDK provati, ma resta una descrizione su disco: non dimostra
+da sola che sia attiva, aggiornata a ogni modifica o equivalente al colore istantaneo
+dei LED. `LastProfile.xml` contiene invece campi colore `255` e hue `0`, quindi i due
+file non vanno considerati intercambiabili o interpretati senza verifiche.
+
+Prossima prova: osservare il file mentre l'utente sceglie almeno due colori statici
+diversi in Armoury Crate e confrontare valori, timestamp e LED reali. Poi verificare
+come vengono rappresentati gli effetti dinamici; leggere il colore iniziale di un
+effetto non basta a seguirne l'animazione. Nessuna chiamata COM, modifica ai file ASUS,
+setter, acquisizione del controllo o arresto dei servizi è servita per questa lettura.
+Nessun provider abilitato nell'agent; i file proprietari non sono copiati nel repository.
+
 Passi della prova:
 
 1. Verificare interfacce e registrazione COM della versione effettivamente installata,

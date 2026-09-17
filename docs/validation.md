@@ -159,6 +159,20 @@ background or colored pixel artifacts. Live sensor/media updates continue.
 - No Aura provider enabled in PulseDeck. Manual accent remains the supported path;
   this result does not rule out other independently validated passive data sources.
 
+## Aura passive effect-file inspection — 2026-09-17
+
+- Read local `LightingService/script/LastScript.xml` as XML without invoking the SDK
+  or modifying ASUS files/services. It described 11 static effects, all with HSL
+  `(0.166667, 1, 0.5)`, converting to yellow `#FFFF00`, with `OneTime` triggers and
+  `ConstantWave` entries. This matches the user's earlier static-yellow observation;
+  no new physical color comparison or controlled color change was performed.
+- `LightingService/LastProfile.xml` instead contained color `255` and hue `0` in
+  the group profile. A persisted profile is not sufficient proof of active LED colors.
+- This is a candidate passive source, not a validated provider. Still required:
+  correlate file changes with user-selected static colors, identify when persisted
+  state is stale/inactive, and assess dynamic-effect representation. Agent unchanged;
+  no proprietary files copied into Git.
+
 ## Windows shutdown and display power — 2026-09-17
 
 - Root cause: the runtime only released the serial port at exit, and the hidden
