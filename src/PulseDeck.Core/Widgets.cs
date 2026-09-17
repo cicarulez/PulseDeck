@@ -33,7 +33,7 @@ public static class WidgetCatalog
         new WidgetSlot("extra7", "Widget aggiuntivo 7", false), new WidgetSlot("extra8", "Widget aggiuntivo 8", false)
     });
     public static readonly IReadOnlyList<string> MetricIds = Array.AsReadOnly(new[]
-    { "cpu.load", "gpu.load", "ram.load", "cpu.temperature", "gpu.temperature", "gpu.power", "gpu.memory", "ram.used", "ram.free", "ram.total" });
+    { "cpu.load", "gpu.load", "ram.load", "cpu.temperature", "gpu.temperature", "gpu.power", "gpu.memory", "ram.used", "ram.free", "ram.total", "system.processes" });
 
     public static WidgetConfig[] Defaults() => [.. LegacyDefaults(), .. Slots.Skip(8).Select(s => new WidgetConfig(s.Id, "none", "", "", "", ""))];
 

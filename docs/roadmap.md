@@ -652,3 +652,10 @@ Per temperature e potenze, frecce ↑ rosse / ↓ verdi rispetto a 15 secondi pr
 con soglie iniziali di 2 °C e 5 W. Sotto soglia nessuna freccia. Dati mancanti,
 interruzioni e cambio di sensore cancellano lo storico; le frecce indicano variazioni,
 non allarmi o superamenti di limiti termici. Soglie attualmente fisse.
+
+### Processi al posto della frequenza RAM (0.4.2)
+
+Su richiesta dell’utente, seconda riga/terza colonna mostra ora `PROCESSI`:
+conteggio totale dei processi Windows, aggiornato a ogni lettura hardware. Nuova
+metrica `system.processes`, selezionabile anche dal configuratore. Nessun anello
+o trend per questo valore. La frequenza RAM resta disponibile nell’inventario.

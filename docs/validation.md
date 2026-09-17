@@ -1268,3 +1268,19 @@ Sources: [Chromium shared system media controls](https://chromium.googlesource.c
   Fan #2. COM5 acknowledged 64 frames with zero errors/recoveries. PresentMon remained
   `ready`; live media source was `youtube-extension`. Trend thresholds are covered
   by tests; no live above-threshold arrow transition was captured in this check.
+
+## Process count widget — 2026-09-18 (0.4.2)
+
+- Added `system.processes` from the Windows process snapshot; disposable process
+  objects are released every tick and failures remain unavailable. Replaced only
+  `value3` (RAM frequency) with numeric `PROCESSI` in the user's configuration.
+- 88 Core tests, Angular production build and Windows publish passed. Renderer
+  code unchanged. Deployed after old agent/task exit; backup
+  `%LOCALAPPDATA%\PulseDeck\before-processes-042-20260918-000503`.
+  Config/credentials preserved during deployment, then saved widget backup
+  `before-processes-widget-20260918-000541.json`. Compared JSON: only the requested
+  widget changed. Existing hidden widgets and other settings are identical.
+- Live Windows metric read 440 and a subsequent PowerShell enumeration read 442
+  (separate snapshots, with diagnostic processes running). Refreshed real preview
+  showed `PROCESSI 442` under RAM without clipping. COM5 remained connected without
+  errors. Preview also showed a green downward GPU power trend arrow from real data.

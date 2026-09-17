@@ -49,6 +49,7 @@ public sealed class HardwareProvider : IDisposable
                 new("gpu.memory", "VRAM used", Get(x => Gpu(x.Hardware) && x.Sensor.SensorType == SensorType.SmallData && x.Sensor.Name.Contains("Used")), "MiB")
             };
             metrics.AddRange(MemorySummary.Read(sensors));
+            metrics.Add(new("system.processes", "Processi", CountProcesses(), ""));
             var pawn = LibreHardwareMonitor.PawnIo.PawnIo.IsInstalled;
             if (!pawn) errors.Add("PawnIO non è installato: mancano le letture a basso livello di CPU, scheda madre e ventole. Installa il driver e riavvia PulseDeck come amministratore.");
             else if (!admin) errors.Add("Avvia PulseDeck come amministratore per accedere anche ai sensori di CPU, scheda madre e ventole.");
@@ -57,6 +58,17 @@ public sealed class HardwareProvider : IDisposable
             { Sensors = sensors, IsAdministrator = admin, PawnIoInstalled = pawn };
         }
         catch (Exception e) { return new([], "error", e.Message) { IsAdministrator = admin }; }
+    }
+
+    private static double? CountProcesses()
+    {
+        try
+        {
+            var processes = System.Diagnostics.Process.GetProcesses();
+            try { return processes.Length; }
+            finally { foreach (var process in processes) process.Dispose(); }
+        }
+        catch { return null; }
     }
 
     private static string Unit(SensorType type) => type switch
