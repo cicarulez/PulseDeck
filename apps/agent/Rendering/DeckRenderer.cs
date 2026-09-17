@@ -209,19 +209,46 @@ public sealed class DeckRenderer : IDisposable
             Text("FPS  —", 48, 402, 27, heavy: true);
             Text("PresentMon non ancora integrato", 48, 427, 13, muted, maxWidth: 300);
         }
+        void WeatherPanel()
+        {
+            var weather = state.Weather;
+            Text("METEO", 48, 113, 15, accent, true);
+            Text(config.WeatherLocation?.Name ?? "Scegli una località", 48, 147, 23, heavy: true, maxWidth: 300);
+            if (weather.Status != "connected" || weather.LocationName != config.WeatherLocation?.Name)
+            {
+                Text("—", 48, 235, 64, muted);
+                Text(config.WeatherLocation is null ? "Configura il meteo dal pannello" : weather.Status == "loading" ? "Aggiornamento in corso…" : "Meteo non disponibile",
+                    48, 278, 17, muted, maxWidth: 300);
+                Text("Nessuna lettura disponibile", 48, 309, 14, muted, maxWidth: 300);
+            }
+            else
+            {
+                string Number(double? value, string suffix) => value is { } v && double.IsFinite(v) ? v.ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("it-IT")) + suffix : "—";
+                WeatherGlyph.Draw(canvas, 46, 170, 84, weather.Code, weather.IsDay);
+                Text(Number(weather.Temperature, "°"), 149, 235, 60, heavy: true, maxWidth: 190);
+                Text(WeatherConditions.Describe(weather.Code, weather.IsDay), 48, 278, 20, maxWidth: 300, minimumSize: 16);
+                Text("Percepita " + Number(weather.FeelsLike, " °C"), 48, 306, 16, muted, maxWidth: 300);
+                Text("MIN " + Number(weather.Minimum, "°") + "   MAX " + Number(weather.Maximum, "°"), 48, 337, 18, maxWidth: 300);
+                Text("Umidità " + Number(weather.Humidity, "%") + "   Vento " + Number(weather.WindSpeed, " km/h"), 48, 368, 14, muted, maxWidth: 300);
+                Text(weather.ModelTime is { } time ? "Dati locali delle " + time.ToString("HH:mm") : "Orario non disponibile", 48, 403, 13, muted, maxWidth: 300);
+            }
+            Text("Open-Meteo · stima meteo", 48, 428, 12, muted, maxWidth: 300);
+        }
         void Compact(bool gaming)
         {
-            float startX = gaming ? 380 : 32, cellWidth = gaming ? 252 : 314;
-            float mediaX = gaming ? 1444 : 1352, mediaWidth = 1900 - mediaX;
+            var weatherLayout = config.Layout == "weather";
+            var columns = weatherLayout ? 3 : 4;
+            float startX = gaming || weatherLayout ? 380 : 32, cellWidth = weatherLayout ? 308 : gaming ? 252 : 314;
+            float mediaX = gaming && !weatherLayout ? 1444 : 1352, mediaWidth = 1900 - mediaX;
             using var card = new SKPaint { Color = new SKColor(12, 24, 28, 200), IsAntialias = true };
-            if (gaming)
+            if (gaming || weatherLayout)
             {
                 canvas.DrawRoundRect(SKRect.Create(32, 86, 332, 356), 8, 8, card);
-                GameSummary();
+                if (weatherLayout) WeatherPanel(); else GameSummary();
             }
             canvas.DrawRoundRect(SKRect.Create(mediaX, 86, mediaWidth, 356), 8, 8, card);
-            for (int i = 0; i < WidgetCatalog.Slots.Count; i++)
-                WidgetCard(i, startX + i % 4 * (cellWidth + 12), 86 + i / 4 * 92, cellWidth);
+            for (int i = 0; i < (weatherLayout ? 12 : WidgetCatalog.Slots.Count); i++)
+                WidgetCard(i, startX + i % columns * (cellWidth + 12), 86 + i / columns * 92, cellWidth);
             Media(mediaX + 12, 108, mediaWidth - 24);
             canvas.DrawLine(mediaX + 12, 296, 1888, 296, line);
             Discord(mediaX + 12, 322, mediaWidth - 24);
@@ -248,7 +275,7 @@ public sealed class DeckRenderer : IDisposable
         VoiceHeader();
         canvas.DrawLine(32, 66, 1888, 66, line);
         var gaming = config.GamingLayout && state.Profile == "gaming";
-        if (gaming || config.Layout == "compact") Compact(gaming);
+        if (gaming || config.Layout is "compact" or "weather") Compact(gaming);
         else
         {
         canvas.DrawLine(310, 90, 310, 446, line);

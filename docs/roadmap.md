@@ -22,6 +22,8 @@ nella sessione Windows dell'utente, senza console aperta.
 - Copertine dalla sessione Windows, RAM fisica usata/libera/totale e velocità di rete.
 - Sfondo scuro statico e nome/icona dell’app in primo piano da Windows (0.2.1).
 - Layout Gaming dedicato, sfondi locali per gioco e nickname/mute Discord nell’header (0.2.2).
+- Layout Meteo con 12 sensori, città selezionabile nell’app, condizioni Open-Meteo
+  e mantenimento di Spotify/Discord (0.2.3). Prima località scelta: Roma, Italia.
 - Esperimento GIF abbandonato dall’utente; rimossi animazione e selettore.
 - PawnIO installato e letture di CPU, scheda madre, ventole, RAM, GPU e dischi.
 - Spotify tramite sessioni multimediali Windows; profili Desktop/Musica/Gaming.
@@ -312,6 +314,16 @@ dei testi e limitare il campionamento in base al costo misurato. Lo stato offlin
 deve usare un fallback dichiarato, senza presentare l'ultimo colore come aggiornato.
 
 ## Widget e temi
+
+La preferenza attuale dell’utente è **12 sensori e meteo a sinistra**. La 0.2.3
+introduce una griglia 3×4 anche durante Gaming, con nome/icona del gioco nell’header,
+sfondo per gioco e media/Discord conservati. Le altre quattro associazioni restano
+salvate per gli altri layout. Sul PC sono attivi i dieci sensori precedenti più
+CPU Package power e GPU Core clock; nessuna attribuzione arbitraria delle ventole
+generiche della scheda madre. Roma, Italia, è la località iniziale richiesta;
+ricerca/scelta città nel configuratore e acquisizione indipendente dal rendering.
+Le condizioni remote sono stime Open-Meteo, con fonte e ora esplicite e nessun dato
+vecchio presentato dopo un errore. Prova fisica del nuovo riquadro ancora da confermare.
 
 La 0.2.0 aggiunge una griglia compatta 4×4 oltre al classico a otto posizioni.
 Le associazioni persistono passando fra i layout; migrazione additiva dello schema 1,

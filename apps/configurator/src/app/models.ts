@@ -1,10 +1,13 @@
+export interface WeatherLocation { name: string; latitude: number; longitude: number; }
+export interface WeatherPlace extends WeatherLocation { label: string; }
 export interface WidgetConfig { slot: string; source: 'metric' | 'sensor' | 'none'; metricId: string; sensorId: string; sensorName: string; label: string; maximum: number; style: 'auto' | 'value' | 'bar' | 'ring'; }
 export interface WidgetSlot { id: string; name: string; isBar: boolean; }
 export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; }
 export interface GameTheme { processName: string; backgroundPath: string; }
 export interface DeckConfig {
   widgets: WidgetConfig[];
-  layout: 'classic' | 'compact';
+  layout: 'classic' | 'compact' | 'weather';
+  weatherLocation: WeatherLocation | null;
   gamingLayout: boolean; gameThemes: GameTheme[];
   schemaVersion: number; profileMode: string; gameProcesses: string[]; profileDelaySeconds: number;
   discordMode: string; discordBaseUrl: string; trackedMemberId: string; displayPort: string; backgroundPath: string; accentColor: string;

@@ -124,6 +124,34 @@ unknown capacity does not become a fictitious 100 GiB total. Network widgets bin
 specific interface sensor (including its name), with adaptive B/s/KiB/s/MiB/s display
 and original byte-based scales. Music and Discord keep dedicated areas in each layout.
 
+## Weather acquisition and twelve-sensor composition
+
+Schema 1 adds nullable `weatherLocation` (name/latitude/longitude) and layout
+`weather`; legacy configuration makes no weather network request. The weather
+layout retains the sixteen stored widget bindings but displays the first twelve in
+a 3×4 grid. A fixed left weather card and the existing right media/Discord card use
+the same renderer for preview and USB, including Gaming. Game foreground identity
+and per-game backgrounds remain independent of that composition.
+
+`WeatherFeed` is owned by the render loop and polls a single asynchronous request
+without awaiting it on the render path. Open-Meteo requests use a fixed HTTPS host,
+explicit units, five-second cancellation budget and a 64 KiB response limit. Success
+is cached for fifteen minutes, failure for two. Location/enable changes cancel and
+discard any pending result; failures clear measurements, old responses cannot
+overwrite another city. Model timestamps older than two hours or over thirty
+minutes in the future are rejected. Cached data is discarded after thirty minutes
+without a successful fetch, including suspend/clock discontinuities.
+
+`GET /api/weather/locations?query=...` proxies a bounded eight-result Open-Meteo
+geocoding query. The settings feature owns search/results and emits the selected
+coordinates through `locationChange`; saving uses the existing config endpoint.
+There is no IP/GPS lookup, external credential, game write or browser-dependent
+weather polling. Weather state includes model time (location UTC offset) and fetch
+time; the panel identifies Open-Meteo and model estimates, not a physical PC sensor.
+
+References: [forecast API](https://open-meteo.com/en/docs),
+[geocoding and GeoNames attribution](https://open-meteo.com/en/docs/geocoding-api).
+
 ## Media artwork and static backgrounds
 
 `MediaProvider` reads the selected session's Windows `Thumbnail` (the same Spotify-first

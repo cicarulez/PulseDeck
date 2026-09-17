@@ -789,3 +789,43 @@ background or colored pixel artifacts. Live sensor/media updates continue.
 - Display was connected at the configuration follow-up. Foreground then was Windows
   Terminal, so an actual FC26 automatic transition and its physical presentation
   still need observation after the game returns to the foreground.
+
+## Twelve sensors and weather column — 2026-09-17 (0.2.3)
+
+- User's final preference is twelve sensor widgets and a dedicated weather column
+  on the left, with the city selectable in the app and Rome, Italy initially.
+  Preserved the original ten bindings and enabled actual CPU Package power and
+  GPU Core clock by ID plus name. The four remaining slots are hidden with their
+  binding fields retained. All runtime configurations/backups remain outside Git.
+- Added `weather` layout: three columns/four rows of sensors, left weather card and
+  existing right Spotify/Discord region, also in Gaming. The standard sixteen-slot
+  and classic eight-slot layouts remain available; all sixteen bindings are stored.
+  Existing header/foreground/game-background behavior and manual accent retained.
+- Weather is opt-in through that layout and a selected city. Open-Meteo geocoding
+  returned Roma / Provincia di Roma / Lazio / Italia at 41.89193, 12.51133; this
+  disambiguates several other Italian results named Roma. Actual forecast endpoint
+  returned current conditions, daily minimum/maximum and Europe/Rome timezone.
+  These are remote model estimates, identified in the panel; no physical weather
+  sensor or geolocation of the user's PC is implied.
+- Core weather feed starts one non-blocking HTTP request, caches success fifteen
+  minutes and retries errors after two. Five-second cancellation/64 KiB bounds,
+  timestamp/unit checks, city-change invalidation and clear-on-failure behavior.
+  No weather request when another layout is selected; search only runs on user action.
+- 61 Core and 12 renderer tests passed. Coverage includes coordinates/defaults,
+  units/missing readings/model timestamps, request caching/retry, delayed response
+  after city change, non-blocking access, oversized response/suspend expiry, twelve
+  cards, inactive extra slots, unavailable readings and unchanged weather region
+  across Gaming transitions. Angular production build and self-contained Windows
+  publish passed. USB/full-frame/shutdown implementation unchanged.
+- Inspected a standalone rendering using the real Rome response and a snapshot of
+  the actual twelve sensors. No synthetic weather was sent to the physical panel.
+  Physical readability and externally induced network-loss behavior remain distinct
+  from these renderer/feed tests.
+- Installation of 0.2.3 is pending: Windows returned user cancellation for the UAC
+  deployment request, so the elevated script never started. No agent shutdown or
+  binary replacement occurred. The complete package is staged outside Git. The
+  running 0.2.2 remains connected with twelve active sensors in compact layout;
+  the follow-up reached 1,911 acknowledged frames and zero recoveries since its
+  preceding reconnect. Rome/weather layout activation, installed city-search UI
+  checks and physical weather readability have not yet been verified. A new UAC
+  request awaits the user's response; hidden startup and existing settings remain.

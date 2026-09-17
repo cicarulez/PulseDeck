@@ -6,6 +6,25 @@ using Xunit;
 
 public class RendererTests
 {
+    [Fact]
+    public void WeatherUsesTwelveCardsAndClearsUnavailableReadings()
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig { Layout = "weather", WeatherLocation = new("Synthetic test city", 0, 0) };
+        var baseline = renderer.Render(State, config);
+        config.Widgets[15] = new("extra8", "metric", "cpu.load", "", "", "HIDDEN");
+        Assert.Equal(baseline.Pixels, renderer.Render(State, config).Pixels);
+        config.Widgets[11] = new("extra4", "metric", "cpu.load", "", "", "LAST");
+        Assert.NotEqual(baseline.Pixels, renderer.Render(State, config).Pixels);
+        var weather = new WeatherSnapshot { Status = "connected", LocationName = "Synthetic test city", Temperature = 22, Code = 0, IsDay = true };
+        var live = renderer.Render(State with { Weather = weather }, config);
+        Assert.NotEqual(live.Pixels, renderer.Render(State, config).Pixels);
+        Assert.Equal(renderer.Render(State, config).Pixels, renderer.Render(State with { Weather = weather with { Status = "unavailable" } }, config).Pixels);
+        Assert.Equal(renderer.Render(State, config).Pixels, renderer.Render(State with { Weather = weather with { LocationName = "Different city" } }, config).Pixels);
+        // Switching profiles keeps the weather column and all twelve sensor positions.
+        var gaming = renderer.Render(State with { Profile = "gaming", Weather = weather }, config);
+        for (var y = 86; y < 442; y++) Assert.True(live.Pixels.AsSpan(y * 1920 * 4, 1340 * 4).SequenceEqual(gaming.Pixels.AsSpan(y * 1920 * 4, 1340 * 4)));
+    }
     private static readonly DeckState State = new(DateTimeOffset.UnixEpoch, "desktop", "",
         new([new("cpu.load", "CPU", 50, "%")], "connected"), new(true, "Synthetic test track", "Test artist", "Test", 5, 10, "connected"),
         new([], null, "connected"), new(false, "COM5", null, "disconnected"));

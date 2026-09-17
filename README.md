@@ -18,6 +18,9 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
   dei permessi. Sul PC di sviluppo: 617 sensori e parametri, incluse soglie dei dispositivi.
 - Pagina **Widget**: layout compatto fino a 16 posizioni, valori, barre e anelli;
   resta disponibile il layout classico a otto posizioni.
+- Layout **Meteo**: 12 sensori in una griglia 3×4, meteo a sinistra e Spotify/Discord
+  a destra. Località ricercabile e selezionabile nell’app; inizialmente Roma, Italia,
+  sul PC di sviluppo.
 - Copertina, titolo, artista, stato e progresso di Spotify o altri player Windows.
 - RAM fisica usata/libera/totale utilizzabile; sensori rete con velocità in B/s, KiB/s o MiB/s.
 - Sfondo statico scuro integrato, oppure un’immagine locale scelta dall’utente.
@@ -135,6 +138,30 @@ Premi **Salva widget** per applicare le modifiche a anteprima e display.
 **Annulla modifiche** recupera l'ultimo salvataggio; **Ripristina layout iniziale**
 prepara le associazioni originali e nasconde gli spazi aggiuntivi, da confermare con
 il salvataggio. Un sensore mancante mostra `—` conservando il collegamento.
+
+### Meteo e dodici sensori (0.2.3)
+
+Scegli **Meteo · 12 sensori + musica e Discord** nella scheda Widget. Le prime dodici
+posizioni occupano tre colonne e quattro righe; le quattro aggiuntive restano salvate
+per gli altri layout. Questa disposizione rimane anche nel profilo Gaming: identità
+del gioco nell’header e sfondo associato continuano a funzionare. Il layout compatto
+a sedici e quello classico a otto restano selezionabili.
+
+In **Configurazione → Meteo**, cerca un comune (per esempio «Roma, Italia»), scegli
+il risultato con provincia/paese corretti e premi **Salva configurazione**. Nessuna
+geolocalizzazione automatica: il servizio riceve solo la ricerca o le coordinate
+della località selezionata. Il meteo viene richiesto solo usando il layout Meteo.
+
+Il riquadro mostra temperatura, condizioni, percepita, minima/massima giornaliera,
+umidità, vento e ora locale del dato. Fonte: [Open-Meteo](https://open-meteo.com/),
+stime dei modelli meteorologici; località basate su GeoNames. Aggiornamento ogni
+15 minuti, richieste limitate a 5 secondi e indipendenti dal rendering. Un errore
+mostra «Meteo non disponibile» e cancella i valori; nuovo tentativo dopo 2 minuti.
+Il cambio città cancella subito la lettura precedente. Nessuna immagine o misura
+dimostrativa; le icone meteo sono disegnate dal renderer condiviso.
+
+Sul PC di sviluppo i 12 widget conservano i dieci precedenti e aggiungono potenza
+CPU Package e frequenza GPU Core, legate ai sensori reali per ID e nome.
 
 ## Copertine, sfondo e app attiva
 

@@ -1,9 +1,10 @@
 import { Component, effect, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DeckConfig } from '../models';
+import { WeatherSettingsComponent } from './weather-settings.component';
 import { GameThemesComponent } from './game-themes.component';
 
-@Component({ selector: 'pd-settings', standalone: true, imports: [FormsModule, GameThemesComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
+@Component({ selector: 'pd-settings', standalone: true, imports: [FormsModule, GameThemesComponent, WeatherSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
 export class SettingsComponent {
   config = input.required<DeckConfig>(); busy = input(false); save = output<DeckConfig>();
   draft!: DeckConfig; processes = '';

@@ -13,6 +13,8 @@ builder.Services.AddSingleton<ConfigStore>();
 builder.Services.AddSingleton<HardwareProvider>();
 builder.Services.AddSingleton<MediaProvider>();
 builder.Services.AddSingleton<ForegroundProvider>();
+builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });
+builder.Services.AddSingleton(provider => new WeatherFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("weather")));
 builder.Services.AddSingleton<EmbeddedDiscordService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<EmbeddedDiscordService>());
 builder.Services.AddHttpClient<DiscordProvider>(client => client.Timeout = TimeSpan.FromMilliseconds(1200));
@@ -41,6 +43,29 @@ app.MapGet("/api/health", () => new { ok = true, app = "PulseDeck", version = ty
 app.MapGet("/api/state", (DeckRuntime runtime) => runtime.State);
 app.MapGet("/api/widget-slots", () => new { slots = WidgetCatalog.Slots, defaults = WidgetCatalog.Defaults() });
 app.MapGet("/api/sensors", (DeckRuntime runtime) => runtime.State.Hardware);
+app.MapGet("/api/weather/locations", async (string? query, IHttpClientFactory clients, CancellationToken token) =>
+{
+    if (string.IsNullOrWhiteSpace(query) || query.Trim().Length is < 2 or > 100)
+        return Results.BadRequest(new { error = "Inserisci un nome di località tra 2 e 100 caratteri." });
+    try
+    {
+        using var client = clients.CreateClient("weather");
+        var json = await client.GetStringAsync("https://geocoding-api.open-meteo.com/v1/search?count=8&language=it&name=" + Uri.EscapeDataString(query.Trim()), token);
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        var results = new List<object>();
+        if (document.RootElement.TryGetProperty("results", out var places))
+            foreach (var place in places.EnumerateArray().Take(8))
+            {
+                string Text(string name) => place.TryGetProperty(name, out var value) ? value.GetString() ?? "" : "";
+                var location = new WeatherLocation(Text("name"), place.GetProperty("latitude").GetDouble(), place.GetProperty("longitude").GetDouble());
+                if (location.IsValid) results.Add(new { location.Name, location.Latitude, location.Longitude,
+                    label = string.Join(", ", new[] { location.Name, Text("admin2"), Text("admin1"), Text("country") }.Where(s => s.Length > 0).Distinct()) });
+            }
+        return Results.Ok(results);
+    }
+    catch (OperationCanceledException) when (token.IsCancellationRequested) { return Results.StatusCode(499); }
+    catch { return Results.Json(new { error = "Ricerca meteo non disponibile. Riprova tra poco." }, statusCode: 502); }
+});
 app.MapGet("/api/config", (ConfigStore store) => store.Current);
 app.MapPut("/api/config", (DeckConfig config, ConfigStore store) =>
 {

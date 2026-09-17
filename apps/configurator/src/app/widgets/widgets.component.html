@@ -3,13 +3,13 @@
   <p>Le modifiche diventano visibili sul pannello e nell’anteprima dopo il salvataggio.</p>
 </section>
 <section class="panel layout-picker fields">
-  <label>Disposizione del pannello<select [ngModel]="layout()" (ngModelChange)="chooseLayout($event)"><option value="compact">Compatto · 16 widget + musica e Discord</option><option value="classic">Classico · 8 widget + musica e Discord</option></select></label>
-  <p>{{ visibleCount() }} / {{ slots().length }} posizioni visibili. Scegli uno spazio e il dato da mostrare. Nel classico, gli otto widget aggiuntivi restano salvati.</p>
-  @if (config().gamingLayout) { <p>Il profilo Gaming usa una disposizione dedicata con gli stessi 16 widget. Puoi disattivarla in Configurazione; qui scegli il layout degli altri profili.</p> }
+  <label>Disposizione del pannello<select [ngModel]="layout()" (ngModelChange)="chooseLayout($event)"><option value="weather">Meteo · 12 sensori + musica e Discord</option><option value="compact">Compatto · 16 widget + musica e Discord</option><option value="classic">Classico · 8 widget + musica e Discord</option></select></label>
+  <p>{{ visibleCount() }} / {{ slots().length }} posizioni visibili. Scegli uno spazio e il dato da mostrare. Le posizioni escluse dal layout restano salvate. Con Meteo, il riquadro a sinistra e i 12 sensori rimangono visibili anche in Gaming.</p>
+  @if (config().gamingLayout && layout() !== 'weather') { <p>Il profilo Gaming usa una disposizione dedicata con gli stessi 16 widget. Puoi disattivarla in Configurazione; qui scegli il layout degli altri profili.</p> }
 </section>
-<div class="positions" aria-label="Posizioni dei widget">@for (slot of slots(); track slot.id; let i = $index) {
+<div class="positions" [class.weather]="layout() === 'weather'" aria-label="Posizioni dei widget">@for (slot of slots(); track slot.id; let i = $index) {
   <button type="button" [class.selected]="selected() === slot.id" [class.hidden-slot]="description(slot.id) === 'Nascosto'" [attr.aria-pressed]="selected() === slot.id" (click)="selected.set(slot.id)"><span>{{ positionName(i, slot.name) }}</span><strong>{{ description(slot.id) }}</strong></button>
 }</div>
-@if (current(); as widget) { <pd-widget-slot-editor [widget]="widget" [slot]="slot()" [compact]="layout() === 'compact'" [hardware]="hardware()" (change)="update($event)" /> }
+@if (current(); as widget) { <pd-widget-slot-editor [widget]="widget" [slot]="slot()" [compact]="layout() !== 'classic'" [hardware]="hardware()" (change)="update($event)" /> }
 <div class="actions"><button class="button" type="button" (click)="reset()" [disabled]="busy()">Ripristina layout iniziale</button><span role="status">{{ dirty() ? 'Modifiche da salvare' : 'Configurazione salvata' }}</span><button class="button" type="button" (click)="discard()" [disabled]="!dirty() || busy()">Annulla modifiche</button><button class="button button--primary" type="button" (click)="submit()" [disabled]="!dirty() || !valid() || busy() || !online()">{{ busy() ? 'Salvataggio…' : 'Salva widget' }}</button></div>
 @if (!valid()) { <p class="notice notice--error" role="alert">Controlla l’etichetta e il valore massimo della barra: deve essere un numero maggiore di zero.</p> }

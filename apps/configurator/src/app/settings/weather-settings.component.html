@@ -1,0 +1,13 @@
+<div class="fields">
+  <label>Cerca città o comune<input name="weatherQuery" [(ngModel)]="query" placeholder="Roma, Italia" maxlength="100" (keydown.enter)="$event.preventDefault(); search()" [disabled]="busy() || searching()"></label>
+  <button class="button" type="button" (click)="search()" [disabled]="busy() || searching() || query.trim().length < 2">{{ searching() ? 'Ricerca…' : 'Cerca località' }}</button>
+</div>
+@if (error()) { <p role="status">{{ error() }}</p> }
+@if (places().length) { <div class="results" aria-label="Località trovate">@for (place of places(); track place.label + ':' + place.latitude + ':' + place.longitude) {
+  <button class="button" type="button" (click)="choose(place)" [disabled]="busy()">{{ place.label }}</button>
+}</div> }
+<p class="selected" role="status">Località selezionata: <strong>{{ location()?.name || 'Nessuna' }}</strong>
+  @if (location()) { <button class="button" type="button" (click)="locationChange.emit(null)" [disabled]="busy()">Rimuovi località</button> }
+</p>
+<p>Scegli il layout <strong>Meteo</strong> nella scheda Widget per visualizzare il riquadro a sinistra e 12 sensori. La località viene applicata con Salva configurazione. Aggiornamento ogni 15 minuti; nessuna localizzazione automatica del PC.</p>
+<p>Dati meteo da <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>; ricerca località basata su GeoNames. Le condizioni sono stime dei modelli meteorologici.</p>

@@ -13,6 +13,7 @@ public sealed record DeckConfig
     public string BackgroundPath { get; init; } = "";
     public string AccentColor { get; init; } = "#a9ff69";
     public string Layout { get; init; } = "compact";
+    public WeatherLocation? WeatherLocation { get; init; }
     public bool GamingLayout { get; init; } = true;
     public GameTheme[] GameThemes { get; init; } = [];
 
@@ -21,7 +22,8 @@ public sealed record DeckConfig
     public string? Validate()
     {
         if (SchemaVersion != 1) return "Unsupported configuration version.";
-        if (Layout is not ("classic" or "compact")) return "Unknown display layout.";
+        if (Layout is not ("classic" or "compact" or "weather")) return "Unknown display layout.";
+        if (WeatherLocation is { } location && !location.IsValid) return "Invalid weather location.";
         if (ProfileMode is not ("auto" or "desktop" or "gaming" or "music")) return "Unknown profile.";
         if (ProfileDelaySeconds is < 0 or > 30) return "Profile delay must be between 0 and 30 seconds.";
         if (GameProcesses is null || GameProcesses.Length > 50 || GameProcesses.Any(p => string.IsNullOrWhiteSpace(p) || p.Length > 100)) return "Invalid game process list.";
@@ -67,4 +69,5 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
 {
     public ForegroundSnapshot Foreground { get; init; } = ForegroundSnapshot.Empty;
     public ForegroundSnapshot? Game { get; init; }
+    public WeatherSnapshot Weather { get; init; } = new();
 }

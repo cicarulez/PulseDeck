@@ -10,7 +10,7 @@ namespace PulseDeck.Agent;
 public sealed class DeckHub : Hub;
 
 public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, MediaProvider media,
-    DiscordProvider discord, ForegroundProvider foreground, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
+    DiscordProvider discord, ForegroundProvider foreground, WeatherFeed weather, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
     ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly ProfileSelector selector = new();
@@ -38,7 +38,8 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     var profile = selector.Select(settings, active.ProcessName, mediaTask.Result.Playing, now);
                     var next = new DeckState(now, profile, active.ProcessName,
                         hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status)
-                        { Foreground = active, Game = gameSelector.Select(settings, profile, active, now) };
+                        { Foreground = active, Game = gameSelector.Select(settings, profile, active, now),
+                            Weather = weather.Read(settings.WeatherLocation, settings.Layout == "weather", stoppingToken) };
                     var rendered = renderer.Render(next, settings, media.Artwork, foreground.Icon);
                     Preview = rendered.Png;
                     display.Send(rendered.Pixels);

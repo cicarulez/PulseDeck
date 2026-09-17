@@ -30,3 +30,10 @@ Other dependencies retain their own licenses:
 Dependency license files included by their packages must accompany redistribution.
 No TURZX binaries, original theme files, EA artwork or game assets are included.
 Background images are selected from the user's local files.
+
+The optional weather layout uses data from [Open-Meteo](https://open-meteo.com/)
+and location search based on [GeoNames](https://www.geonames.org/). See the service's
+[terms](https://open-meteo.com/en/terms), [forecast documentation](https://open-meteo.com/en/docs)
+and [geocoding attribution](https://open-meteo.com/en/docs/geocoding-api).
+Attribution appears in the panel and configurator. Weather icons are drawn by
+PulseDeck; no third-party icon collection is bundled.
