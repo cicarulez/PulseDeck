@@ -154,8 +154,10 @@ dettagliato ha però trovato il dispositivo con produttore PulseDeck, classifica
 come `All`: l'assenza del nome nelle capacità non significava assenza dal servizio.
 La sonda ora dichiara il tipo esterno generico `EXTERNAL_GENERAL` e usa il nome
 PulseDeck anche come modello; la comparsa della scheda resta da verificare.
-Le richieste sono contate ma non ancora gestite:
-non sono disponibili colori Aura e l'agent rimane invariato.
+Il servizio ha poi acquisito il nuovo tipo, ma l'utente non vede ancora la scheda.
+È ora gestita la ricezione di un singolo valore grezzo tramite la callback osservata
+`SetEffect2` (effetto 0), con formato controllato: valore e corrispondenza con i LED
+restano da verificare. Non sono disponibili colori Aura nell'agent.
 
 ## Avvio automatico senza finestre
 

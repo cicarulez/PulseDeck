@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "DiscoveryHal.h"
+#include "IncomingSample.h"
 
 static const GUID probe_clsid = {0x702d21b6,0x3a25,0x4d2c,{0x9f,0x73,0xf6,0x4c,0x78,0xe2,0x12,0xa8}};
 static const GUID hal_iid = {0xf2c8d5b4,0x3854,0x4325,{0x8a,0x4f,0xfd,0x7c,0x50,0x72,0xe3,0xb9}};
@@ -19,6 +20,9 @@ static DWORD cookie;
 static Receiver *receiver;
 static LONG last_effect_method;
 static ULONG last_effect_id, last_effect_count, last_effect_variant;
+static LONG raw_samples;
+static ULONG raw_word;
+static ULONGLONG raw_sample_tick;
 /* Record incoming call shape only. No dereference of unverified color payloads. */
 static void record_effect(LONG method, ULONG effect, ULONG count, ULONG variant) {
     InterlockedIncrement(&effect_requests);
@@ -80,17 +84,25 @@ static HRESULT STDMETHODCALLTYPE device_sync(Device *self, ULONG effect, ULONGLO
     InterlockedIncrement(&sync_requests);
     return E_NOTIMPL;
 }
-/* The SDK's out-of-process enumeration requires Opt2 even for metadata reads.
-   These additional incoming callbacks are deliberately unsupported in this probe;
-   do not claim color reception before their payload contract has been tested. */
+/* The SDK requires Opt2 even for metadata reads. Only the observed SetEffect2
+   one-word envelope is accepted below; other incoming variants stay unsupported. */
 static HRESULT STDMETHODCALLTYPE device_effect_opt(Device *self, ULONG effect, ULONG *colors,
                                                    ULONG count, ULONG speed, ULONG direction) {
     (void)self; (void)effect; (void)colors; (void)count; (void)speed; (void)direction;
     record_effect(2, effect, count, 0); return E_NOTIMPL;
 }
 static HRESULT STDMETHODCALLTYPE device_effect2(Device *self, ULONG effect, VARIANT colors, ULONG count) {
-    (void)self; (void)effect; (void)colors; (void)count;
-    record_effect(3, effect, count, V_VT(&colors)); return E_NOTIMPL;
+    (void)self;
+    record_effect(3, effect, count, V_VT(&colors));
+    /* ID 0 is the incoming mode observed from LightingService. Accept only its
+       verified one-word envelope; do not infer RGB encoding or sync selection. */
+    if (effect != 0) return E_NOTIMPL;
+    ULONG word = 0;
+    HRESULT hr = DecodeIncomingWord(&colors, count, &word);
+    if (FAILED(hr)) return hr;
+    raw_word = word; raw_sample_tick = GetTickCount64();
+    InterlockedIncrement(&raw_samples);
+    return S_OK;
 }
 static HRESULT STDMETHODCALLTYPE device_effect_opt2(Device *self, ULONG effect, VARIANT colors,
                                                     ULONG count, ULONG speed, ULONG direction) {
@@ -194,7 +206,8 @@ HRESULT UnregisterProbe(void) {
 ProbeStats GetProbeStats(void) {
     ProbeStats stats = {activations, enumerations, capabilities, effect_requests,
         sync_requests, hal.refs, device.refs, factory_refs,
-        last_effect_method, last_effect_id, last_effect_count, last_effect_variant};
+        last_effect_method, last_effect_id, last_effect_count, last_effect_variant,
+        raw_samples, raw_word, raw_sample_tick};
     return stats;
 }
 

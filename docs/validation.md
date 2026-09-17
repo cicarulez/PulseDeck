@@ -508,3 +508,53 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   startup at the final display check. Agent binaries, configuration and startup task
   unchanged; no physical RGB correspondence verified. Decompilation, package backup
   and runtime logs remain outside Git.
+
+## Aura refreshed metadata and incoming envelope — 2026-09-17
+
+- User still sees no tile. The current detailed service inventory now returns one
+  EXTERNAL_GENERAL/PulseDeck Virtual Probe identity, so the updated metadata was
+  acquired. Windows boot remains 13:21:59Z and LightingService remains PID 6456:
+  no additional reboot or service restart was observed. SDK vendor logs at local
+  15:53 identify PID 6456 enumerating our HAL; exact service attribution is now
+  supported rather than inferred from timing alone.
+- Native report for PID 44604 has eight incoming effect requests. Last call is
+  method 3 (SetEffect2), effect 0, count 1, VARTYPE 8211 (VT_ARRAY|VT_UI4).
+  LightingService logs report Apply Failed specifically for PulseDeck Virtual Probe.
+  These are ASUS calls delivering to our destination; our tools did not invoke
+  Apply, SetMode, SetLightColor or another outgoing RGB setter.
+- Static inspection found EXTERNAL_GENERAL mapping in the Armoury Crate Aura plugin
+  as well. This does not establish the remaining tile eligibility rules. No vendor
+  binary, UI configuration, sync selection or effect setting was changed.
+- Implemented a passive SetEffect2 effect-0 sink for the observed one-word envelope.
+  Decoder validates variant flags/type, array rank/element width/type, bounds and
+  count, copies only the single word and leaves input ownership with COM's caller.
+  Wrong envelopes fail; other effect IDs/variants remain unsupported. Successful
+  storage returns S_OK, with rawSamples/rawWord/rawSampleTick in the latest report
+  and colorVerified=false. No agent provider, byte-order assumption or RGB rendering.
+- Fifteen synthetic decoder checks passed on Windows, including nulls, BYREF, wrong
+  count, empty/multiple elements, multidimensional and mismatched element arrays,
+  plus valid nonzero lower bound. Tests call the decoder only, not HAL/SDK setters.
+  Native warnings-as-errors build, 100-cycle COM ownership test and three isolated
+  SDK metadata iterations also passed, with no effect calls in metadata tests.
+- First UAC prompt was declined accidentally; user explicitly requested it again.
+  Resent elevation succeeded. Backed up prior own installation/status, stopped and
+  waited for only our host, installed 0.4.0-probe, and passed SYSTEM autoactivation,
+  direct/SDK metadata and idle-exit checks. Baseline PID 17784, 14:08:34Z, references
+  1/1/1, rawSamples=0, colorVerified=false. Services retained PIDs 6456/6408. Live
+  receipt by this replacement still requires natural service activation; the test
+  baseline is not a real RGB sample.
+- Separately found USB delivery exhausted after needReSend:1|renderCnt:0: two
+  recoveries, 27 acknowledgements, userDisconnected=false. No vendor TURZX process
+  was listed. An initial reconnect request without the required local-client header
+  returned HTTP 403 and made no change. One correctly formed explicit reconnect
+  succeeded; later 108 acknowledgements and zero recoveries confirmed resumed
+  transport. No physical artifact/power-off confirmation was inferred.
+- After 0.4.0 installation, user left/re-entered Aura Sync and again reported no
+  tile. No probe process was observed afterwards, and the latest probe-specific
+  service delivery log lines were still from the prior 15:53 activation. There is
+  no evidence this page visit activated the replacement. Therefore live S_OK
+  delivery and any effect on UI eligibility remain unverified; another unchanged
+  page-entry test was not requested. Installed binary hash matches the tested build.
+- Final USB status: connected, 441 acknowledged frames, one subsequent bounded
+  recovery. No further explicit reconnect was issued. This is transport evidence,
+  not a fresh physical-image confirmation.

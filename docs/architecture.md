@@ -209,3 +209,12 @@ EXTERNAL_GENERAL (0x64000), as mapped in the installed service, instead of type 
 only method/effect/count/VARTYPE, not colors, while unsupported callbacks continue
 to fail explicitly. Neither a registered device nor this generic classification
 guarantees an Armoury Crate tile or selection in the user's sync group.
+
+The observed incoming SetEffect2 contract (effect 0, one VT_UI4 SAFEARRAY element)
+now has a passive sink. A separate decoder validates non-BYREF VT_ARRAY|VT_UI4,
+rank one, ULONG element width/type, count one and matching bounds before reading.
+It accepts a nonzero lower bound, never frees caller-owned input, and copies only
+one word. The callback stores a bounded latest sample with monotonic tick/count and
+returns S_OK; it does not call an SDK method or affect hardware. Other modes remain
+unsupported. Diagnostics explicitly mark colorVerified=false; this is not a runtime
+AuraColorProvider or proof the device participates in the user's sync selection.

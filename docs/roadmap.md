@@ -237,16 +237,32 @@ mantiene `synchronizable=0`: il servizio ne legge il valore per gli effetti, ma
 l'indagine non ne ha dimostrato il ruolo nella comparsa della scheda. Non dichiarare
 supporto alla sincronizzazione temporizzata senza implementarne il contratto.
 
-Prossimo passaggio: verificare che il servizio rilegga i metadati aggiornati alla
-prossima scansione/avvio normale, quindi controllare comparsa e selezione della
-scheda. Il nuovo rapporto distingue l'ultima callback (metodo, effect ID, numero
-elementi, VARTYPE) senza dereferenziare payload sconosciuti. Dopo la comparsa, far
-selezionare all'utente solo PulseDeck e verificare ricezione passiva e corrispondenza
-dei colori. Le callback restano E_NOTIMPL nell'host installato; non sono ancora un
-ricevitore RGB funzionante. `EXTERNAL_GENERAL` è un candidato verificato nella
-mappa locale, non una garanzia di una scheda supportata da Armoury Crate.
-Non occorre ripetere la
-registrazione o proporre altri riavvii prima di aver preparato questa verifica.
+**Nuovo tipo acquisito senza un altro boot:** il getter dettagliato restituisce ora
+EXTERNAL_GENERAL/PulseDeck Virtual Probe, ma l'utente continua a non vedere la
+scheda. Windows conserva il boot delle 13:21:59 UTC e LightingService PID 6456.
+I log SDK attribuiscono l'enumerazione al servizio stesso; i log LightingService
+riportano fallimento della consegna dell'effetto a PulseDeck. La sonda ha contato
+otto richieste; l'ultima è SetEffect2, effetto 0, count 1, VARTYPE 8211
+(VT_ARRAY | VT_UI4). Non si tratta più di metadati vecchi o di sola registrazione.
+
+La sonda accetta ora questo preciso formato e conserva solo l'ultimo valore grezzo
+con contatore e timestamp monotono, senza interpretarlo come RGB verificato.
+Rifiuta effetto diverso da 0, array multidimensionali, tipi diversi, BYREF, puntatori
+nulli e lunghezze discordanti. I test esercitano il decoder con dati sintetici,
+non chiamano setter o callback effetto. Le altre callback restano non implementate.
+
+Prossimo passaggio: alla prossima attivazione naturale dal servizio, verificare che
+la consegna riesca e acquisire il valore ricevuto. Parallelamente verificare i
+requisiti del plugin Armoury Crate per la scheda e la selezione: la categoria
+EXTERNAL_GENERAL compare nelle sue mappe, ma questo non prova l'ammissibilità della
+nostra periferica. Non cambiare categoria o flag di sincronizzazione senza evidenze.
+Solo dopo una selezione esplicita e confronto con i LED reali si potrà parlare di
+ricezione sincronizzata; il dato grezzo potrebbe anche essere una inizializzazione.
+La prova di uscita/rientro nella pagina dopo l'installazione 0.4.0 è ancora negativa:
+nessun processo della sonda osservato e nessuna nuova consegna nei log controllati.
+Non è una prova del comportamento della nuova callback in uso dal servizio.
+Non ripetere registrazioni, cambi di tipo o prove identiche di ingresso nella pagina;
+serve distinguere la riattivazione dell'HAL dai criteri che producono la scheda.
 Non riavviare i servizi ASUS né invocare setter RGB. Il plug-in ASUS Windows Dynamic
 Lighting appartiene all'integrazione ASUS/Windows e non identifica la nostra sonda.
 Nessun provider o ricevitore persistente viene installato nell'agent in questa fase.

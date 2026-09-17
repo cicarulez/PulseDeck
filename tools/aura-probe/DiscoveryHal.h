@@ -21,6 +21,9 @@ typedef struct ProbeStats {
     ULONG last_effect_id;
     ULONG last_effect_count;
     ULONG last_effect_variant;
+    LONG raw_samples;
+    ULONG raw_word;
+    ULONGLONG raw_sample_tick;
 } ProbeStats;
 
 int CheckProbeContracts(void);

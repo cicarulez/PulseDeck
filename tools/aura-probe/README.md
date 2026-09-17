@@ -362,3 +362,23 @@ for pointer-based methods, otherwise the unmodified VARTYPE including flags.
 These are incoming methods on our own destination, never outgoing calls by our
 probe. No color buffer is decoded by the added diagnostics. The installed host
 still returns E_NOTIMPL and cannot claim real colors or successful effect handling.
+
+### Validated incoming envelope (probe 0.4.0)
+
+The service later acquired EXTERNAL_GENERAL/PulseDeck metadata without another boot,
+while the user still saw no tile. Vendor SDK logs identify LightingService PID 6456
+as the enumerating process; the service reported Apply Failed for our virtual model.
+The latest incoming call shape was SetEffect2, ID 0, count 1, VARTYPE 8211.
+
+The own callback now accepts exactly this envelope, copies the one raw ULONG and
+returns S_OK. It does not assume byte order or that this is the current PC color.
+All other effect variants/IDs remain unsupported. Latest report fields rawSamples,
+rawWord, rawSampleTick and colorVerified=false distinguish unverified incoming data;
+zero rawSamples means no data, regardless of rawWord's default zero. No frame queue.
+
+`PulseDeck.AuraProbe.exe --check-incoming` runs synthetic decoder fixtures without
+calling any HAL/SDK effect method. Fifteen checks cover null inputs, wrong count,
+BYREF, empty/multiple elements, wrong rank/element type/size, plus a valid nonzero
+lower bound. Own COM/SDK metadata regressions must still report zero effect calls.
+Live delivery after host replacement, tile visibility and physical color matching
+remain separate checks; a successful decoder test cannot establish them.

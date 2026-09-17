@@ -7,6 +7,7 @@
 #include <string.h>
 #include "DiscoveryHal.h"
 #include "Receiver.h"
+#include "IncomingSample.h"
 
 static LONG WINAPI report_probe_crash(EXCEPTION_POINTERS *exception) {
     HMODULE module = NULL;
@@ -137,6 +138,7 @@ int main(int argc, char **argv) {
     if (argc == 2 && !strcmp(argv[1], "--service-devices")) return read_service_metadata(TRUE);
     if (argc > 1 && !strcmp(argv[1], "--receiver")) return RunReceiver(argc, argv);
     if (argc == 2 && !strcmp(argv[1], "--check-contracts")) return CheckProbeContracts();
+    if (argc == 2 && !strcmp(argv[1], "--check-incoming")) return CheckIncomingWordDecoder();
     BOOL separate = (argc == 5 || argc == 6) && (!strcmp(argv[4], "separate") || !strcmp(argv[4], "transport-test"));
     BOOL transport_test = separate && !strcmp(argv[4], "transport-test");
     if ((argc != 4 && !separate) || !scratch_path_valid(argv[1]) ||
