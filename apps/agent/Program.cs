@@ -15,7 +15,7 @@ builder.Services.AddSingleton<MediaProvider>();
 builder.Services.AddSingleton<ForegroundProvider>();
 builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });
 builder.Services.AddSingleton(provider => new WeatherFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("weather")));
-builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.2.5"); })
+builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.2.6"); })
     .ConfigurePrimaryHttpMessageHandler(NewsHttp.CreateHandler);
 builder.Services.AddSingleton(provider => new NewsFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("news")));
 builder.Services.AddSingleton<EmbeddedDiscordService>();

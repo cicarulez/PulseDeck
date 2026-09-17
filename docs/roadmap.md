@@ -329,7 +329,8 @@ CPU Package power e GPU Core clock; nessuna attribuzione arbitraria delle ventol
 generiche della scheda madre. La 0.2.3 è installata con Roma, Italia, selezionata;
 ricerca/scelta città e persistenza nel configuratore verificate su Windows,
 con acquisizione indipendente dal rendering e trasmissione USB confermata dall'agent.
-Le condizioni remote sono stime Open-Meteo, con fonte e ora esplicite e nessun dato
+Le condizioni remote sono stime Open-Meteo, con fonte nel configuratore e ora sul
+pannello, e nessun dato
 vecchio presentato dopo un errore. L’utente ha confermato la leggibilità del meteo e
 di tutti i 12 sensori sul display fisico, con immagine corretta e senza anomalie.
 
@@ -544,3 +545,12 @@ collegate, URL personalizzati e persistenza verificati dal configuratore Windows
 
 Fonti dei preset: [ANSA RSS](https://www.ansa.it/sito/static/ansa_rss.html),
 [Multiplayer.it feed](https://multiplayer.it/feed/).
+
+## Leggibilità su indicazioni dello screenshot (0.2.6)
+
+Rimossi la piccola didascalia sopra il nome dell’app e il credito meteo dal display;
+fonte e natura stimata del meteo rimangono nel configuratore. Ingranditi nome app,
+RAM usata/totale e libera, tempo Spotify, umidità, vento, ora meteo e data/ora news.
+Umidità, vento e ora meteo ora hanno una riga ciascuno. I 12 sensori e la dimensione
+scelta per il titolo news restano invariati; recupero USB della 0.2.5 conservato.
+Verifica fisica della nuova leggibilità ancora distinta dalle prove del renderer.

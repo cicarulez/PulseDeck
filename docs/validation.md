@@ -985,3 +985,33 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   frame 198 after sixty consecutive acknowledged frames. This verifies the bounded
   recovery improvement and short-term continuity, not elimination of the initial
   USB fault or a long-duration/cable/suspend reliability guarantee.
+
+## Screenshot-directed readability adjustments — 2026-09-17 (0.2.6)
+
+- Read the user's annotated screenshot from /tmp without copying it into Git.
+  Red marks identify the small foreground-app caption and weather credit line;
+  white marks identify foreground name, RAM used/total/free, media elapsed/duration,
+  weather humidity/wind/model time and the news publication timestamp.
+- Removed those two captions from the shared renderer. Open-Meteo attribution and
+  the explanation that weather is a model estimate remain in the configurator/docs.
+  Foreground name is now 28 px, media time 20 px, RAM used/total up to 26 px (22 px
+  minimum fitting) and free memory 20 px. Humidity, wind and model time each use a
+  separate 20 px line; news time is at least 20 px. Marked secondary readings now
+  use the normal light text color for contrast. Existing twelve sensor bindings,
+  news title size, header nickname and media cover remain unchanged.
+- 70 Core and 15 renderer tests, Angular production build and Windows publish passed.
+  Inspected standalone rendering against an actual state snapshot; all marked text
+  fits. USB recovery/encoding/shutdown implementation is unchanged from 0.2.5.
+- Before this update, the running 0.2.5 reported connected at 962 acknowledged
+  frames, six recoveries, zero current attempts and no current error. The historical
+  resend remains in diagnostics; this does not mean the initial USB fault is gone.
+- Deployed 0.2.6 after the old agent and hidden launcher fully exited. Backup:
+  `%LOCALAPPDATA%\PulseDeck\before-readability-026-20260917-204022`.
+  Stop logged screen-off and standby COM3 was observed; startup rediscovered COM5.
+  Configuration and encrypted credentials hashes are unchanged. The elevated
+  interactive PulseDeck task is running with no window; legacy TURZX task stays disabled.
+- Installed API and configurator report 0.2.6. Inspected the actual Windows PNG:
+  removed captions are absent, enlarged RAM/weather/media/header/news-time text
+  fits without overlap. At 79 acknowledged frames the display was connected,
+  transmitting partial frames with zero recovery attempts/errors; weather and news
+  were connected. Physical readability approval for this revision is still pending.

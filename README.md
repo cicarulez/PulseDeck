@@ -25,7 +25,7 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
 - Copertina, titolo, artista, stato e progresso di Spotify o altri player Windows.
 - RAM fisica usata/libera/totale utilizzabile; sensori rete con velocità in B/s, KiB/s o MiB/s.
 - Sfondo statico scuro integrato, oppure un’immagine locale scelta dall’utente.
-- Nome e icona dell’app in primo piano; indicazione Gioco per gli eseguibili configurati.
+- Nome e icona dell’app in primo piano; riconoscimento dei giochi configurati per il profilo Gaming.
 - Profili Desktop, Gaming e Musica; selezione manuale o automatica con ritardo configurabile.
 - Layout Gaming dedicato con icona/nome del gioco, identificazione GPU e gli stessi 16 widget;
   sfondo statico locale associabile a ciascun gioco.
@@ -170,6 +170,10 @@ dimostrativa; le icone meteo sono disegnate dal renderer condiviso.
 Sul PC di sviluppo i 12 widget conservano i dieci precedenti e aggiungono potenza
 CPU Package e frequenza GPU Core, legate ai sensori reali per ID e nome.
 
+La 0.2.6 ingrandisce umidità, vento e ora del dato su tre righe distinte. La riga
+con la fonte è rimossa dal display su richiesta; attribuzione Open-Meteo e natura
+stimata dei dati restano esplicite nel configuratore.
+
 ### News nel footer (0.2.4)
 
 Installata sul PC di sviluppo con Ultime notizie ANSA, Tecnologia ANSA e gaming PC
@@ -212,8 +216,8 @@ ma viene decodificato solo il primo fotogramma; il vecchio flag di animazione è
 L'aggiornamento normale resta a circa 1 Hz, senza cambiare il protocollo USB.
 
 La testata mostra nome e icona dell'eseguibile in primo piano, ricavati da Windows.
-**Gioco** compare solo se il processo corrisponde all'elenco in Configurazione; le
-altre applicazioni sono indicate come **App**. Il profilo Gaming manuale non trasforma
+Dalla 0.2.6 il nome è più grande, senza la piccola didascalia superiore. Il riconoscimento
+dei giochi usa i processi elencati in Configurazione. Il profilo Gaming manuale non trasforma
 un browser in un gioco rilevato. L'icona viene cercata localmente e conservata in una
 cache limitata in memoria: nessuna immagine del gioco entra nel repository. Processi
 protetti o applicazioni senza icona possono mostrare il nome e un segnaposto APP.

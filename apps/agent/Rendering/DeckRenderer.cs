@@ -129,7 +129,7 @@ public sealed class DeckRenderer : IDisposable
             Text(available ? state.Media.Artist : "", textX, y + 80, 18, muted, maxWidth: textWidth);
             Text(available ? state.Media.Playing ? "IN RIPRODUZIONE" : "IN PAUSA" : "INATTIVO", textX, y + 115, 13, state.Media.Playing ? accent : muted, maxWidth: textWidth);
             string Time(double seconds) => TimeSpan.FromSeconds(Math.Clamp(double.IsFinite(seconds) ? seconds : 0, 0, 359999)).ToString(seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
-            Text(available && state.Media.DurationSeconds > 0 ? $"{Time(state.Media.PositionSeconds)} / {Time(state.Media.DurationSeconds)}" : "— / —", textX, y + 144, 14, muted);
+            Text(available && state.Media.DurationSeconds > 0 ? $"{Time(state.Media.PositionSeconds)} / {Time(state.Media.DurationSeconds)}" : "— / —", textX, y + 144, 20, maxWidth: textWidth);
             canvas.DrawLine(x, y + 166, x + width, y + 166, line);
             if (available && state.Media.DurationSeconds > 0)
                 canvas.DrawRect(x, y + 164, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * width, 4, accentPaint);
@@ -154,11 +154,11 @@ public sealed class DeckRenderer : IDisposable
                     using var arc = new SKPath(); arc.AddArc(bounds, -90, (float)fraction * 359.99f); canvas.DrawPath(arc, ring);
                 }
                 else Text("—", x + 31, y + 47, 18, muted);
-                Text(widget.Label, x + 84, y + 23, 13, muted, maxWidth: cellWidth - 100);
+                Text(widget.Label, x + 84, y + 20, 13, muted, maxWidth: cellWidth - 100);
                 if (widget.Capacity is { } capacity && widget.Value is { } used)
                 {
-                    Text($"{widget.DisplayValue} / {capacity:0.#} {widget.DisplayUnit}", x + 84, y + 47, 22, maxWidth: cellWidth - 100, minimumSize: 14);
-                    Text($"{Math.Max(0, capacity - used):0.#} {widget.DisplayUnit} liberi", x + 84, y + 67, 13, muted, maxWidth: cellWidth - 100);
+                    Text($"{widget.DisplayValue} / {capacity:0.#} {widget.DisplayUnit}", x + 84, y + 48, 26, maxWidth: cellWidth - 100, minimumSize: 22);
+                    Text($"{Math.Max(0, capacity - used):0.#} {widget.DisplayUnit} liberi", x + 84, y + 72, 20, maxWidth: cellWidth - 100);
                 }
                 else ValueText(widget, x + 84, y + 58, 29, cellWidth - 100);
             }
@@ -229,10 +229,10 @@ public sealed class DeckRenderer : IDisposable
                 Text(WeatherConditions.Describe(weather.Code, weather.IsDay), 48, 278, 20, maxWidth: 300, minimumSize: 16);
                 Text("Percepita " + Number(weather.FeelsLike, " °C"), 48, 306, 16, muted, maxWidth: 300);
                 Text("MIN " + Number(weather.Minimum, "°") + "   MAX " + Number(weather.Maximum, "°"), 48, 337, 18, maxWidth: 300);
-                Text("Umidità " + Number(weather.Humidity, "%") + "   Vento " + Number(weather.WindSpeed, " km/h"), 48, 368, 14, muted, maxWidth: 300);
-                Text(weather.ModelTime is { } time ? "Dati locali delle " + time.ToString("HH:mm") : "Orario non disponibile", 48, 403, 13, muted, maxWidth: 300);
+                Text("Umidità " + Number(weather.Humidity, "%"), 48, 367, 20, maxWidth: 300);
+                Text("Vento " + Number(weather.WindSpeed, " km/h"), 48, 397, 20, maxWidth: 300);
+                Text(weather.ModelTime is { } time ? "Dati locali delle " + time.ToString("HH:mm") : "Orario non disponibile", 48, 427, 20, maxWidth: 300);
             }
-            Text("Open-Meteo · stima meteo", 48, 428, 12, muted, maxWidth: 300);
         }
         void Compact(bool gaming)
         {
@@ -269,8 +269,7 @@ public sealed class DeckRenderer : IDisposable
         Text("RECON / " + state.Profile.ToUpperInvariant(), 320, 42, 18, muted);
         if (appIcon is not null) canvas.DrawBitmap(appIcon, SKRect.Create(642, 14, 40, 40));
         else Text("APP", 643, 41, 13, muted);
-        Text(state.Foreground.IsGame ? "GIOCO IN PRIMO PIANO" : "APP IN PRIMO PIANO", 698, 25, 11, state.Foreground.IsGame ? accent : muted, true);
-        Text(state.Foreground.DisplayName, 698, 49, 20, maxWidth: 450);
+        Text(state.Foreground.DisplayName, 698, 44, 28, maxWidth: 450);
         Text(state.Timestamp.ToLocalTime().ToString("HH:mm:ss"), 1760, 42, 22);
         VoiceHeader();
         canvas.DrawLine(32, 66, 1888, 66, line);
@@ -337,7 +336,7 @@ public sealed class DeckRenderer : IDisposable
             var notice = state.News.Status switch { "loading" => "Aggiornamento notizie…", "not-configured" => "Scegli i canali in Configurazione → News",
                 "empty" => "Nessuna notizia recente", _ => "Notizie non disponibili" };
             Text(headline?.Title ?? notice, 286, 470, newsSize, maxWidth: 1450, minimumSize: newsSize);
-            Text(headline?.PublishedAt?.ToLocalTime().ToString("dd/MM HH:mm") ?? "data n/d", 1764, 470, newsSize - 8, muted, maxWidth: 136);
+            Text(headline?.PublishedAt?.ToLocalTime().ToString("dd/MM HH:mm") ?? "data n/d", 1764, 470, Math.Max(20, newsSize - 4), maxWidth: 136);
         }
         using var image = SKImage.FromBitmap(bitmap);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
