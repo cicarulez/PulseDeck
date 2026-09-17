@@ -201,10 +201,22 @@ Un'ulteriore lettura SDK delle registrazioni reali, senza attivare gli HAL elenc
 ha trovato 17 voci con esattamente un GUID PulseDeck durante la pubblicazione:
 la voce è quindi leggibile fuori dal registro privato del test.
 
-Prossimo passaggio: individuare un percorso di aggiornamento dell'inventario HAL
-del servizio attivo. Non riavviare i servizi ASUS né caricare la sonda dentro
-LightingService come scorciatoia. Dopo il rilevamento, verificare ricezione e
-contratto dei colori prima della prova fisica.
+**Installazione sperimentale rimovibile preparata:** un EXE COM separato in
+`C:\Program Files\PulseDeck Aura Probe`, protetto da scrittura per gli utenti
+standard, ha superato l'avvio su richiesta da SYSTEM/sessione 0, tre enumerazioni
+SDK e l'uscita quando i client rilasciano i riferimenti. Usa `LocalServer32` con
+identità del chiamante, senza `RunAs=Interactive User`, servizi o task permanenti.
+La categoria Aura viene pubblicata solo dopo questi controlli. Rimozione completa,
+rifiuto di sovrascrivere un'installazione esistente e reinstallazione verificati.
+
+Prossimo passaggio: dopo un riavvio eseguito volontariamente dall'utente, leggere
+prima la diagnostica della sonda, senza attivarla con i nostri client, e controllare
+Aura Sync. Le due attivazioni già registrate appartengono ai test SYSTEM, non ad
+ASUS. Il riavvio potrebbe provocare una nuova scansione, ma non garantisce
+l'accettazione dell'HAL. Non riavviare i servizi ASUS né caricare la sonda dentro
+LightingService come scorciatoia. Dopo il rilevamento, implementare e verificare
+ricezione e contratto dei colori prima della prova fisica: le callback aggiuntive
+restituiscono ancora E_NOTIMPL.
 Nessun provider o ricevitore persistente viene installato nell'agent in questa fase.
 
 Il modulo GmAcc installato include già una modalità virtuale, ma usa il canale
@@ -216,8 +228,8 @@ servizio accetti un HAL di terze parti. Non sono state disabilitate verifiche di
 
 Ancora da verificare: tile Armoury Crate, ricezione dei frame colore dal controller
 ASUS, transizioni statiche/dinamiche confrontate con i LED reali, rimozione pulita
-e convivenza con Aura Wallpaper. Nessun provider nell'agent e nessuna installazione
-HAL persistente; i servizi ASUS non sono stati arrestati o riavviati.
+e convivenza con Aura Wallpaper. Nessun provider nell'agent; è installata solo la
+sonda separata descritta sopra. I servizi ASUS non sono stati arrestati o riavviati.
 
 Passi della prova della sorgente colori:
 

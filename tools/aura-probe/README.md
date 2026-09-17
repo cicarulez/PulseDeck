@@ -182,7 +182,8 @@ remote references or resolve the previously observed SDK lifetime issue.
 
 LightingService runs as LocalSystem. The next test now verifies activation across
 that boundary, but real service discovery, color payloads and continuous lifetime
-remain unverified. No persistent server or agent provider is installed.
+remain unverified. That temporary workflow installs no persistent server or agent provider.
+For the subsequent on-demand installation, see below.
 
 Microsoft reference: [running EXE class registration and revocation](https://learn.microsoft.com/en-us/windows/win32/com/registering-a-running-exe-server).
 
@@ -265,3 +266,62 @@ and virtual-device capability description are our own.
 Microsoft references: [process-local registry redirection](https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regoverridepredefkey),
 [COM registration](https://learn.microsoft.com/en-us/windows/win32/api/combaseapi/nf-combaseapi-coregisterclassobject),
 [type-library loading](https://learn.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-loadtypelibex).
+
+## Reversible on-demand installation (experimental)
+
+The development PC now has an experimental registration for a separate
+`PulseDeck.AuraHal.exe` under `C:\Program Files\PulseDeck Aura Probe`.
+This does not establish an Armoury Crate tile or usable RGB receiver. Effect
+callbacks remain unsupported, and no PulseDeck agent provider is enabled.
+
+Run from the built native-probe directory in **elevated Windows PowerShell**:
+
+```powershell
+./Manage-InstalledProbe.ps1 -Action Install
+./Manage-InstalledProbe.ps1 -Action Status
+./Manage-InstalledProbe.ps1 -Action Remove
+```
+
+The installed copy of `Manage-InstalledProbe.ps1` also supports Status/Remove.
+Install refuses an existing directory or any of our class/AppID/category keys.
+It copies only our executables/scripts into an admin-owned folder, applies explicit
+read/execute-only access for Users and records ownership plus SHA-256 hashes.
+It registers the exact probe CLSID's x86 LocalServer32 path, fully quoted, plus
+ServerExecutable. No AppID/RunAs, permanent scheduled task or Windows service is
+created. COM launches the HAL as its caller, including SYSTEM/session 0, rather than
+requiring a server already running in an interactive login.
+
+Before category publication, a unique bounded SYSTEM task verifies automatic startup,
+direct COM metadata, three private-category SDK enumerations and idle exit. The
+server retains no ASUS SDK and no hardware ownership. It pumps its STA, honors COM
+references/locks, and exits after 15 idle seconds. It suspends class activation before
+final shutdown. The task is removed; failures roll back owned registration/files.
+If removal cannot observe our server exit within ten seconds, files are retained for
+retry instead of forcibly terminating another process or removing locked binaries.
+Unexpected files in the directory are preserved. Abrupt termination/power loss of
+the installer is not a tested transactional rollback guarantee.
+
+Reports contain metadata/counters only, one latest file per account/session:
+`%LOCALAPPDATA%\PulseDeck\aura-installed-probe\session-<id>.json`.
+The x86 SYSTEM process writes under
+`C:\Windows\SysWOW64\config\systemprofile\AppData\Local\PulseDeck`.
+Status reads available reports without activating the HAL; run elevated to read
+SYSTEM's report. Installation audit results remain in the installer's LOCALAPPDATA
+under `PulseDeck\aura-investigation\installed-runs`. Preserve the audit as the
+baseline: two activations/seven enumerations/four capability reads came from our
+SYSTEM test, not ASUS. Report timestamps and PIDs distinguish later starts.
+
+After a user-initiated reboot, read Status **before** running any direct/SDK activation
+test, then read existing service capabilities and inspect Aura Sync. No reboot or
+ASUS service restart is performed by these scripts. Detection after reboot and
+physical RGB correspondence remain unverified. Do not invoke the old temporary COM,
+SYSTEM identity or class-absence tests while installed: they share the same CLSID.
+
+Windows validation: SYSTEM automatic launch and idle exit passed; attempting a
+second Install was refused; Remove left REGDB_E_CLASSNOTREG and no category/class
+keys; reinstall passed the same SYSTEM checks. No temporary tasks remained and
+ASUS service PIDs were unchanged. The service still did not report PulseDeck.
+
+Microsoft references: [LocalServer32 command registration](https://learn.microsoft.com/en-us/windows/win32/com/localserver32),
+[launching-user identity](https://learn.microsoft.com/en-us/windows/win32/com/launching-user),
+[class suspension](https://learn.microsoft.com/en-us/windows/win32/api/combaseapi/nf-combaseapi-cosuspendclassobjects).

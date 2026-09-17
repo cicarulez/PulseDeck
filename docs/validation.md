@@ -379,3 +379,44 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   message check verifies the handler and hardware command, not Windows shutdown
   ordering on this PC. Forced termination, USB errors and power loss remain outside
   the guarantee of a cooperative shutdown handler.
+
+## Aura on-demand installation and removal — 2026-09-17
+
+- Built a separate x86 GUI-subsystem HAL executable with GCC warnings as errors.
+  It loads no ASUS SDK, calls no RGB control methods and remains separate from the
+  installed agent. Existing 100-cycle COM ownership tests and temporary external
+  COM/SDK plus forced-exit cleanup regression passed before persistent installation.
+- The machine x86 LocalServer32 registration now launches the HAL automatically
+  under the caller's identity. A SYSTEM/session-0 client with no pre-existing HAL
+  process passed direct metadata reads and three SDK enumerations. The server
+  recorded two activations, seven enumerations, four capability reads and zero
+  effect/sync callbacks, then exited idle with references 1/1/1. This establishes
+  on-demand activation from SYSTEM, not an actual pre-login or reboot observation.
+- Initial installer checks exposed a PowerShell variable-name collision and then
+  the x86 SYSTEM log's SysWOW64 redirection. Both handled failures removed their
+  installation. Corrected workflow passed, then passed again after full removal.
+- Existing-install refusal was verified. Removal deleted only owned category/class
+  keys and known package files; native CoGetClassObject returned REGDB_E_CLASSNOTREG.
+  Reinstallation passed the SYSTEM checks before republishing the category. Latest
+  successful test server PID 35032, report 2026-09-17T13:04:30Z, state idle-exit.
+  Audit is stored outside Git under the installer's LOCALAPPDATA.
+- Final SDK registration inventory: 17 HAL entries, one probe GUID. The installation
+  remains in C:\Program Files\PulseDeck Aura Probe for a later user-initiated reboot.
+  Directory owner is BUILTIN\Administrators; SYSTEM/admin FullControl, Users
+  ReadAndExecute. Only our two executables and two scripts plus manifest are present.
+  No permanent task/service or AppID/RunAs mapping was created; no global COM ACL edits.
+- Roundtrip left zero temporary probe tasks. LightingService PID 6840 and
+  ArmouryCrateService PID 6608 remained running. A passive service-capabilities read
+  after reinstall still returned ContainsProbeName=false. No additional host remained
+  running. Installed PulseDeck agent, startup task and configuration were unchanged.
+- No PC restart, service restart, SwitchMode, Apply, outgoing LED setter or manual
+  refresh was used. Receiving colors is not implemented by the installed host;
+  effect callbacks return E_NOTIMPL. Actual ASUS activation/tile discovery after
+  reboot, continuous callback behavior, RGB correspondence and abrupt installer
+  interruption remain unverified. Read diagnostic Status before any new self-test
+  after reboot so our own activations cannot be mistaken for ASUS discovery.
+- Configurator returned HTTP 200. A subsequent unrelated USB timeout entered
+  `recovering` at acknowledgement 11587; the existing bounded recovery returned to
+  connected with recovery count 13, acknowledgement 11678 and attempt budget reset
+  to zero. No manual reconnect was issued. This is transport evidence; no new
+  physical-image or RGB confirmation was requested during the Aura installation.

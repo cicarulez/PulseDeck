@@ -12,6 +12,8 @@ static const GUID hal_iid = {0xf2c8d5b4,0x3854,0x4325,{0x8a,0x4f,0xfd,0x7c,0x50,
 static LONG activations, enumerations, capabilities, effect_requests, sync_requests;
 static LONG legacy_enumerations, array_enumerations;
 static LONG factory_refs = 1;
+static LONG server_locks;
+static LONG registered_factory_refs;
 static BOOL empty_devices;
 static DWORD cookie;
 static Receiver *receiver;
@@ -152,13 +154,30 @@ static HRESULT STDMETHODCALLTYPE factory_create(IClassFactory *self, IUnknown *o
     InterlockedIncrement(&activations);
     return hal_query(&hal, iid, result);
 }
-static HRESULT STDMETHODCALLTYPE factory_lock(IClassFactory *self, BOOL lock) { (void)self; (void)lock; return S_OK; }
+static HRESULT STDMETHODCALLTYPE factory_lock(IClassFactory *self, BOOL lock) {
+    (void)self;
+    if (lock) InterlockedIncrement(&server_locks);
+    else if (server_locks > 0) InterlockedDecrement(&server_locks);
+    else return E_UNEXPECTED;
+    return S_OK;
+}
 static IClassFactoryVtbl factory_vtbl = {factory_query, factory_add, factory_release, factory_create, factory_lock};
 static IClassFactory factory = {&factory_vtbl};
 HRESULT RegisterProbe(BOOL empty) {
     if (cookie) return E_UNEXPECTED;
     empty_devices = empty;
     return CoRegisterClassObject(&probe_clsid, (IUnknown*)&factory, CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &cookie);
+}
+HRESULT RegisterLocalProbe(void) {
+    if (cookie) return E_UNEXPECTED;
+    HRESULT hr = CoRegisterClassObject(&probe_clsid, (IUnknown*)&factory,
+        CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie);
+    registered_factory_refs = factory_refs;
+    return hr;
+}
+BOOL ProbeHasClients(void) {
+    return hal.refs > 1 || device.refs > 1 || server_locks > 0 ||
+        factory_refs > registered_factory_refs;
 }
 HRESULT UnregisterProbe(void) {
     if (!cookie) return S_FALSE;

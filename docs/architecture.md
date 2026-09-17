@@ -175,3 +175,28 @@ limit, and runs only in the configured user session. No browser is opened.
 The installer exports existing task XML before changes, registers and verifies
 PulseDeck before disabling the legacy TURZX task, and rolls back the task changes
 if setup fails. Hardware/runtime files and credentials are untouched by setup.
+
+## On-demand experimental Aura HAL
+
+`PulseDeck.AuraHal.exe` is a separate x86 GUI-subsystem COM host with no ASUS SDK
+loading or outgoing RGB calls. Its machine x86 `LocalServer32` registration uses
+the launching client's identity, allowing a SYSTEM caller to start it in session 0
+without an interactive-user host. This does not change the PulseDeck agent identity.
+The executable and helper scripts live in an administrator-owned Program Files
+folder with explicit SYSTEM/admin write and Users read/execute permissions.
+
+The STA pumps messages and exits after 15 idle seconds once HAL/device/factory
+references and server locks allow it. Class suspension prevents new SCM activation
+during final idle shutdown. A removal marker in the protected installation folder
+ends only this host; the remover first unpublishes its owned category and CLSID.
+One latest JSON report per account/session records activation counts, callbacks and
+exit state under that account's LOCALAPPDATA/PulseDeck. SYSTEM x86 writes to the
+SysWOW64 systemprofile location; no log or vendor binary goes into the repository.
+
+`Manage-InstalledProbe.ps1` refuses existing registration/install paths, records an
+ownership manifest and file hashes, tests on-demand SYSTEM COM/SDK activation and
+idle exit before publishing the Aura category, and rolls back handled failures.
+The temporary SYSTEM test task is removed. A persistent installation conflicts with
+the earlier temporary-class/absence tests: remove it before running those tests.
+No color reception, service acceptance or reboot behavior is established by the
+SYSTEM client test. This prototype still returns E_NOTIMPL for effect callbacks.

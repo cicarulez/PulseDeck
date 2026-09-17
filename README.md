@@ -143,7 +143,12 @@ separato, nella stessa sessione utente, compresa la rimozione della registrazion
 temporanea dopo un arresto forzato. Un client di prova `LocalSystem` in sessione 0
 riesce ora a leggere ed enumerare il dispositivo tramite due voci COM temporanee.
 La pubblicazione nella categoria Aura per 30 secondi non ha provocato il rilevamento
-automatico da parte del servizio già attivo; nessuna installazione persistente.
+automatico da parte del servizio già attivo.
+È ora installata una sonda sperimentale rimovibile in `C:\Program Files\PulseDeck Aura Probe`:
+Windows ne ha verificato l'avvio COM su richiesta come SYSTEM, senza un host già
+aperto nella sessione utente. Disinstallazione e reinstallazione sono state provate.
+Il rilevamento da parte di ASUS dopo un riavvio volontario dell'utente resta da
+verificare; non sono ancora disponibili colori Aura e l'agent rimane invariato.
 
 ## Avvio automatico senza finestre
 

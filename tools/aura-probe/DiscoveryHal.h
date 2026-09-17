@@ -21,6 +21,8 @@ int CheckProbeContracts(void);
 int RunComServer(const char *parent_pid, const char *event_suffix, const char *lifetime);
 int CheckRemoteContracts(void);
 int CheckRemoteAbsent(void);
+HRESULT RegisterLocalProbe(void);
+BOOL ProbeHasClients(void);
 void SetProbeReceiver(Receiver *receiver);
 HRESULT RegisterProbe(BOOL empty);
 HRESULT UnregisterProbe(void);
