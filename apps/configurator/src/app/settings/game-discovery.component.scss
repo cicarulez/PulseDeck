@@ -1,0 +1,11 @@
+@use './game-themes.component';
+.path{overflow-wrap:anywhere}
+details{margin-top:20px}summary{cursor:pointer;font-size:13px}
+.game-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);min-width:0}
+.game-row>div:first-child{min-width:0}.game-row p{margin:5px 0}.game-row strong{font-size:13px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}textarea{resize:vertical;min-height:80px;padding:10px 12px}
+@media(max-width:640px){.game-row{align-items:stretch;flex-direction:column}}
+
+.game-identity{display:flex;align-items:center;gap:12px;min-width:0}.game-description{min-width:0}
+.thumbnail{width:80px;height:45px;flex:none;display:grid;place-items:center;background:var(--bg);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.thumbnail img{width:100%;height:100%;object-fit:cover}.thumbnail span{font-size:9px;line-height:1.3;color:var(--muted);text-align:center}

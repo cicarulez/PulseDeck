@@ -691,3 +691,25 @@ Steam esistente. Gli sfondi manuali mantengono la precedenza; quelli automatici
 valgono solo in Gaming. La rilevazione dei processi di gioco resta separata.
 Implementazione e test completati; download reale da verificare dopo che l'utente
 avrà collegato la propria chiave. Dettagli in `docs/validation.md`.
+
+## Scoperta locale Steam ed EA Games (0.6.0)
+
+Implementata scansione in background all'avvio, ogni dieci minuti e su richiesta:
+librerie Steam registrate, EA Games standard e cartelle aggiuntive configurabili.
+Manifest, cache locale di avvio Steam e metadati EA associano titoli ed eseguibili;
+il catalogo NVIDIA non è necessario. I candidati incerti possono essere confermati
+o ignorati nel configuratore; la lista manuale resta disponibile come eccezione.
+SteamGridDB continua a occuparsi delle immagini dopo il riconoscimento locale.
+
+Il riconoscimento automatico verifica il percorso completo; la lettura Windows
+usa prima i permessi limitati per il nome dell'immagine del processo. Il catalogo
+persistente resta fuori dal repository. Nuovi filtri FPS vengono applicati senza
+riavviare una raccolta sana mentre uno dei giochi è aperto; per un titolo appena
+installato può servire attendere la scansione prima di avviarlo.
+
+Sul PC dell'utente: tre librerie, 15 titoli e 27 eseguibili riconosciuti, incluso
+FC 27. F1 25 raggiunge il limite delle sottocartelle esplorate, segnalato in UI;
+eseguibili principale e trial comunque rilevati. Verifiche in `docs/validation.md`.
+
+Aggiunte anche miniature accanto agli eseguibili del catalogo, su richiesta:
+caricamento progressivo, cache condivisa delle copertine e segnaposto esplicito.

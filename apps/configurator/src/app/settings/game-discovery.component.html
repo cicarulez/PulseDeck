@@ -1,0 +1,29 @@
+<div class="theme-heading"><h3>Riconoscimento automatico dei giochi</h3><span>{{ state()?.scanning ? 'Scansione in corso…' : options().enabled ? 'Attivo' : 'Disattivato' }}</span></div>
+<p>Legge le librerie Steam e la cartella EA Games standard. Non dipende da NVIDIA. SteamGridDB recupera le immagini quando apri un gioco riconosciuto.</p>
+<div class="fields">
+  <label>Ricerca locale<select [ngModelOptions]="{standalone: true}" [ngModel]="options().enabled" (ngModelChange)="update({enabled: $event})" [disabled]="busy()"><option [ngValue]="true">Attiva</option><option [ngValue]="false">Disattiva</option></select></label>
+  <label class="wide">Altre cartelle di giochi<textarea rows="3" [ngModelOptions]="{standalone: true}" [ngModel]="options().folders.join('\n')" (ngModelChange)="folders($event)" [disabled]="busy()" placeholder="D:\EA Games"></textarea><small>Un percorso per riga. Le librerie Steam registrate e C:\Program Files\EA Games vengono già cercate automaticamente.</small></label>
+</div>
+<p>Salva la configurazione per applicare cartelle, conferme ed esclusioni. La scansione si ripete ogni dieci minuti. I giochi nuovi devono essere rilevati prima di avviarli per preparare gli FPS.</p>
+<button class="button" type="button" (click)="scan()" [disabled]="busy() || requesting() || state()?.scanning || !options().enabled">Cerca nuovi giochi</button>
+@if (message()) { <p role="status">{{ message() }}</p> }
+@if (state(); as catalog) {
+  @for (library of catalog.libraries; track library.path) { <p class="path">{{ library.source }} · {{ library.path }}</p> }
+  @for (warning of catalog.warnings; track warning) { <p role="status">{{ warning }}</p> }
+  <details><summary>Catalogo · {{ catalog.games.length }} eseguibili</summary>
+    @for (game of catalog.games; track game.executable) {
+      <div class="game-row"><div class="game-identity">
+        <div class="thumbnail" aria-hidden="true">
+          @if (!failedImages().has(game.thumbnailId)) { <img [src]="'/api/games/thumbnail/' + game.thumbnailId" alt="" width="80" height="45" loading="lazy" decoding="async" (error)="imageFailed(game)"> }
+          @else { <span>Immagine<br>non disponibile</span> }
+        </div>
+        <div class="game-description"><strong>{{ game.name }}</strong><p>{{ game.source }} · {{ label(game) }}</p><p class="path">{{ game.executable }}</p></div></div>
+        <div class="actions">
+          @if (status(game) !== 'recognized') { <button class="button" type="button" (click)="decide(game, 'confirm')" [disabled]="busy()">Conferma</button> }
+          @if (status(game) !== 'ignored') { <button class="button" type="button" (click)="decide(game, 'ignore')" [disabled]="busy()">Ignora</button> }
+          @if (status(game) === 'ignored') { <button class="button" type="button" (click)="decide(game, 'reset')" [disabled]="busy()">Ripristina</button> }
+        </div>
+      </div>
+    } @empty { <p>Nessun eseguibile rilevato. Controlla le cartelle o avvia una nuova scansione.</p> }
+  </details>
+}

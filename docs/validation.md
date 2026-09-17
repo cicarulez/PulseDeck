@@ -1317,3 +1317,59 @@ Sources: [Chromium shared system media controls](https://chromium.googlesource.c
   unverified until the user connects a personal key and opens a recognized game.
 
 API reference: [official SteamGridDB client](https://github.com/SteamGridDB/node-steamgriddb).
+
+## Steam/EA library discovery — 2026-09-18 (0.6.0)
+
+- Added optional background scans of registered Steam libraries, the standard
+  EA Games folder and user-configured local roots. Reads Steam ACF manifests,
+  appinfo cache versions 0x27/0x28/0x29 and EA installer XML. Launch metadata and
+  conservative executable/title matches identify games; helpers and Steam software
+  entries are excluded. Unknown candidates require confirmation. Windows image-path
+  queries use limited process rights first, with module-path fallback.
+- Automatic recognition requires the full executable path; explicit manual names
+  remain supported. Catalog snapshots are cached outside source control. Existing
+  timer, Alt-Tab and renderer behavior use the effective discovered process list.
+  A changed FPS filter is deferred while a captured or newly discovered game runs;
+  a newly discovered uncaptured game gets an explicit restart-required status.
+- 107 Core tests passed, including escaped Steam paths, three binary appinfo
+  versions, malformed caches, helper exclusion, title matching, Unreal secondary
+  targets, overrides and foreground name collisions. 17 rendering tests passed.
+  Angular production build and Windows publish succeeded without warnings.
+- A separate Windows scanner executable read real installation metadata without
+  launching games. The running agent subsequently reported three roots: Steam on
+  C:, E:\SteamLibrary and C:\Program Files\EA Games; 15 distinct titles and 27
+  recognized executable paths, no pending confirmations. Includes FC 27, ARC Raiders
+  (PioneerGame root and Unreal child), Mafia III and the other EA/Steam installs.
+  Steam classifies 3DMark as software, so it is omitted. F1 25 reached the 2,000
+  directory limit; main/trial EXEs were found and the partial-scan warning is exposed.
+- Isolated headless Chromium on the production configurator with mocked APIs
+  verified scan requests do not submit the settings form, ignoring an entry persists
+  through the explicit save, zero Angular page errors and no overflow at 390 px.
+- Initial 0.6.0 deployment stopped/waited for the old agent/task, with backup
+  `%LOCALAPPDATA%\PulseDeck\before-discovery-060-20260918-005007`.
+  Config, Discord credentials and SteamGridDB credentials preserved; COM5 verified
+  connected with acknowledged frames and no error. Actual rescan completed while
+  the PresentMon process ID stayed unchanged; FPS status remained `ready`, with
+  52 display frames acknowledged at that observation.
+- No actual game launch, foreground transition or new-game FPS samples were observed
+  during these checks. Mid-game catalog changes are not yet integration-tested;
+  the verified rescan used unchanged installations on the desktop.
+- The limited-rights Windows image-path helper was exercised on the standalone
+  diagnostic process and matched its actual executable path. This does not prove
+  that every protected game permits the query.
+- Authenticated SteamGridDB fetch using the saved, DPAPI-decrypted credential
+  returned both a valid cover and hero for Battlefield 6. EA SPORTS FC 27 returned
+  no usable artwork in that check. No credential value was printed. These images
+  were cached locally; their physical-panel appearance was not observed.
+- Added user-requested 160×90 JPEG thumbnails to catalog rows. Lazy browser loading,
+  a two-download limit and per-title request sharing reuse existing artwork caches;
+  thumbnail requests do not mutate the active display scene. Unknown catalog IDs
+  return 404, and missing images have an explicit UI placeholder. A second isolated
+  Chromium check verified image decode, missing-image placeholder, save behavior,
+  zero Angular errors and no mobile overflow. Production builds passed again.
+- Final build including thumbnails deployed with backup
+  `%LOCALAPPDATA%\PulseDeck\before-discovery-060-20260918-005548`.
+  Config and both credential files preserved, startup task reused. Live thumbnail
+  endpoint returned a decodable 160×90 Battlefield 6 JPEG (6,258 bytes); unknown ID
+  returned 404. At the check, display connected with 11 acknowledged frames and no
+  error, SteamGridDB configured and FPS `ready`. No game was launched by the agent.

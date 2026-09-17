@@ -50,7 +50,7 @@ public sealed class GameArtworkProvider(HttpClient client, ConfigStore config, S
         return snapshot;
     }
 
-    private async Task<GameArtworkSnapshot> Fetch(string name, CancellationToken token)
+    public async Task<GameArtworkSnapshot> Fetch(string name, CancellationToken token)
     {
         if (steamGrid.Configured)
         {

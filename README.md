@@ -220,17 +220,14 @@ L'aggiornamento normale resta a circa 1 Hz, senza cambiare il protocollo USB.
 
 La testata mostra nome e icona dell'eseguibile in primo piano, ricavati da Windows.
 Dalla 0.2.6 il nome è più grande, senza la piccola didascalia superiore. Il riconoscimento
-dei giochi usa i processi elencati in Configurazione. Il profilo Gaming manuale non trasforma
+dei giochi usa le installazioni Steam/EA rilevate e le eccezioni manuali in Configurazione. Il profilo Gaming manuale non trasforma
 un browser in un gioco rilevato. L'icona viene cercata localmente e conservata in una
 cache limitata in memoria: nessuna immagine del gioco entra nel repository. Processi
 protetti o applicazioni senza icona possono mostrare il nome e un segnaposto APP.
 L'icona segue il primo piano, quindi cambia anche passando a un'altra app con Alt-Tab.
-La scoperta automatica dei giochi installati non è ancora implementata.
-La ricognizione successiva ha trovato nel catalogo locale della NVIDIA App le
-associazioni di FC26 e Battlefield 6 ai rispettivi eseguibili. È una possibile fonte
-in sola lettura per automatizzare il riconoscimento e recuperare le icone anche quando
-il processo non espone il percorso; l’adapter non è ancora integrato. Icona e sfondo
-panoramico sono risorse distinte: il recupero automatico delle copertine resta da fare.
+Dalla 0.6.0 la scansione locale Steam/EA associa titolo e percorso degli eseguibili;
+il catalogo NVIDIA rimane una fonte opzionale per i giochi configurati manualmente.
+Le copertine e gli sfondi automatici sono descritti nella sezione SteamGridDB.
 
 ### Modalità Gaming e utente Discord nell’header (0.2.2)
 
@@ -441,5 +438,40 @@ la ricerca Steam; se anche quella manca viene mostrata l'icona disponibile.
 Cache immagini per 30 giorni nella cartella `game-artwork`, senza credenziali nelle
 richieste al CDN. **Rimuovi collegamento** cancella la chiave e ripristina la ricerca
 Steam; le immagini già scaricate rimangono nella cache locale. Questa integrazione
-riguarda le immagini: l'elenco dei processi che attivano Gaming resta configurato
-separatamente. Non viene attivata alcuna registrazione storica della telemetria.
+riguarda le immagini: il riconoscimento dei giochi usa il catalogo locale Steam/EA
+e le eccezioni manuali. Non viene attivata alcuna registrazione storica della telemetria.
+
+
+### Riconoscimento automatico Steam ed EA Games (0.6.0)
+
+In **Configurazione → Comportamento → Riconoscimento automatico dei giochi** puoi
+attivare la scansione, indicare altre cartelle e usare **Cerca nuovi giochi**.
+Steam viene individuato dal registro dell'utente, comprese le librerie secondarie
+registrate in `libraryfolders.vdf`. EA Games viene cercato nella cartella standard
+Program Files; installazioni EA in altri percorsi si aggiungono alle cartelle.
+
+La scansione parte all'avvio, al cambio delle opzioni salvate e ogni dieci minuti,
+su un worker separato dal display. Legge manifest Steam, dati locali di avvio
+`appinfo.vdf`, metadati EA e descrizioni degli EXE. Esclude componenti di servizio,
+launcher e software classificato come non gioco da Steam. Il formato appinfo è
+opzionale: versioni sconosciute o file non leggibili lasciano i candidati incerti
+alla conferma manuale. Non vengono avviati gli eseguibili durante la scansione.
+
+Il catalogo mostra i singoli eseguibili, incluse varianti multiplayer, trial e
+secondi processi del gioco. Puoi **Confermare**, **Ignorare** o **Ripristinare** una
+voce, quindi salvare la configurazione. Le esclusioni riguardano la scoperta
+automatica: eventuali eccezioni nella lista manuale restano esplicite e prioritarie.
+Per il riconoscimento automatico serve il percorso completo del processo attivo;
+un nome identico fuori dalla libreria non basta. I dati vengono conservati in
+`%LOCALAPPDATA%\PulseDeck\game-library.json`, mai nel repository.
+
+La scansione ha limiti di profondità e numero di cartelle; eventuali risultati
+parziali sono segnalati. Per un gioco appena installato, attendi la scansione e
+lo stato FPS `ready` prima di aprirlo. Il catalogo aggiornato non riavvia una
+raccolta FPS sana mentre un gioco è aperto; se il nuovo processo non era ancora
+incluso, PulseDeck indica di chiuderlo e riaprirlo dopo la preparazione.
+
+Ogni voce del catalogo mostra una miniatura della copertina, caricata solo quando
+si avvicina all'area visibile. Riusa la cache immagini SteamGridDB/Steam del display,
+con al massimo due download contemporanei e un segnaposto se manca una copertina.
+Le miniature JPEG sono ridotte a 160×90; non vengono aggiunte immagini al repository.

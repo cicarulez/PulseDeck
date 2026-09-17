@@ -23,7 +23,10 @@ public sealed class PresentMonProvider : IDisposable
         // agent startup, limited to configured executable names. Select samples by PID.
         var names = config.GameProcesses.Select(p => Path.GetFileNameWithoutExtension(p) + ".exe")
             .Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
-        if (!names.SequenceEqual(processNames, StringComparer.OrdinalIgnoreCase))
+        var pendingNames = !names.SequenceEqual(processNames, StringComparer.OrdinalIgnoreCase);
+        // Never replace a healthy ETW session while any captured/new game is running.
+        var defer = pendingNames && capture is { HasExited: false } && AnyGameRunning(names.Concat(processNames));
+        if (pendingNames && !defer)
         {
             Stop(); processNames = names; retryAt = DateTimeOffset.MinValue; lastError = null;
         }
@@ -36,7 +39,9 @@ public sealed class PresentMonProvider : IDisposable
                 if (csvHeader is not null) samples?.Add(csvHeader, now);
             }
         }
-        if (names.Length == 0) return new("idle");
+        if (defer && current is not null && !processNames.Contains(current.ProcessName + ".exe", StringComparer.OrdinalIgnoreCase))
+            return new("restart-required", ProcessId: current.ProcessId, Detail: "Nuovo gioco rilevato: chiudilo e attendi la raccolta pronta prima di riaprirlo.");
+        if (names.Length == 0 && !defer) return new("idle");
         if (!File.Exists(executable)) return new("not-installed", Detail: "PresentMon non installato");
         if (capture is not null && !capture.HasExited)
         {
@@ -77,6 +82,19 @@ public sealed class PresentMonProvider : IDisposable
             return new("starting", ProcessId: current?.ProcessId);
         }
         catch { Stop(); return new("unavailable", ProcessId: current?.ProcessId, Detail: "Avvio PresentMon non riuscito"); }
+    }
+
+    private static bool AnyGameRunning(IEnumerable<string> names)
+    {
+        var wanted = names.Select(Path.GetFileNameWithoutExtension).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            var running = false;
+            foreach (var process in Process.GetProcesses())
+                using (process) { try { if (wanted.Contains(process.ProcessName)) running = true; } catch { } }
+            return running;
+        }
+        catch { return true; }
     }
 
     private ProcessStartInfo StartInfo() => new(executable)

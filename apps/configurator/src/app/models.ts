@@ -1,3 +1,6 @@
+export interface GameDiscoveryOptions { enabled: boolean; folders: string[]; confirmedExecutables: string[]; ignoredExecutables: string[]; }
+export interface DiscoveredGame { thumbnailId: string; name: string; executable: string; installDirectory: string; source: string; steamAppId: string | null; automatic: boolean; status: 'recognized' | 'review' | 'ignored'; }
+export interface GameLibraryStatus { enabled: boolean; scanning: boolean; scannedAt: string | null; libraries: { path: string; source: string }[]; games: DiscoveredGame[]; warnings: string[]; }
 export interface NewsChannel { name: string; url: string; enabled: boolean; }
 export interface NewsOptions { enabled: boolean; rotationSeconds: number; fontSize: number; channels: NewsChannel[]; }
 export interface NewsItem { source: string; title: string; url: string; publishedAt: string | null; }
@@ -9,6 +12,7 @@ export interface WidgetSlot { id: string; name: string; isBar: boolean; }
 export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; }
 export interface GameTheme { processName: string; backgroundPath: string; }
 export interface DeckConfig {
+  gameDiscovery: GameDiscoveryOptions;
   widgets: WidgetConfig[];
   layout: 'classic' | 'compact' | 'weather';
   weatherLocation: WeatherLocation | null; news: NewsOptions;

@@ -17,6 +17,9 @@ builder.Services.AddHttpClient("youtube-artwork", client =>
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 builder.Services.AddSingleton<MediaProvider>();
 builder.Services.AddSingleton<InstalledGameCatalog>();
+builder.Services.AddSingleton<GameDiscoveryService>();
+builder.Services.AddSingleton<GameThumbnailProvider>();
+builder.Services.AddHostedService(p => p.GetRequiredService<GameDiscoveryService>());
 builder.Services.AddSingleton<ForegroundProvider>();
 builder.Services.AddSingleton<GameSessionProvider>();
 builder.Services.AddSingleton<SteamGridCredentials>();
@@ -29,7 +32,7 @@ builder.Services.AddHttpClient("game-artwork", client => { client.Timeout = Time
 builder.Services.AddSingleton(provider => new GameArtworkProvider(provider.GetRequiredService<IHttpClientFactory>().CreateClient("game-artwork"), provider.GetRequiredService<ConfigStore>(), provider.GetRequiredService<SteamGridArtwork>()));
 builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });
 builder.Services.AddSingleton(provider => new WeatherFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("weather")));
-builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.5.0"); })
+builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.6.0"); })
     .ConfigurePrimaryHttpMessageHandler(NewsHttp.CreateHandler);
 builder.Services.AddSingleton(provider => new NewsFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("news")));
 builder.Services.AddSingleton<EmbeddedDiscordService>();
@@ -104,6 +107,15 @@ app.MapGet("/api/weather/locations", async (string? query, IHttpClientFactory cl
     catch (OperationCanceledException) when (token.IsCancellationRequested) { return Results.StatusCode(499); }
     catch { return Results.Json(new { error = "Ricerca meteo non disponibile. Riprova tra poco." }, statusCode: 502); }
 });
+app.MapGet("/api/games", (GameDiscoveryService games) => games.Status);
+app.MapGet("/api/games/thumbnail/{id}", async (string id, GameDiscoveryService games, GameThumbnailProvider thumbnails, CancellationToken token) =>
+{
+    var title = games.ThumbnailTitle(id);
+    if (title is null) return Results.NotFound();
+    var image = await thumbnails.Read(title).WaitAsync(token);
+    return image is null ? Results.NotFound() : Results.File(image, "image/jpeg");
+});
+app.MapPost("/api/games/scan", (GameDiscoveryService games) => { games.RequestScan(); return Results.Ok(new { requested = true }); });
 app.MapGet("/api/steamgriddb", (SteamGridCredentials credentials) => new { configured = credentials.Configured });
 app.MapPost("/api/steamgriddb", async (SteamGridKeyRequest request, SteamGridArtwork artwork, SteamGridCredentials credentials, CancellationToken token) =>
 {

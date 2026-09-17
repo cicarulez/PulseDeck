@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
+import { GameLibraryStatus, DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class DeckService {
@@ -42,6 +42,8 @@ export class DeckService {
     }
     return response.json() as Promise<T>;
   }
+  gameLibraries() { return this.request<GameLibraryStatus>('/api/games'); }
+  scanGames() { return this.request<{ requested: boolean }>('/api/games/scan', 'POST'); }
   steamGridStatus() { return this.request<{ configured: boolean }>('/api/steamgriddb'); }
   connectSteamGrid(key: string) { return this.request<{ configured: boolean }>('/api/steamgriddb', 'POST', { key }); }
   disconnectSteamGrid() { return this.request<{ configured: boolean }>('/api/steamgriddb', 'DELETE'); }

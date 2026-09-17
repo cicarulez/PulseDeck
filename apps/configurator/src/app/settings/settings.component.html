@@ -3,8 +3,9 @@
     <div class="fields">
       <label>Profilo<select name="profile" [(ngModel)]="draft.profileMode"><option value="auto">Automatico</option><option value="desktop">Desktop</option><option value="gaming">Gaming</option><option value="music">Musica</option></select></label>
       <label>Attesa prima del cambio (secondi)<input name="delay" type="number" min="0" max="30" [(ngModel)]="draft.profileDelaySeconds" required></label>
-      <label class="wide">Processi dei giochi<input name="games" [(ngModel)]="processes" placeholder="bf6, altro-gioco"><small>Nomi esatti, separati da virgole. La regola usa il programma in primo piano. Nome e icona sono letti da Windows; i giochi qui elencati ricevono l’indicazione Gioco.</small></label>
+      <label class="wide">Processi aggiuntivi dei giochi<input name="games" [(ngModel)]="processes" placeholder="bf6, altro-gioco"><small>Eccezioni manuali, separate da virgole, per giochi non riconosciuti dalla scansione.</small></label>
     </div>
+    <pd-game-discovery [options]="draft.gameDiscovery" [busy]="busy()" (optionsChange)="draft.gameDiscovery = $event" (processesChange)="discoveredProcesses = $event" />
   </section>
   <section class="panel"><div class="section-title"><span>02 / DISPLAY E ASPETTO</span><h2>Il tuo pannello.</h2></div>
     <div class="fields">
@@ -14,7 +15,7 @@
       <label class="wide">Layout nel profilo Gaming<select name="gamingLayout" [(ngModel)]="draft.gamingLayout"><option [ngValue]="true">Discord, copertina e sessione</option><option [ngValue]="false">Mantieni il layout scelto in Widget</option></select><small>Discord occupa la colonna sinistra; copertina, durata e FPS del gioco sostituiscono musica e Discord a destra. I sensori rimangono 12 nel layout Meteo, 16 negli altri. Alt-Tab ripristina il layout abituale dopo il ritardo; la durata continua dalla partenza del processo.</small></label>
     </div>
     <pd-steam-grid />
-    <pd-game-themes [themes]="draft.gameThemes" [processes]="gameProcesses()" [busy]="busy()" (themesChange)="draft.gameThemes = $event" />
+    <pd-game-themes [themes]="draft.gameThemes" [processes]="themeProcesses()" [busy]="busy()" (themesChange)="draft.gameThemes = $event" />
   </section>
   <section class="panel"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>
     <div class="fields">

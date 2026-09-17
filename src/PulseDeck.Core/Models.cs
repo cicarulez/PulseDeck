@@ -4,6 +4,7 @@ public sealed record DeckConfig
 {
     public int SchemaVersion { get; init; } = 1;
     public string ProfileMode { get; init; } = "auto";
+    public GameDiscoveryOptions GameDiscovery { get; init; } = new();
     public string[] GameProcesses { get; init; } = ["bf6", "Battlefield"];
     public int ProfileDelaySeconds { get; init; } = 3;
     public string DiscordMode { get; init; } = "embedded";
@@ -23,6 +24,8 @@ public sealed record DeckConfig
 
     public string? Validate()
     {
+        if (GameDiscovery is null) return "Invalid game discovery settings.";
+        if (GameDiscovery.Validate() is { } discoveryError) return discoveryError;
         if (News is null) return "Invalid news settings.";
         if (News.Validate() is { } newsError) return newsError;
         if (SchemaVersion != 1) return "Unsupported configuration version.";

@@ -10,7 +10,7 @@ namespace PulseDeck.Agent;
 public sealed class DeckHub : Hub;
 
 public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, MediaProvider media,
-    DiscordProvider discord, EmbeddedDiscordService embeddedDiscord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
+    DiscordProvider discord, EmbeddedDiscordService embeddedDiscord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
     ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly ProfileSelector selector = new();
@@ -35,7 +35,8 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     await Task.WhenAll(hardwareTask, mediaTask, discordTask);
                     var now = DateTimeOffset.UtcNow;
                     var active = foreground.Read(settings);
-                    var profile = selector.Select(settings, active.ProcessName, mediaTask.Result.Playing, now);
+                    settings = discovery.EffectiveConfig(settings);
+                    var profile = selector.Select(settings, active.ProcessName, mediaTask.Result.Playing, now, active.IsGame);
                     var game = gameSelector.Select(settings, profile, active, now);
                     var session = sessions.Read(game, now);
                     if (game is not null && session is null && active.ProcessId != game.ProcessId) game = null;
