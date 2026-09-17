@@ -153,8 +153,10 @@ coordinates through `locationChange`; saving uses the existing config endpoint.
 There is no IP/GPS lookup, external credential, game write or browser-dependent
 weather polling. Weather state includes model time (location UTC offset) and fetch
 time. Since 0.2.6, publisher attribution and the model-estimate explanation remain
-in the configurator rather than a small credit line on the display. Humidity, wind
-and model time occupy separate 20 px lines; no physical PC weather sensor is implied.
+in the configurator rather than a small credit line on the display. Humidity and
+wind occupy separate 20 px lines. Since 0.2.7, the model-time
+line is also omitted from the panel; time remains available in the API state.
+No physical PC weather sensor is implied.
 
 References: [forecast API](https://open-meteo.com/en/docs),
 [geocoding and GeoNames attribution](https://open-meteo.com/en/docs/geocoding-api).

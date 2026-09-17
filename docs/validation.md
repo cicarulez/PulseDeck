@@ -1018,3 +1018,23 @@ background or colored pixel artifacts. Live sensor/media updates continue.
 - The user subsequently confirmed on the physical display that all marked text is
   readable and both captions marked for removal are gone: “Sì, tutto corretto e
   leggibile”. This confirms the 0.2.6 readability changes on the panel.
+
+## Remove secondary RAM and weather text — 2026-09-17 (0.2.7)
+
+- After approving 0.2.6 readability, the user requested removing the free-memory
+  line and the entire “Dati locali delle…” weather line. The shared renderer now
+  shows only RAM used/total beneath its label, aligned with the other main ring
+  values. Weather retains humidity and wind; model time remains in API state.
+- 70 Core tests, 15 renderer tests, Angular production build and Windows publish
+  passed. After the additional weather request, renderer tests and Windows publish
+  were repeated successfully against the final source. No transport changes.
+- Before deployment, 0.2.6 was connected on COM5 with 1,805 acknowledged frames,
+  zero recoveries and no transport error in that session.
+- Installed 0.2.7 with backup `before-readability-027-20260917-211129` outside
+  Git. Old agent and launcher exited before replacement; screen-off/standby COM3
+  and automatic wake to COM5 were observed. Configuration and credential hashes
+  are unchanged; hidden elevated interactive startup is running, TURZX disabled.
+- Windows preview inspected: free-memory and weather-time lines are absent; RAM
+  used/total remains legible and aligned. Configurator and health report 0.2.7.
+  At 21 acknowledged frames, partial transmission continued without errors or
+  recoveries. Physical confirmation of these two removals is still pending.

@@ -155,10 +155,9 @@ public sealed class DeckRenderer : IDisposable
                 }
                 else Text("—", x + 31, y + 47, 18, muted);
                 Text(widget.Label, x + 84, y + 20, 13, muted, maxWidth: cellWidth - 100);
-                if (widget.Capacity is { } capacity && widget.Value is { } used)
+                if (widget.Capacity is { } capacity && widget.Value is not null)
                 {
-                    Text($"{widget.DisplayValue} / {capacity:0.#} {widget.DisplayUnit}", x + 84, y + 48, 26, maxWidth: cellWidth - 100, minimumSize: 22);
-                    Text($"{Math.Max(0, capacity - used):0.#} {widget.DisplayUnit} liberi", x + 84, y + 72, 20, maxWidth: cellWidth - 100);
+                    Text($"{widget.DisplayValue} / {capacity:0.#} {widget.DisplayUnit}", x + 84, y + 58, 26, maxWidth: cellWidth - 100, minimumSize: 22);
                 }
                 else ValueText(widget, x + 84, y + 58, 29, cellWidth - 100);
             }
@@ -231,7 +230,6 @@ public sealed class DeckRenderer : IDisposable
                 Text("MIN " + Number(weather.Minimum, "°") + "   MAX " + Number(weather.Maximum, "°"), 48, 337, 18, maxWidth: 300);
                 Text("Umidità " + Number(weather.Humidity, "%"), 48, 367, 20, maxWidth: 300);
                 Text("Vento " + Number(weather.WindSpeed, " km/h"), 48, 397, 20, maxWidth: 300);
-                Text(weather.ModelTime is { } time ? "Dati locali delle " + time.ToString("HH:mm") : "Orario non disponibile", 48, 427, 20, maxWidth: 300);
             }
         }
         void Compact(bool gaming)

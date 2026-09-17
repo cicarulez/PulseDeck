@@ -329,9 +329,8 @@ CPU Package power e GPU Core clock; nessuna attribuzione arbitraria delle ventol
 generiche della scheda madre. La 0.2.3 è installata con Roma, Italia, selezionata;
 ricerca/scelta città e persistenza nel configuratore verificate su Windows,
 con acquisizione indipendente dal rendering e trasmissione USB confermata dall'agent.
-Le condizioni remote sono stime Open-Meteo, con fonte nel configuratore e ora sul
-pannello, e nessun dato
-vecchio presentato dopo un errore. L’utente ha confermato la leggibilità del meteo e
+Le condizioni remote sono stime Open-Meteo, con fonte nel configuratore e ora nello
+stato API, e nessun dato vecchio presentato dopo un errore. L’utente ha confermato la leggibilità del meteo e
 di tutti i 12 sensori sul display fisico, con immagine corretta e senza anomalie.
 
 La 0.2.0 aggiunge una griglia compatta 4×4 oltre al classico a otto posizioni.
@@ -555,3 +554,8 @@ Umidità, vento e ora meteo ora hanno una riga ciascuno. I 12 sensori e la dimen
 scelta per il titolo news restano invariati; recupero USB della 0.2.5 conservato.
 L’utente ha confermato sul pannello fisico la leggibilità dei testi ingranditi e
 la rimozione delle due scritte indicate nello screenshot.
+
+Su successiva richiesta, la 0.2.7 elimina la seconda riga con i GB liberi dal
+widget RAM ad anello e mantiene il solo valore principale usato/totale.
+Rimossa anche la riga “Dati locali delle…” dal meteo; l’ora del dato resta
+disponibile nello stato API.

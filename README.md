@@ -23,7 +23,8 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
   sul PC di sviluppo.
 - News nel footer con preset, feed RSS/Atom personalizzati e dimensione testo regolabile.
 - Copertina, titolo, artista, stato e progresso di Spotify o altri player Windows.
-- RAM fisica usata/libera/totale utilizzabile; sensori rete con velocità in B/s, KiB/s o MiB/s.
+- RAM fisica usata/libera/totale utilizzabile; il widget ad anello mostra solo
+  usata/totale dalla 0.2.7. Sensori rete con velocità in B/s, KiB/s o MiB/s.
 - Sfondo statico scuro integrato, oppure un’immagine locale scelta dall’utente.
 - Nome e icona dell’app in primo piano; riconoscimento dei giochi configurati per il profilo Gaming.
 - Profili Desktop, Gaming e Musica; selezione manuale o automatica con ritardo configurabile.
@@ -170,9 +171,10 @@ dimostrativa; le icone meteo sono disegnate dal renderer condiviso.
 Sul PC di sviluppo i 12 widget conservano i dieci precedenti e aggiungono potenza
 CPU Package e frequenza GPU Core, legate ai sensori reali per ID e nome.
 
-La 0.2.6 ingrandisce umidità, vento e ora del dato su tre righe distinte. La riga
-con la fonte è rimossa dal display su richiesta; attribuzione Open-Meteo e natura
-stimata dei dati restano esplicite nel configuratore.
+La 0.2.6 ingrandisce i dettagli meteo. Dalla 0.2.7 restano umidità e vento su
+due righe distinte, senza la riga “Dati locali delle…”. La fonte è rimossa dal
+display su richiesta; attribuzione Open-Meteo e natura stimata restano esplicite
+nel configuratore, mentre l’ora del dato resta disponibile nello stato API.
 
 ### News nel footer (0.2.4)
 
