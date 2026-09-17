@@ -34,10 +34,10 @@ nella sessione Windows dell'utente, senza console aperta.
 | --- | --- | --- | --- |
 | P0 | Prove della base | Avvio quotidiano affidabile | Accesso Windows reale, arresto volontario, Spotify, display; ingresso/uscita e mute/deaf con partecipanti Discord |
 | P0 | Affidabilità USB | Recupero limitato implementato; completare prove fisiche | Errori reali, scollegamento/ricollegamento USB, sospensione/ripresa e immagine corretta dopo recupero |
-| P1 | Ricerca di una sorgente Aura in lettura | Superare l'esito negativo della prima prova SDK | Colori dell'effetto ASUS osservabili senza acquisire il controllo né alterare i LED |
+| In pausa | Ricerca di una sorgente Aura in lettura | Tentativo HAL virtuale interrotto dall'utente; mantenere il colore manuale | Colori dell'effetto ASUS osservabili senza acquisire il controllo né alterare i LED |
 | P1 | Architettura per più display | Uno stato condiviso, schermi indipendenti | Due configurazioni con dimensioni, driver e contenuti separati; errore USB isolato per dispositivo |
 | P2 | Layout oltre le otto posizioni disponibili | Disporre anche musica e Discord per display/profilo | Configurazione persistente e composizione leggibile alle dimensioni di ogni schermo |
-| P2 | Tema con colori Aura | Accenti e barre coordinati al PC | Cambi colore reali, testo leggibile, comportamento corretto quando Aura non è disponibile |
+| In pausa | Tema con colori Aura | Accenti e barre coordinati al PC | Cambi colore reali, testo leggibile, comportamento corretto quando Aura non è disponibile |
 | P2 | FPS e tempi dei fotogrammi | Informazioni del gioco in primo piano | Misure reali attribuite al processo corretto, confronto con uno strumento di riferimento |
 | P2 | Chi parla su Discord | Indicatore vocale distinto dal mute | Due utenti, cambio interlocutore, silenzio, mute e riconnessione verificati |
 | P3 | Musica e sfondi | Copertina, progresso e tema Battlefield | Cambio traccia, pausa, sorgente multimediale alternativa; sfondo nitido sul display |
@@ -57,10 +57,19 @@ visivamente l'immagine completa e corretta, con dati aggiornati e senza residui 
 pixel anomali dopo il recupero. Restano una richiesta di reinvio reale e le prove
 di cavo/sospensione.
 
-La prova Aura precede il lavoro grafico esteso: evita di progettare un tema attorno
+La ricerca Aura è in pausa e non blocca il lavoro grafico con palette manuali.
+La precedente priorità alla prova serviva a non progettare un tema attorno
 a una sorgente di colore che potrebbe non essere leggibile.
 
 ## Aura Sync: il pannello segue il PC
+
+**Stato attuale — 17 settembre 2026:** l'utente ha chiesto di lasciare perdere il
+tentativo di far comparire una periferica virtuale in Aura Sync. Indagine sospesa:
+sonda disinstallata, registrazioni proprie rimosse e assenza verificata. Restano
+codice, evidenze e backup privato; nessuna reinstallazione o ulteriore prova senza
+una nuova richiesta. Il colore manuale continua a funzionare. I passaggi tecnici
+seguenti documentano la ricerca svolta e possibili verifiche solo per un'eventuale
+ripresa esplicita; non sono attività ancora da eseguire in questa sessione.
 
 **Decisione dell'utente:** la prima modalità deve seguire i colori già impostati
 sul PC. PulseDeck non deve diventare il controller dell'illuminazione.

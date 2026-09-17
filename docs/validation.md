@@ -558,3 +558,22 @@ background or colored pixel artifacts. Live sensor/media updates continue.
 - Final USB status: connected, 441 acknowledged frames, one subsequent bounded
   recovery. No further explicit reconnect was issued. This is transport evidence,
   not a fresh physical-image confirmation.
+
+## Aura experiment retired at user request — 2026-09-17
+
+- User asked to leave the virtual-device approach aside because of its complexity
+  and missing Armoury Crate tile. Stopped investigation rather than proposing more
+  category changes, reboots or RGB tests.
+- Saved the own installed package and pre-removal Status to a private runtime backup,
+  then ran its remover elevated. Verified category/class keys absent, native class
+  check REGDB_E_CLASSNOTREG (0x80040154), installation directory absent and no
+  PulseDeck.AuraHal process remaining. Source and previous evidence were preserved.
+- LightingService and ArmouryCrateService remained Running with the same PIDs
+  6456 and 6408 before/after. No service restart, vendor configuration change, sync
+  selection or RGB control call. A vendor's cached device inventory was not forced
+  to refresh during cleanup.
+- PulseDeck remained connected, 538 acknowledgements and one recovery at final check.
+  Agent, settings and startup task unchanged. Manual theme color remains available;
+  real Aura RGB reception and selectable tile were not achieved. Runtime cleanup
+  audit and backup remain outside Git. Do not restart this experiment without a new
+  user request.

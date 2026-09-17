@@ -1,5 +1,13 @@
 # Isolated Aura virtual-device experiment
 
+**Retired from the development PC on 2026-09-17 at the user's request.**
+The user abandoned the virtual Aura-device experiment after repeated missing-tile
+results. Own class/category registration and installed folder were removed;
+REGDB_E_CLASSNOTREG and no remaining probe process were verified. ASUS services and
+PulseDeck were left running. Sources and private runtime backup are preserved.
+Commands and installed-state descriptions below are historical/reproduction notes,
+not authorization to reinstall or resume tests. No Aura provider is active.
+
 This is a development probe, not an installed Aura device or a PulseDeck provider.
 The native x86 executable hosts the installed ASUS SDK and our own minimal HAL.
 No vendor binaries, logs or proprietary inspection output belong in Git.

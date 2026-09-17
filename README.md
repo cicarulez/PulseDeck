@@ -128,36 +128,13 @@ ma i valori RGB non corrispondevano al giallo fisso confermato dall'utente.
 La sincronizzazione non è quindi attiva: il colore resta quello manuale scelto
 in **Configurazione**. Dettagli e prossimi passi nel [piano](docs/roadmap.md#aura-sync-il-pannello-segue-il-pc).
 
-Una [sonda HAL separata](tools/aura-probe/README.md) ha verificato che l'SDK scopre
-e carica il nostro modulo software in un processo isolato. Con un host nativo x86
-l'SDK enumera anche **PulseDeck Virtual Probe**, un dispositivo virtuale 1×1 con
-un LED, superando il crash della sonda .NET. La comparsa in Armoury Crate e la
-ricezione dei colori Aura restano da verificare; nessun provider è attivo nell'agent.
-È stato provato anche un ricevitore separato con messaggi sintetici dichiarati e
-chiusura automatica in caso di timeout: non costituisce ancora una lettura Aura.
-L'SDK riconosce ora anche il descrittore dell'effetto `Static`. Una lettura separata
-delle capacità del servizio ASUS attivo è riuscita, ma non contiene PulseDeck:
-il dispositivo virtuale non è ancora registrato nel servizio né visibile in Armoury Crate.
-È ora verificata anche l'enumerazione SDK con il nostro modulo in un processo COM
-separato, nella stessa sessione utente, compresa la rimozione della registrazione
-temporanea dopo un arresto forzato. Un client di prova `LocalSystem` in sessione 0
-riesce ora a leggere ed enumerare il dispositivo tramite due voci COM temporanee.
-La pubblicazione nella categoria Aura per 30 secondi non ha provocato il rilevamento
-automatico da parte del servizio già attivo.
-È ora installata una sonda sperimentale rimovibile in `C:\Program Files\PulseDeck Aura Probe`:
-Windows ne ha verificato l'avvio COM su richiesta come SYSTEM, senza un host già
-aperto nella sessione utente. Disinstallazione e reinstallazione sono state provate.
-Dopo il riavvio dell'utente, la sonda si è avviata in sessione 0 e ha registrato
-un'enumerazione del dispositivo e due richieste di effetto, prima dei nostri test.
-L'utente non vede ancora PulseDeck in Aura Sync. Una successiva lettura dell'elenco
-dettagliato ha però trovato il dispositivo con produttore PulseDeck, classificato
-come `All`: l'assenza del nome nelle capacità non significava assenza dal servizio.
-La sonda ora dichiara il tipo esterno generico `EXTERNAL_GENERAL` e usa il nome
-PulseDeck anche come modello; la comparsa della scheda resta da verificare.
-Il servizio ha poi acquisito il nuovo tipo, ma l'utente non vede ancora la scheda.
-È ora gestita la ricezione di un singolo valore grezzo tramite la callback osservata
-`SetEffect2` (effetto 0), con formato controllato: valore e corrispondenza con i LED
-restano da verificare. Non sono disponibili colori Aura nell'agent.
+Il tentativo di far comparire PulseDeck come periferica Aura Sync è stato
+**interrotto su richiesta dell'utente** il 17 settembre 2026. Il servizio ASUS
+riconosceva la sonda, ma Armoury Crate non ne mostrava una scheda selezionabile.
+La sonda e la sua registrazione sono state rimosse; nessun provider Aura è attivo.
+Il colore manuale resta disponibile e lo sviluppo delle altre funzioni può proseguire.
+Codice sperimentale ed evidenze rimangono nella [documentazione della sonda](tools/aura-probe/README.md),
+senza ulteriori prove o reinstallazioni automatiche.
 
 ## Avvio automatico senza finestre
 
