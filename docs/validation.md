@@ -449,3 +449,17 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   outside Git. No ASUS services, RGB settings, installed binaries or tasks changed.
   Next investigation is passive callback diagnostics/handling and device metadata,
   rather than repeating unchanged registration/reboot attempts.
+
+## Aura Sync selection screenshot — 2026-09-17
+
+- User explains that a discovered device must be selected in Aura Sync to join
+  synchronization. Inspected the supplied screenshot directly: seven device tiles,
+  all checked, and no PulseDeck tile. The visible search button belongs to the Hue
+  connection section, not general HAL discovery. No UI actions were performed.
+- Initial effect callbacks do not prove participation in synchronized effects;
+  they may be initialization calls. Our current Static descriptor advertises
+  synchronizable=0. Its influence on tile eligibility is an investigation target,
+  not an established cause. Do not infer color reception or fix the flag blindly.
+- Next acceptance sequence: tile appears, user selects PulseDeck, incoming callbacks
+  and physical color correspondence are verified. Existing device selections and
+  the current effect must be preserved. The screenshot remains outside Git.

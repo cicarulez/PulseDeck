@@ -217,10 +217,19 @@ coerente con il caricamento da parte dello stack ASUS, ma il rapporto non identi
 il processo chiamante. L'utente non vede PulseDeck in Aura Sync e la lettura delle
 capacità del servizio continua a non contenerne il nome. Nessun colore acquisito.
 
-Prossimo passaggio: distinguere nella diagnostica le callback ricevute, effect ID,
-formato e numero degli elementi, quindi implementare la ricezione passiva validata.
-Le callback attualmente restituiscono E_NOTIMPL nell'host installato; un possibile
-collegamento con la mancata comparsa è ancora un'ipotesi. Non occorre ripetere la
+L'utente chiarisce che una periferica deve prima comparire come scheda e poi essere
+selezionata per entrare in Aura Sync. Lo screenshot mostra sette schede selezionate,
+nessuna PulseDeck; il pulsante «Cerca dispositivi» appartiene alla sezione Hue.
+Le due callback iniziali non dimostrano quindi la partecipazione alla sincronizzazione.
+
+Prossimo passaggio: verificare il contratto dei metadati necessario alla comparsa e
+alla selezione della scheda. Il prototipo dichiara Static con `synchronizable=0`:
+è un possibile ostacolo da verificare, non una causa dimostrata né una correzione da
+applicare alla cieca. Preparare anche diagnostica delle callback (metodo, effect ID,
+formato e numero degli elementi); dopo la comparsa, far selezionare all'utente solo
+PulseDeck e verificare ricezione passiva e corrispondenza dei colori. Le callback
+attualmente restituiscono E_NOTIMPL nell'host installato; un possibile collegamento
+con la mancata comparsa è ancora un'ipotesi. Non occorre ripetere la
 registrazione o proporre altri riavvii prima di aver preparato questa verifica.
 Non riavviare i servizi ASUS né invocare setter RGB. Il plug-in ASUS Windows Dynamic
 Lighting appartiene all'integrazione ASUS/Windows e non identifica la nostra sonda.
