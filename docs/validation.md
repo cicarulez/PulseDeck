@@ -698,3 +698,9 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   DRS documentation describes driver profiles/applications, not proof of locally
   installed games; no documented public NVIDIA App library API was found in this
   investigation. Sources and future launcher-based discovery are in the roadmap.
+
+### User physical confirmation after 0.2.1 deployment
+
+- User confirmed the dark background and foreground application icon look correct
+  on the physical display. A game was explicitly not tested; its actual icon and
+  game badge remain pending a real foreground-game check.
