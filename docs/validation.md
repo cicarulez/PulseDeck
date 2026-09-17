@@ -420,3 +420,32 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   connected with recovery count 13, acknowledgement 11678 and attempt budget reset
   to zero. No manual reconnect was issued. This is transport evidence; no new
   physical-image or RGB confirmation was requested during the Aura installation.
+
+## Aura user reboot observation — 2026-09-17
+
+- User reports no PulseDeck entry after the requested manual reboot and Aura Sync
+  check. Windows LastBootUpTime is 2026-09-17T13:21:59.5000000Z. Both installed
+  category/class registrations remain present. No install, activation self-test,
+  registry change or refresh was run before collecting the existing report.
+- Elevated read-only Status found the installed HAL running as PID 9916/session 0,
+  created about 13:22:10 UTC. Its latest report at 13:22:26Z records one activation,
+  two enumeration calls, one capability read, two effect requests, zero sync calls
+  and HAL/device/factory references 5/5/2. The previous self-test baseline was PID
+  35032 at 13:04:30Z, idle-exit, with zero effect calls. These are new startup calls,
+  not counts carried over from our earlier tests.
+- This is consistent with the ASUS stack loading the registered HAL at startup.
+  The current report does not capture caller PID or distinguish effect callback
+  variants/payloads, so exact caller attribution and RGB values are not established.
+  Installed callback implementations still return E_NOTIMPL; two requests do not
+  demonstrate accepted effects, valid colors or continuous updates.
+- A subsequent read-only service capability query returned ContainsProbeName=false
+  from LightingService PID 6456. ArmouryCrateService PID 6408 is running. The bounded
+  event-log query found no matching probe DCOM events or probe/LightingService
+  application crash events since boot; this is not a comprehensive error-log audit.
+- PulseDeck display API reports connected, 163 acknowledged frames and zero
+  recoveries since startup. No physical screen-off observation during the reboot
+  was supplied, so Windows shutdown ordering/power-off remains unconfirmed.
+- Runtime audit lives in LOCALAPPDATA/PulseDeck/aura-investigation/after-reboot.json,
+  outside Git. No ASUS services, RGB settings, installed binaries or tasks changed.
+  Next investigation is passive callback diagnostics/handling and device metadata,
+  rather than repeating unchanged registration/reboot attempts.

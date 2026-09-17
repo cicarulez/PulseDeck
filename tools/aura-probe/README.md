@@ -325,3 +325,14 @@ ASUS service PIDs were unchanged. The service still did not report PulseDeck.
 Microsoft references: [LocalServer32 command registration](https://learn.microsoft.com/en-us/windows/win32/com/localserver32),
 [launching-user identity](https://learn.microsoft.com/en-us/windows/win32/com/launching-user),
 [class suspension](https://learn.microsoft.com/en-us/windows/win32/api/combaseapi/nf-combaseapi-cosuspendclassobjects).
+
+### Subsequent user reboot result
+
+The user still sees no PulseDeck tile. Before any activation self-test, elevated
+Status found a new session-0 HAL process and a post-boot report with one activation,
+two enumerations, one capability read and two effect callbacks. Thus startup now
+loads the component and reaches its incoming methods; the caller PID and specific
+callback payloads are not recorded yet. The existing service capability getter
+still omits the probe name. E_NOTIMPL callbacks may matter to initialization, but
+that is an unverified hypothesis. No real RGB sample has been received/validated.
+See the dated validation record before interpreting the earlier negative results.

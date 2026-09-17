@@ -209,14 +209,21 @@ identità del chiamante, senza `RunAs=Interactive User`, servizi o task permanen
 La categoria Aura viene pubblicata solo dopo questi controlli. Rimozione completa,
 rifiuto di sovrascrivere un'installazione esistente e reinstallazione verificati.
 
-Prossimo passaggio: dopo un riavvio eseguito volontariamente dall'utente, leggere
-prima la diagnostica della sonda, senza attivarla con i nostri client, e controllare
-Aura Sync. Le due attivazioni già registrate appartengono ai test SYSTEM, non ad
-ASUS. Il riavvio potrebbe provocare una nuova scansione, ma non garantisce
-l'accettazione dell'HAL. Non riavviare i servizi ASUS né caricare la sonda dentro
-LightingService come scorciatoia. Dopo il rilevamento, implementare e verificare
-ricezione e contratto dei colori prima della prova fisica: le callback aggiuntive
-restituiscono ancora E_NOTIMPL.
+**Esito del riavvio dell'utente:** boot Windows alle 13:21:59 UTC; sonda avviata
+in sessione 0 alle 13:22:10 circa. Il rapporto delle 13:22:26 registra un'attivazione,
+due chiamate di enumerazione, una lettura delle capacità e due richieste di effetto.
+Non erano stati eseguiti nostri test di attivazione dopo il riavvio. È evidenza
+coerente con il caricamento da parte dello stack ASUS, ma il rapporto non identifica
+il processo chiamante. L'utente non vede PulseDeck in Aura Sync e la lettura delle
+capacità del servizio continua a non contenerne il nome. Nessun colore acquisito.
+
+Prossimo passaggio: distinguere nella diagnostica le callback ricevute, effect ID,
+formato e numero degli elementi, quindi implementare la ricezione passiva validata.
+Le callback attualmente restituiscono E_NOTIMPL nell'host installato; un possibile
+collegamento con la mancata comparsa è ancora un'ipotesi. Non occorre ripetere la
+registrazione o proporre altri riavvii prima di aver preparato questa verifica.
+Non riavviare i servizi ASUS né invocare setter RGB. Il plug-in ASUS Windows Dynamic
+Lighting appartiene all'integrazione ASUS/Windows e non identifica la nostra sonda.
 Nessun provider o ricevitore persistente viene installato nell'agent in questa fase.
 
 Il modulo GmAcc installato include già una modalità virtuale, ma usa il canale

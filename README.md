@@ -147,8 +147,11 @@ automatico da parte del servizio già attivo.
 È ora installata una sonda sperimentale rimovibile in `C:\Program Files\PulseDeck Aura Probe`:
 Windows ne ha verificato l'avvio COM su richiesta come SYSTEM, senza un host già
 aperto nella sessione utente. Disinstallazione e reinstallazione sono state provate.
-Il rilevamento da parte di ASUS dopo un riavvio volontario dell'utente resta da
-verificare; non sono ancora disponibili colori Aura e l'agent rimane invariato.
+Dopo il riavvio dell'utente, la sonda si è avviata in sessione 0 e ha registrato
+un'enumerazione del dispositivo e due richieste di effetto, prima dei nostri test.
+L'utente non vede ancora PulseDeck in Aura Sync e il servizio non ne restituisce
+il nome nelle capacità. Le richieste sono contate ma non ancora gestite:
+non sono disponibili colori Aura e l'agent rimane invariato.
 
 ## Avvio automatico senza finestre
 
