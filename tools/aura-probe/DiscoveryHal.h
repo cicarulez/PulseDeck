@@ -18,7 +18,7 @@ typedef struct ProbeStats {
 } ProbeStats;
 
 int CheckProbeContracts(void);
-int RunComServer(const char *parent_pid, const char *event_suffix);
+int RunComServer(const char *parent_pid, const char *event_suffix, const char *lifetime);
 int CheckRemoteContracts(void);
 int CheckRemoteAbsent(void);
 void SetProbeReceiver(Receiver *receiver);

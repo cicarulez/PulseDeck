@@ -172,11 +172,13 @@ ProbeStats GetProbeStats(void) {
 
 /* Temporary running EXE registration only: no Classes/ASUS registry changes.
    A message pump is required because the factory and objects belong to this STA. */
-int RunComServer(const char *parent_pid, const char *event_suffix) {
+int RunComServer(const char *parent_pid, const char *event_suffix, const char *lifetime) {
     char *end = NULL;
     DWORD pid = strtoul(parent_pid, &end, 10);
     if (!pid || *end || strlen(event_suffix) != 32 ||
         strspn(event_suffix, "0123456789abcdef") != 32) return 2;
+    unsigned long seconds = strtoul(lifetime, &end, 10);
+    if (!*lifetime || *end || seconds < 1 || seconds > 120) return 2;
     char event_name[100];
     snprintf(event_name, sizeof(event_name), "Local\\PulseDeck.AuraProbe.Ready.%s", event_suffix);
     HANDLE ready = OpenEventA(EVENT_MODIFY_STATE, FALSE, event_name);
@@ -195,7 +197,7 @@ int RunComServer(const char *parent_pid, const char *event_suffix) {
         CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie);
     int code = 1;
     if (SUCCEEDED(hr) && SetEvent(ready)) {
-        ULONGLONG deadline = GetTickCount64() + 15000;
+        ULONGLONG deadline = GetTickCount64() + seconds * 1000;
         HANDLE waiting[] = {stop, parent};
         for (;;) {
             ULONGLONG now = GetTickCount64();
@@ -215,7 +217,7 @@ int RunComServer(const char *parent_pid, const char *event_suffix) {
     CloseHandle(ready); CloseHandle(stop); CloseHandle(parent);
     ProbeStats s = GetProbeStats();
     if (s.effect_requests || s.sync_requests) code = 1;
-    printf("{\"scope\":\"temporary COM server; not registered with Aura\","
+    printf("{\"scope\":\"temporary COM server; registration owned by supervisor\","
            "\"processId\":%lu,\"activations\":%ld,\"enumerations\":%ld,\"capabilities\":%ld,"
            "\"legacyEnumerations\":%ld,\"arrayEnumerations\":%ld,"
            "\"effectRequests\":%ld,\"syncRequests\":%ld}\n", GetCurrentProcessId(),

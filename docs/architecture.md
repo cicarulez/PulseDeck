@@ -145,7 +145,23 @@ Its Enumerate2 path requires IAacLedDeviceOpt2, so the device exposes the inheri
 Opt/Device2/Opt2 interfaces with their correct vtable slots. Their extra incoming
 effect callbacks return E_NOTIMPL; no live color reception is claimed. Direct COM
 and SDK metadata checks pass, including class-table cleanup after forced server exit.
-This proves same-user process isolation, not activation by LocalSystem LightingService.
+The separate SYSTEM-client check now also proves cross-user/session activation:
+temporary CLSID-to-AppID mapping and AppID RunAs=Interactive User allow a native
+client in session 0 to reach the existing user-session server. No LocalServer32
+autostart command, credentials or machine-wide COM security defaults are changed.
+The helper uses a unique, bounded SYSTEM task; the PulseDeck agent stays interactive.
+
+`Test-SystemComIsolation.ps1` elevates only its registration/task supervisor. Baseline
+mode changes no COM registry entries; `-InteractiveIdentity` owns two temporary keys
+and refuses to replace existing ones. `-WithSdk` runs private-category SDK checks as
+SYSTEM after the direct test. Optional `-ObserveAuraSeconds` publishes just our HAL
+category entry after both checks pass, then reads existing service capabilities.
+It removes its category/class/AppID keys and task in finally and verifies absence.
+Runtime audit files live under LOCALAPPDATA, passed explicitly to the SYSTEM phase.
+Native server lifetime remains 15 seconds by default, configurable up to 120 for
+this bounded workflow; supervisor exit still ends it. Passive publication for 30
+seconds did not cause live service activation. No provider or remote color handling
+is enabled by these checks; added effect callbacks still return E_NOTIMPL.
 
 ## Windows startup
 

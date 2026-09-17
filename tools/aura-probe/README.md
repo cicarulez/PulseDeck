@@ -119,8 +119,9 @@ run. `-CheckContracts` cannot be combined with the receiver/discovery options.
 
 Next: establish isolated live HAL discovery and the packed-color contract before
 any physical color comparison. There are
-no installation or registration commands for LightingService; no persistent receiver
-or agent provider has been installed.
+no persistent installation commands for LightingService; the optional SYSTEM test
+below can publish a temporary category entry. No persistent receiver or agent provider
+has been installed.
 
 The installed GmAcc HAL's virtual branch uses loopback 11000, already owned by
 Aura Wallpaper, and precedes the wallpaper branch. Its global settings remain
@@ -143,8 +144,9 @@ not live colors or proof that every listed location represents connected hardwar
 Static inspection of the installed service's manual refresh path shows teardown
 of effect executors; that path was not invoked. The inspected signature check in
 DoEnumerateHalInfo targets the SDK DLL, so it does not establish that unsigned HALs
-are rejected. Live registration/removal and fault isolation remain unresolved:
-the process-local factory and private IPC do not expose our HAL to LightingService.
+are rejected. The process-local factory and private IPC alone do not expose our HAL
+to LightingService; the newer SYSTEM test below checks cross-session activation and
+temporary category publication separately from this read-only capability query.
 
 ## Native COM server in another process
 
@@ -178,11 +180,75 @@ capability reads and zero effect/synchronization requests. The SDK client's loca
 HAL counters must remain zero. Its local reference roots of 1/1/1 do not measure
 remote references or resolve the previously observed SDK lifetime issue.
 
-LightingService runs as LocalSystem; activation across that user/session boundary,
-real Aura category discovery, color payloads and continuous lifetime remain to test.
-No persistent server, agent provider, service refresh or Armoury Crate tile is installed.
+LightingService runs as LocalSystem. The next test now verifies activation across
+that boundary, but real service discovery, color payloads and continuous lifetime
+remain unverified. No persistent server or agent provider is installed.
 
 Microsoft reference: [running EXE class registration and revocation](https://learn.microsoft.com/en-us/windows/win32/com/registering-a-running-exe-server).
+
+## SYSTEM client and optional temporary Aura publication
+
+Run these sequentially from a normal Windows PowerShell session. Each command
+requests UAC elevation for a short-lived helper; the native COM server continues
+under the signed-in user's token. No passwords or credentials are supplied.
+
+```powershell
+# Diagnostic baseline: expected class-not-registered from the SYSTEM client.
+./Test-SystemComIsolation.ps1
+# Temporary identity mapping, direct and private-category SDK checks.
+./Test-SystemComIsolation.ps1 -InteractiveIdentity -WithSdk
+# Publish our HAL category only after those checks succeed; observe, then remove it.
+./Test-SystemComIsolation.ps1 -InteractiveIdentity -WithSdk -ObserveAuraSeconds 30
+```
+
+The helper creates a unique `PulseDeck-AuraProbe-<run-id>` scheduled task to run our
+native client as SYSTEM in session 0. It never changes the existing PulseDeck task.
+`-InteractiveIdentity` temporarily creates only the probe CLSID's AppID mapping and
+our AppID's `RunAs=Interactive User` value under machine Classes. Existing keys cause
+an abort; no replacement occurs. No LocalServer32 autostart entry, global COM ACL,
+ASUS setting, SDK control token or service restart is needed.
+
+With `-ObserveAuraSeconds` (1–60), successful direct and SDK checks are prerequisites
+for publishing one entry for our CLSID in the SDK third-party HAL category. The
+helper reads LightingService capabilities every few seconds; it never calls refresh,
+engine/profile methods or LED setters. Cleanup removes its category, CLSID, AppID
+and unique task, then verifies absence. Output distinguishes SYSTEM test results from
+actual service observations. Full audit JSON and capability XML remain under the
+interactive user's LOCALAPPDATA/PulseDeck/aura-investigation, explicitly passed to
+the SYSTEM phase; nothing is stored alongside source files.
+Before announcing publication, a bounded native `--registered-hal-info` read also
+requires exactly one probe GUID in the SDK's real registry inventory. It never calls
+CreateHal on those entries, so no vendor hardware module is activated by this check.
+
+The native server supports a validated 1–120-second lifetime (default 15). This
+workflow uses 120, watches supervisor exit and normally shuts down sooner. Its added
+effect methods still return E_NOTIMPL: advertising Static metadata does not yet make
+it a usable live color receiver.
+
+Windows results:
+
+- Baseline SYSTEM/session-0 activation: REGDB_E_CLASSNOTREG, zero server activations.
+- Interactive identity mapping: direct metadata read S_OK; three SDK enumerations
+  also passed from SYSTEM. Server recorded the expected two activations, seven array
+  enumerations, four capabilities and zero effect/sync callbacks.
+- 30-second passive category publication: 13 reads without the probe name and no
+  additional server activation. Normal handled cleanup verified no keys/task left.
+- A second 60-second window was announced for user entry into Aura Sync: 26 reads
+  without the probe name and again no additional activation. The user confirmed the
+  same devices were visible after entering; this does not establish a HAL rescan.
+- A subsequent short publication verified 17 real SDK registry entries, exactly one
+  matching the probe GUID. This rules out visibility limited to our private registry
+  view; it does not demonstrate that LightingService refreshed its own inventory.
+- No probe processes or temporary tasks remained. Configurator returned HTTP 200;
+  physical-display transport stayed connected and acknowledgement counts advanced.
+
+The absence of activation does not establish an ASUS signature rejection. The next
+question is when/how the running service refreshes its HAL inventory under the user's
+normal Armoury Crate workflow. Do not turn the existing read-only query into an
+unverified service refresh call.
+
+Microsoft references: [RunAs identity](https://learn.microsoft.com/en-us/windows/win32/com/runas),
+[CLSID/AppID mapping](https://learn.microsoft.com/en-us/windows/win32/com/appid-key).
 
 ## Inspect contracts without activating COM
 

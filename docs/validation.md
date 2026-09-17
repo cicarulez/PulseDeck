@@ -319,6 +319,39 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   service activation, Armoury Crate discovery, color reception and physical color
   matching remain unverified. No installed-agent or startup-task changes.
 
+## Aura SYSTEM activation and temporary category publication — 2026-09-17
+
+- Baseline client verified IsSystem=true/session=0 and failed activation with
+  REGDB_E_CLASSNOTREG. The interactive native server had zero activations.
+- Temporary x86 CLSID/AppID mapping with RunAs=Interactive User enabled the same
+  SYSTEM client to enumerate one device and read its capabilities (S_OK). Neither
+  LocalServer32 nor global DCOM access/launch permissions were changed.
+- SYSTEM SDK test also passed three enumerations with full metadata assertions.
+  Server totals matched the direct plus SDK clients: two activations, seven array
+  enumerations, four capability reads, zero effect/synchronization requests.
+- Temporary third-party Aura category entry then published for 30 seconds. All
+  13 capability observations had ContainsProbeName=false and service PID 6840.
+  No additional server activations were observed. This is a negative passive
+  discovery result, not proof of a signature rejection or inability to load it.
+- Every elevated run removed its unique scheduled task. Registration runs removed
+  only newly-created probe keys; latest supervisor also verified all three exact
+  class/AppID/category paths absent. It refuses pre-existing keys. Private results
+  are stored outside Git; the SYSTEM phase receives the caller's runtime directory.
+- User reports no scan button in Armoury Crate and apparent scanning on entering
+  Aura Sync. A second, announced 60-second window produced 26 negative capability
+  observations and no additional server activations. User confirmed the same devices
+  remained visible after entering the page; this does not prove a HAL rescan occurred.
+- Added a bounded read of EumerateHalInfo against the real registry, without calling
+  CreateHal on any returned entry. During a subsequent three-second publication,
+  SDK reported 17 registrations with exactly one probe GUID. Both service capability
+  reads remained negative and server activation totals were unchanged. This verifies
+  real registry visibility, not acceptance or refresh by the running LightingService.
+- The final ordinary COM/SDK regression with forced server termination passed and
+  class absence was confirmed. Zero probe processes/temporary tasks remained;
+  configurator HTTP 200 and display connected with advancing acknowledgements.
+- Installed agent, PulseDeck startup task and ASUS services were not replaced,
+  stopped or restarted. No SwitchMode, Apply, LED setter or refresh call was made.
+
 ## Windows shutdown and display power — 2026-09-17
 
 - Root cause: the runtime only released the serial port at exit, and the hidden

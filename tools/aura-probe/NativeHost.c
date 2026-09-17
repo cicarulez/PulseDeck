@@ -90,10 +90,46 @@ static int read_service_capabilities(void) {
 #define GET(object, name, result) CHECK(invoke(object, L##name, DISPATCH_PROPERTYGET, NULL, result))
 #define DISPATCH(value) REQUIRE((value).vt == VT_DISPATCH && (value).pdispVal)
 
+/* Enumerate registration metadata only; never call CreateHal on real entries. */
+static int read_registered_hal_info(void) {
+    const GUID sdk_clsid = {0x34b707dc,0x1133,0x4ebc,{0xb3,0x80,0x21,0x38,0x7a,0x50,0xa8,0x9d}};
+    HRESULT initialized = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(initialized)) return 3;
+    IDispatch *sdk = NULL;
+    VARIANT collection = {0}, count = {0}, item = {0}, guid = {0}, index = {0};
+    LONG total = 0, matches = 0;
+    int exit_code = 1;
+    CHECK(CoCreateInstance(&sdk_clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IDispatch, (void**)&sdk));
+    CHECK(invoke(sdk, L"EumerateHalInfo", DISPATCH_METHOD, NULL, &collection));
+    DISPATCH(collection);
+    GET(collection.pdispVal, "Count", &count);
+    REQUIRE(count.vt == VT_I4 && count.lVal >= 0 && count.lVal <= 1024);
+    total = count.lVal; index.vt = VT_I4;
+    for (index.lVal = 0; index.lVal < total; index.lVal++) {
+        CHECK(invoke(collection.pdispVal, L"Item", DISPATCH_PROPERTYGET, &index, &item));
+        DISPATCH(item);
+        GET(item.pdispVal, "Guid", &guid);
+        REQUIRE(guid.vt == VT_BSTR && guid.bstrVal);
+        if (!_wcsicmp(guid.bstrVal, PROBE_GUID_TEXT)) matches++;
+        VariantClear(&guid); VariantClear(&item);
+    }
+    REQUIRE(matches <= 1);
+    printf("{\"scope\":\"registered HAL metadata only; no activation\","
+           "\"registeredHalCount\":%ld,\"probeMatches\":%ld}\n", total, matches);
+    exit_code = 0;
+cleanup:
+    VariantClear(&guid); VariantClear(&item); VariantClear(&count); VariantClear(&collection);
+    if (sdk) IDispatch_Release(sdk);
+    CoUninitialize();
+    return exit_code;
+}
+
 int main(int argc, char **argv) {
     SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
     SetUnhandledExceptionFilter(report_probe_crash);
-    if (argc == 4 && !strcmp(argv[1], "--com-server")) return RunComServer(argv[2], argv[3]);
+    if (argc == 2 && !strcmp(argv[1], "--registered-hal-info")) return read_registered_hal_info();
+    if ((argc == 4 || argc == 5) && !strcmp(argv[1], "--com-server"))
+        return RunComServer(argv[2], argv[3], argc == 5 ? argv[4] : "15");
     if (argc == 2 && !strcmp(argv[1], "--remote-contracts")) return CheckRemoteContracts();
     if (argc == 2 && !strcmp(argv[1], "--remote-absent")) return CheckRemoteAbsent();
     if (argc == 2 && !strcmp(argv[1], "--service-capabilities")) return read_service_capabilities();

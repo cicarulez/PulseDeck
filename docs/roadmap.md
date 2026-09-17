@@ -177,12 +177,34 @@ Verificata la scomparsa della classe COM dopo uscita normale e arresto forzato d
 nostro server. Questo supera il precedente limite del trasporto COM, senza dimostrare
 il funzionamento continuativo o risolvere la proprietà dei riferimenti interni SDK.
 
-Prossimo passaggio ancora necessario: registrazione/rimozione e accesso dal servizio
-ASUS reale. LightingService gira come LocalSystem, mentre questa prova usa due
-processi dello stesso utente; il confine di sicurezza/sessione resta da verificare.
-La classe temporanea non compare nelle categorie HAL ASUS del sistema e il servizio
-non la rileva. Non caricare la sonda dentro LightingService come scorciatoia. Dopo
-questo passaggio, verificare ricezione e contratto dei colori prima della prova fisica.
+**Confine LocalSystem verificato con un client nostro:** senza registrazione
+aggiuntiva, un client SYSTEM in sessione 0 riceve `REGDB_E_CLASSNOTREG`. Con due
+voci temporanee CLSID/AppID e `RunAs=Interactive User`, lo stesso client legge il
+dispositivo nella sessione interattiva; anche tre enumerazioni SDK passano.
+Nessuna modifica alle impostazioni globali di sicurezza COM o ai servizi ASUS.
+Il supervisore elevato crea e rimuove una propria attività SYSTEM di breve durata;
+non modifica l'attività PulseDeck e non sposta l'agent in sessione 0.
+
+**Pubblicazione passiva nella categoria Aura provata:** dopo il successo dei client,
+una voce HAL PulseDeck è rimasta registrata per 30 secondi. Tredici letture delle
+capacità del servizio non contenevano PulseDeck; il server registrava soltanto le
+due attivazioni previste dai nostri client, nessuna richiesta colore. Questo non
+stabilisce un rifiuto del modulo: non è stato richiesto alcun refresh del servizio.
+Chiavi temporanee e attività di prova rimosse e assenza verificata.
+
+L'utente riferisce che non c'è un pulsante di ricerca e la scansione sembra avvenire
+entrando nella pagina Aura Sync. Annunciata una seconda finestra di 60 secondi per
+questa prova: 26 letture negative e nessuna attivazione aggiuntiva; l'utente conferma
+che vede gli stessi dispositivi. Questo non dimostra che il servizio abbia eseguito
+una nuova enumerazione degli HAL.
+Un'ulteriore lettura SDK delle registrazioni reali, senza attivare gli HAL elencati,
+ha trovato 17 voci con esattamente un GUID PulseDeck durante la pubblicazione:
+la voce è quindi leggibile fuori dal registro privato del test.
+
+Prossimo passaggio: individuare un percorso di aggiornamento dell'inventario HAL
+del servizio attivo. Non riavviare i servizi ASUS né caricare la sonda dentro
+LightingService come scorciatoia. Dopo il rilevamento, verificare ricezione e
+contratto dei colori prima della prova fisica.
 Nessun provider o ricevitore persistente viene installato nell'agent in questa fase.
 
 Il modulo GmAcc installato include già una modalità virtuale, ma usa il canale

@@ -140,7 +140,10 @@ delle capacità del servizio ASUS attivo è riuscita, ma non contiene PulseDeck:
 il dispositivo virtuale non è ancora registrato nel servizio né visibile in Armoury Crate.
 È ora verificata anche l'enumerazione SDK con il nostro modulo in un processo COM
 separato, nella stessa sessione utente, compresa la rimozione della registrazione
-temporanea dopo un arresto forzato. L'accesso dal servizio ASUS resta da verificare.
+temporanea dopo un arresto forzato. Un client di prova `LocalSystem` in sessione 0
+riesce ora a leggere ed enumerare il dispositivo tramite due voci COM temporanee.
+La pubblicazione nella categoria Aura per 30 secondi non ha provocato il rilevamento
+automatico da parte del servizio già attivo; nessuna installazione persistente.
 
 ## Avvio automatico senza finestre
 
