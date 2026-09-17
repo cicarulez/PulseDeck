@@ -135,6 +135,9 @@ un LED, superando il crash della sonda .NET. La comparsa in Armoury Crate e la
 ricezione dei colori Aura restano da verificare; nessun provider è attivo nell'agent.
 È stato provato anche un ricevitore separato con messaggi sintetici dichiarati e
 chiusura automatica in caso di timeout: non costituisce ancora una lettura Aura.
+L'SDK riconosce ora anche il descrittore dell'effetto `Static`. Una lettura separata
+delle capacità del servizio ASUS attivo è riuscita, ma non contiene PulseDeck:
+il dispositivo virtuale non è ancora registrato nel servizio né visibile in Armoury Crate.
 
 ## Avvio automatico senza finestre
 

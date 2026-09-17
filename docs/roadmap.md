@@ -151,9 +151,26 @@ il collegamento privato evita quella dipendenza. Nessuna prova dentro LightingSe
 
 Questa è una verifica del trasporto: la callback ricevente HAL è predisposta per
 inoltrare un singolo valore grezzo come non verificato, ma **non è stata invocata
-da Aura**. Nessun effetto dichiarato supportato e nessun colore Aura reale ricevuto.
-Prossimo passo: determinare contratto e descrittore degli effetti/colore impacchettato
-e verificare il rilevamento nel servizio Aura attivo.
+da Aura**. Ora l'SDK riconosce il descrittore `Static` (ID 1, sincronizzazione
+disabilitata), verificato tramite getter su tre enumerazioni; la callback rifiuta
+gli altri ID. Questo prova il descrittore, non il significato dei byte colore o
+la ricezione di frame reali.
+
+La nuova sonda `Read-ServiceCapabilities.ps1` legge solamente
+`IServiceMediator.get_QueryAllDeviceCap` dal LightingService già in esecuzione,
+con limite di tempo e salvataggio privato fuori Git. Lettura riuscita; la risposta
+contiene voci Aura Wallpaper, ma non PulseDeck. Non installa o registra la sonda.
+L'ispezione statica di `RefreshDeviceManually` mostra un percorso che distrugge
+e ricrea esecutori degli effetti: non è un getter passivo e non è stato invocato.
+Il controllo di firma osservato in `DoEnumerateHalInfo` riguarda il percorso
+`AuraSdk_x86.dll`; non dimostra un rifiuto del nostro HAL.
+
+Prossimo passaggio ancora necessario: un percorso di registrazione/rimozione del
+HAL nel servizio reale con isolamento dei guasti verificato. La registrazione COM
+locale e il ricevitore IPC attuali non rendono il dispositivo visibile al servizio;
+il precedente tentativo COM tra processi resta non funzionante. Non caricare la
+sonda sperimentale dentro LightingService come scorciatoia. Dopo questo passaggio,
+verificare rilevamento e contratto dei colori prima della prova fisica.
 Nessun provider o ricevitore persistente viene installato nell'agent in questa fase.
 
 Il modulo GmAcc installato include già una modalità virtuale, ma usa il canale

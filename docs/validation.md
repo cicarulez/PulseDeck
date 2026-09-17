@@ -263,6 +263,29 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   startup tasks and ASUS service settings unchanged. No LED setter, Apply,
   SwitchMode, service restart, system HAL registration or physical RGB test.
 
+## Aura effect descriptor and running-service read — 2026-09-17
+
+- Native probe advertises one Static effect, ID 1, with synchronization disabled.
+  SDK getters verified its count, name, ID and synchronization flag on three device
+  enumerations. Callback accepts only ID 1 and a single raw word; unsupported IDs
+  return E_NOTIMPL. No invocation of this incoming callback was attempted.
+- Rebuilt with `-Wall -Wextra -Werror`. Direct COM ownership checks passed 100
+  cycles; separate receiver, empty HAL and two synthetic transport samples passed.
+  All SDK discovery runs retained zero effect/synchronization requests. Color
+  encoding, live delivery and physical matching remain unverified.
+- Added a separate, bounded read of `IServiceMediator.get_QueryAllDeviceCap`,
+  using the running LightingService's COM local server. Windows call succeeded;
+  response is valid XML, includes Aura Wallpaper entries and no PulseDeck name.
+  This is capability metadata, not LED readings or proof of every listed location
+  being physical hardware. Full response stays in local runtime storage outside Git.
+- LightingService stayed running with PID 6840. Static inspection found that its
+  manual refresh path tears down effect executors; it was not called. The signature
+  check inspected in DoEnumerateHalInfo targets AuraSdk_x86.dll, not evidence of a
+  blanket third-party HAL rejection. No signature checks were bypassed.
+- No live HAL registration, Armoury Crate tile, ASUS color callback or persistent
+  provider installed. COM isolation across processes remains unresolved; the private
+  IPC receiver alone does not make the HAL discoverable outside its test host.
+
 ## Windows shutdown and display power — 2026-09-17
 
 - Root cause: the runtime only released the serial port at exit, and the hidden

@@ -128,8 +128,13 @@ process now exercises a private latest-value IPC transport using inherited share
 memory/events; it does not load ASUS code. The SDK host owns a kill-on-close job
 containing that receiver, assigned before resuming its first thread. The test mode
 labels its two patterns synthetic, while normal mode reports unavailable. The incoming
-HAL effect callback can forward one raw word as unverified; no effect is advertised
-and no such callback has been observed. The probe itself never invokes LED setters.
+HAL effect callback can forward one raw word as unverified for effect ID 1 only.
+The SDK recognizes its Static descriptor, with synchronization disabled. No such
+callback has been observed. The probe itself never invokes LED setters.
+An independent bounded mode reads `IServiceMediator.get_QueryAllDeviceCap` from
+the already-running LightingService. It saves the response outside Git and never
+registers a HAL or requests a device refresh. Service capabilities are metadata,
+not current RGB samples; PulseDeck is absent from that response on the tested PC.
 
 ## Windows startup
 

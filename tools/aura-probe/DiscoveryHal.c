@@ -38,16 +38,19 @@ static HRESULT STDMETHODCALLTYPE device_capability(Device *self, BSTR *xml) {
     *xml = SysAllocString(L"<capability><version>1</version><type>0</type>"
         L"<device><name>" PROBE_DEVICE_NAME L"</name><id>0</id><manufacturer>PulseDeck</manufacturer>"
         L"<model>Isolated test destination</model><layout><led_count>1</led_count>"
-        L"<size><width>1</width><height>1</height></size></layout><supported_effect/>"
+        L"<size><width>1</width><height>1</height></size></layout>"
+        L"<supported_effect><effect><name>Static</name><id>1</id>"
+        L"<synchronizable>0</synchronizable></effect></supported_effect>"
         L"</device></capability>");
     InterlockedIncrement(&capabilities);
     return *xml ? S_OK : E_OUTOFMEMORY;
 }
 static HRESULT STDMETHODCALLTYPE device_effect(Device *self, ULONG effect, ULONG *colors, ULONG count) {
-    (void)self; (void)effect;
+    (void)self;
     InterlockedIncrement(&effect_requests);
     /* This is an incoming HAL callback, never invoked by our probe. Keep the
        packed word unverified until its effect/color contract is validated. */
+    if (effect != 1) return E_NOTIMPL;
     if (!colors || count != 1) return E_INVALIDARG;
     return receiver ? PublishReceiverColor(receiver, colors[0], FALSE) : E_NOTIMPL;
 }
