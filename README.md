@@ -172,7 +172,7 @@ CPU Package e frequenza GPU Core, legate ai sensori reali per ID e nome.
 
 Installata sul PC di sviluppo con Ultime notizie ANSA, Tecnologia ANSA e gaming PC
 di Multiplayer.it attivi. Ricezione delle tre fonti e configuratore verificati;
-leggibilità fisica del nuovo footer ancora da confermare.
+l’utente ha confermato che il footer a 24 px è abbastanza grande e leggibile.
 
 In **Configurazione → News**, aggiungi i preset ANSA (ultime notizie, tecnologia,
 sport, Lazio) e Multiplayer.it (gaming PC), oppure un feed RSS/Atom personalizzato.

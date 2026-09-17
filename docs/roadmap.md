@@ -532,7 +532,8 @@ RSS 2.0/Atom pubblici HTTPS diretti, nessuna chiave o scraping degli articoli. S
 titoli con fonte/data (data assente dichiarata), fino a dieci recenti per canale,
 cache in memoria e aggiornamento ogni quindici minuti. Errori/assenza di notizie
 espliciti, richieste indipendenti dal rendering. La prova sul display fisico del
-footer e della rotazione è ancora da confermare. La 0.2.4 è installata: tre fonti
+footer a 24 px ha confermato dimensione e leggibilità adeguate; la rotazione è stata
+osservata nell’anteprima Windows. La 0.2.4 è installata: tre fonti
 collegate, URL personalizzati e persistenza verificati dal configuratore Windows.
 
 Fonti dei preset: [ANSA RSS](https://www.ansa.it/sito/static/ansa_rss.html),

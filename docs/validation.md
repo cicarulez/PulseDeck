@@ -922,4 +922,8 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   (HTTP 200), reloaded and verified size plus the same three active sources. Inspected
   actual Windows preview with the larger gaming headline: it fits without touching
   widgets. COM5 reached 100 acknowledged frames, zero recoveries and no transport
-  error since this last restart. Physical approval of the enlarged text is pending.
+  error since this last restart.
+- User subsequently confirmed that the 24 px footer is sufficiently large and
+  readable on the physical display. This closes the enlarged-text readability
+  check; it is not an additional confirmation of rotation timing or long-term USB
+  stability beyond the separate observations recorded above.
