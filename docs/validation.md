@@ -40,9 +40,10 @@
   The reused hidden startup task opened standby COM3 and restored COM5; first frame
   confirmed at 10:32:56, about 23 seconds after agent startup. Final installed Core
   DLL matches the tested publish. Both deployment backups remain outside Git.
-- Physical image correctness after recovery has not yet been visually confirmed
-  by the user in this session. USB acknowledgements and preview checks are separate
-  evidence. Synthetic Windows session-end messages were not repeated for 0.1.1;
+- The user visually confirmed the physical panel after recovery: complete, correct
+  image and live data updates, without residual content or anomalous pixels. This
+  complements the USB acknowledgements and preview checks above.
+- Synthetic Windows session-end messages were not repeated for 0.1.1;
   their previous validation is recorded below. Shutdown while the port is already
   lost cannot send screen-off: recovery deliberately does not reopen during shutdown.
 - `needReSend:1`, persistent failure exhaustion and cancellation during a recovery

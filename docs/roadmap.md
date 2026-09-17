@@ -52,8 +52,10 @@ successo. Disconnessione volontaria e arresto annullano il recupero; nessun risv
 automatico in questa fase. Test con trasporto simulato coprono fallimenti e cancellazione;
 le evidenze Windows e i limiti delle prove fisiche sono in `docs/validation.md`.
 La 0.1.1 installata ha recuperato autonomamente un timeout reale al primo tentativo;
-verificati anche arresto dell'agent e risveglio COM3 → COM5. Restano il controllo
-visivo dopo recupero, una richiesta di reinvio reale e le prove di cavo/sospensione.
+verificati anche arresto dell'agent e risveglio COM3 → COM5. L'utente ha confermato
+visivamente l'immagine completa e corretta, con dati aggiornati e senza residui o
+pixel anomali dopo il recupero. Restano una richiesta di reinvio reale e le prove
+di cavo/sospensione.
 
 La prova Aura precede il lavoro grafico esteso: evita di progettare un tema attorno
 a una sorgente di colore che potrebbe non essere leggibile.
