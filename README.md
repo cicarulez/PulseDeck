@@ -128,6 +128,11 @@ ma i valori RGB non corrispondevano al giallo fisso confermato dall'utente.
 La sincronizzazione non è quindi attiva: il colore resta quello manuale scelto
 in **Configurazione**. Dettagli e prossimi passi nel [piano](docs/roadmap.md#aura-sync-il-pannello-segue-il-pc).
 
+Una [sonda HAL separata](tools/aura-probe/README.md) ha verificato che l'SDK scopre
+e carica il nostro modulo software in un processo isolato. L'enumerazione dei
+dispositivi termina però la sonda: nessun dispositivo PulseDeck è stato aggiunto
+ad Armoury Crate e nessun colore Aura viene ancora ricevuto.
+
 ## Avvio automatico senza finestre
 
 Dalla cartella pubblicata, esegui una volta come amministratore:

@@ -119,7 +119,35 @@ effetto non basta a seguirne l'animazione. Nessuna chiamata COM, modifica ai fil
 setter, acquisizione del controllo o arresto dei servizi è servita per questa lettura.
 Nessun provider abilitato nell'agent; i file proprietari non sono copiati nel repository.
 
-Passi della prova:
+### Dispositivo virtuale: prima prova di rilevamento — 17 settembre 2026
+
+La [sonda HAL](../tools/aura-probe/README.md) crea una voce privata e una factory COM
+PulseDeck visibili solo al processo di prova. L'SDK ASUS 3.07.05.0 scopre il GUID
+tramite `EumerateHalInfo` e carica il modulo tramite `CreateHal`: prova superata
+senza hardware aggiuntivo, privilegi amministrativi o registrazione nel sistema.
+Questo verifica il primo livello software, non la comparsa tra i dispositivi Aura.
+
+Il passo `EumerateDevices` provoca invece `0xC0000005` nella sonda .NET Framework,
+prima della callback del nostro HAL; Windows segnala `clr.dll`. Causa ancora da
+determinare. La prova predefinita si ferma al caricamento; la riproduzione del crash
+è esplicita e resta in un processo figlio con timeout e pulizia della chiave privata.
+Non caricare questo prototipo nel servizio ASUS. Prossimo passo: risolvere il confine
+COM nell'host isolato, valutando un host nativo; poi esporre un vero destinatario
+virtuale di colori e verificare un percorso di rilevamento nel servizio attivo.
+
+Il modulo GmAcc installato include già una modalità virtuale, ma usa il canale
+locale 11000 occupato da Aura Wallpaper e quel ramo precede quello Wallpaper.
+Non è quindi una destinazione aggiuntiva indipendente verificata: nessun flag ASUS
+è stato modificato. L'eventuale verifica di firme/registrazione del servizio reale
+resta da accertare; l'attivazione locale della nostra factory non dimostra che il
+servizio accetti un HAL di terze parti. Non sono state disabilitate verifiche di firma.
+
+Ancora da verificare: tile Armoury Crate, ricezione dei frame colore dal controller
+ASUS, transizioni statiche/dinamiche confrontate con i LED reali, rimozione pulita
+e convivenza con Aura Wallpaper. Nessun provider nell'agent e nessuna installazione
+HAL persistente; i servizi ASUS non sono stati arrestati o riavviati.
+
+Passi della prova della sorgente colori:
 
 1. Verificare interfacce e registrazione COM della versione effettivamente installata,
    compatibilità con .NET 10 x64 e accesso dalla sessione interattiva.

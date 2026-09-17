@@ -173,6 +173,35 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   state is stale/inactive, and assess dynamic-effect representation. Agent unchanged;
   no proprietary files copied into Git.
 
+## Aura virtual HAL discovery — 2026-09-17
+
+- Added `tools/aura-probe`, independent of the agent. Metadata inspection uses
+  `LoadTypeLibEx(REGKIND_NONE)`; local ASUS libraries and inspection output remain
+  outside Git. SDK 3.07.05.0; GmAcc HAL 1.0.12.0.
+- Default probe passed in a non-elevated, isolated 32-bit Windows PowerShell child:
+  `EumerateHalInfo` returned exactly our private GUID and `CreateHal` invoked our
+  COM factory once. The prototype exposes the standard `IAacLedDeviceHal` contract,
+  obtained from the installed DRAM type library. No physical device was enumerated.
+- Actual device enumeration failed: the explicit `-EnumerateDevices` experiment
+  exited with `0xC0000005` before the managed enumeration callback. Application
+  Error records identify `clr.dll` 4.8.9345.0; root cause is unresolved. Changing
+  the registry view back before activation did not resolve it. Default probe
+  deliberately excludes this operation; discovery/activation passed with exit 0.
+- Parent enforces a 20-second limit and cleans the uniquely named private HKCU tree
+  after normal exit or child failure. HKCR redirection and COM registration are
+  process-local. No persistent HAL registration or change to ASUS configuration,
+  no service restart/stop, no `SwitchMode`, `Apply`, LED setters or signature bypass.
+- Static inspection found GmAcc's virtual branch and its connection to loopback
+  11000. The port is already owned by `Aura Wallpaper Service`; the virtual branch
+  precedes the Wallpaper branch. Global flags were left unchanged to preserve it.
+- **Not verified:** discovery by the running LightingService, Armoury Crate tile,
+  live color delivery, dynamic effects, or a new physical RGB comparison. An SDK
+  factory activation is not evidence that the service accepts third-party HALs.
+- PulseDeck remained on version 0.1.1. At the start of this investigation it had
+  exhausted USB recovery; a normal connect restored COM5. Later observation showed
+  another timeout recovered within budget, with acknowledged frames progressing.
+  No new physical-panel confirmation was requested during Aura work.
+
 ## Windows shutdown and display power — 2026-09-17
 
 - Root cause: the runtime only released the serial port at exit, and the hidden
