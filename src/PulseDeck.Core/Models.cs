@@ -54,6 +54,7 @@ public sealed record HardwareSnapshot(IReadOnlyList<Metric> Metrics, string Stat
 public sealed record MediaSnapshot(bool Playing, string Title, string Artist, string App, double PositionSeconds, double DurationSeconds, string Status)
 {
     public string? ArtworkId { get; init; }
+    public string Source { get; init; } = "windows";
 }
 public sealed record ForegroundSnapshot(int ProcessId, string ProcessName, string DisplayName, bool IsGame, string? IconId, string IconStatus)
 {

@@ -1183,3 +1183,51 @@ Sources: [PresentMon v1 header](https://github.com/GameTechDev/PresentMon/blob/v
   as a measured FPS accuracy or sustained Discord speech reliability test.
 
 Source: [PresentMon BF6 capture startup failure](https://github.com/GameTechDev/PresentMon/issues/573).
+
+## Optional YouTube Chrome extension — 2026-09-17 (0.4.0)
+
+- User requested an optional browser integration after observing Chrome previews
+  and multiple windows overwrite the shared Windows media session. User explicitly
+  prefers playback over foreground focus, including when the focused video is paused.
+- Manifest V3 extension polls only the main watch-page player every two seconds.
+  Playback precedes focus; focus breaks ties between playing videos, then previous
+  selection remains stable. Sidebar/home previews, ads, stale SPA player IDs, discarded
+  tabs, Shorts and embedded players are not treated as main watch-page videos.
+- Browser data overrides Chrome's Windows metadata while fresh. Spotify/other native
+  playing sessions preserve existing precedence. Validated in-memory updates expire
+  after ten seconds; null updates clear immediately. An alarm reconstructs state
+  following worker suspension. There is no media history persistence or remote
+  telemetry; the agent fetches artwork from a fixed YouTube image host using video ID.
+- Fixed public manifest key yields extension ID
+  `fdnmkffkacgdkcajobjemocddofgkpdf`. The loopback bridge admits only the matching
+  extension Origin and dedicated POST header; other API origins remain unchanged.
+  Public key is identification, not a secret or protection against local processes.
+- 84 Core and 17 rendering tests passed, along with five Node extension tests.
+  Core checks include expiry/clear, invalid metadata rejection and native player
+  precedence. JavaScript checks cover paused foreground vs playing background,
+  playing ties, close, primary player extraction and preview/ad/SPA exclusions.
+  Angular production build and Windows self-contained publish passed.
+- A separate headless Chromium instance loaded the actual unpacked extension with
+  the expected ID. A synthetic YouTube-shaped page with a real generated WebM
+  verified isolated content-script extraction, worker delivery with correct Origin,
+  and null update on tab close. Loopback requests were intercepted in that harness;
+  no synthetic readings were sent to the physical display. This does not prove
+  compatibility with the live YouTube DOM in the user's Chrome profile.
+- Deployed 0.4.0 after old agent and task exited; backup
+  `%LOCALAPPDATA%\PulseDeck\before-youtube-040-20260917-232835`. Configuration and
+  credential hashes preserved, startup task reused unchanged. Verified COM5 identity,
+  display connected without errors/recoveries, and prestarted FPS collector `ready`.
+- Actual signed-in Windows API checks passed: extension OPTIONS 204, null update 200,
+  unrelated/missing Origin or missing header 403, extension-origin config read 403,
+  invalid fields 400, oversized body 413. Media remained `source: windows` and
+  connected without the extension. No fabricated media was injected into the agent.
+- Extension files are installed at `%LOCALAPPDATA%\PulseDeck\app\youtube-extension`.
+  User must load this folder in Chrome developer mode and reload existing YouTube
+  tabs. Real two-window/hover acceptance, extension-to-agent selected media and live
+  disable/re-enable transitions remain pending that activation. Multiple profiles
+  with simultaneous extension instances are not supported (last update wins).
+
+Sources: [Chromium shared system media controls](https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/content/browser/media/system_media_controls/),
+[Chrome extension network requests](https://developer.chrome.com/docs/extensions/develop/concepts/network-requests),
+[Chrome manifest key](https://developer.chrome.com/docs/extensions/reference/manifest/key),
+[Service worker lifecycle](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle).

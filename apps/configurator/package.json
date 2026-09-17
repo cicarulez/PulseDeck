@@ -1,6 +1,6 @@
 {
   "name": "pulsedeck-configurator",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "private": true,
   "scripts": { "start": "ng serve --proxy-config proxy.conf.json", "build": "ng build", "check": "ng build --configuration development" },
   "engines": { "node": "^24.15.0 || >=26.0.0" },

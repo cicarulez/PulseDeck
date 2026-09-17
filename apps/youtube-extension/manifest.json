@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "PulseDeck \u00b7 YouTube",
+  "version": "0.1.0",
+  "minimum_chrome_version": "120",
+  "description": "Invia a PulseDeck il video principale di YouTube, ignorando le anteprime. Integrazione locale opzionale.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyCz7JD5jd4+LcHfuNPOZ+r7/k58vLTD0geWGa6HbrjFzcmcsTWgjX1kbVav97wY/pr2F4FYpGTfZOm1bCqeOOudfn9DwXANQZekvvO5aCJZNrqbpLLSmbS6Dl1E8qlQELR01dAFAUfVYjQukem6XexoQOPN7DHDO7NipWotrBL/ZroJ8/Z7h6OsEYeNe2zCkYpo7rxt+26aP6DP4m5VkaYoF8iy9EpqnElktGxBduISonrff01USzbg+Kc1XwOfBX+RX8eye+A3pmxiPjfVI54vIZ3ilLzghDH+kSbWZy6t5e+Hjz2FaL6dm4S5t9BtdRwCg3aSAcV424RbbZ+nMqwIDAQAB",
+  "permissions": [
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
+  "action": {
+    "default_title": "PulseDeck \u00b7 YouTube",
+    "default_popup": "popup.html"
+  }
+}

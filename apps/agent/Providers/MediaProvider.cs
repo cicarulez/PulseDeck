@@ -4,10 +4,9 @@ using PulseDeck.Core;
 
 namespace PulseDeck.Agent.Providers;
 
-public sealed class MediaProvider
+public sealed class MediaProvider(BrowserMediaStore browser, IHttpClientFactory clients)
 {
     private GlobalSystemMediaTransportControlsSessionManager? manager;
-    private GlobalSystemMediaTransportControlsSession? previousSession;
     private readonly MediaArtworkCache artwork = new();
     public MediaArtwork? Artwork => artwork.Current;
     public async Task<MediaSnapshot> ReadAsync(CancellationToken cancellationToken)
@@ -20,7 +19,11 @@ public sealed class MediaProvider
                 && s.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
                 ?? sessions.FirstOrDefault(s => s.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
                 ?? manager.GetCurrentSession();
-            if (!Equals(session, previousSession)) { artwork.Clear(); previousSession = session; }
+            var browserMedia = browser.Read();
+            if (browserMedia is not null && BrowserMediaSelection.PreferBrowser(browserMedia.Playing,
+                session?.SourceAppUserModelId,
+                session?.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing))
+                return await ReadBrowser(browserMedia, cancellationToken);
             if (session is null) { artwork.Clear(); return new(false, "", "", "", 0, 0, "idle"); }
             var metadata = await session.TryGetMediaPropertiesAsync().AsTask(cancellationToken);
             var identity = System.Text.Json.JsonSerializer.Serialize(new[] { session.SourceAppUserModelId,
@@ -48,6 +51,23 @@ public sealed class MediaProvider
                 { ArtworkId = artwork.Current?.Id };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch { manager = null; previousSession = null; artwork.Clear(); return new(false, "", "", "", 0, 0, "unavailable"); }
+        catch
+        {
+            manager = null;
+            if (browser.Read() is { } media) return await ReadBrowser(media, cancellationToken);
+            artwork.Clear(); return new(false, "", "", "", 0, 0, "unavailable");
+        }
+    }
+
+    private async Task<MediaSnapshot> ReadBrowser(BrowserMedia media, CancellationToken cancellationToken)
+    {
+        await artwork.RefreshAsync("youtube:" + media.VideoId, async token =>
+        {
+            using var client = clients.CreateClient("youtube-artwork");
+            // Validated video ID, fixed HTTPS host/path, no arbitrary browser-supplied URLs.
+            return await client.GetByteArrayAsync("https://i.ytimg.com/vi/" + media.VideoId + "/hqdefault.jpg", token);
+        }, cancellationToken);
+        return new(media.Playing, media.Title, media.Artist, "Chrome · YouTube", media.PositionSeconds,
+            media.DurationSeconds, "connected") { ArtworkId = artwork.Current?.Id, Source = "youtube-extension" };
     }
 }

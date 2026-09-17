@@ -625,3 +625,14 @@ impostazioni di sicurezza. Le misure effettive sono riportate in `docs/validatio
 L’utente ha confermato il funzionamento degli FPS su BF6 con la 0.3.2 dopo la prova
 richiesta di riapertura e Alt-Tab/rientro. Nessun valore numerico FPS è stato
 registrato durante quella prova; distinguere la conferma d’uso dalle misure.
+
+## YouTube opzionale (0.4.0)
+
+Implementata estensione Chrome locale per distinguere il player principale dalle
+anteprime. Priorità richiesta: video in riproduzione prima di quello in pausa;
+a parità di riproduzione prevale la scheda della finestra attiva. Mantiene la
+precedenza dei player nativi già in riproduzione. Senza estensione, senza player
+supportato o dopo dieci secondi senza dati torna alla lettura Windows. Installazione
+manuale dalla cartella `youtube-extension`, inclusa nelle build; nessun obbligo per
+usare PulseDeck. Test automatici e trasporto verificati; accettazione sul sito reale
+in attesa dell'attivazione in Chrome. Dettagli in `docs/validation.md`.

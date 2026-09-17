@@ -414,3 +414,13 @@ Chiudere la finestra lascia il display attivo. **Arresta PulseDeck** nel configu
 ferma invece l’agent. Una seconda apertura riporta in primo piano la stessa finestra.
 Il menu Visualizza offre zoom e Ricollega. Il browser rimane disponibile allo stesso
 indirizzo locale. Per sviluppare il wrapper: `cd apps/desktop`, `npm ci`, `npm start`.
+
+### YouTube: estensione Chrome opzionale
+
+La distribuzione include `youtube-extension`, caricabile da `chrome://extensions`
+con **Modalità sviluppatore → Carica estensione non pacchettizzata**. Ricaricare una
+volta le schede YouTube già aperte. Il player principale in riproduzione prevale
+su video in pausa; le anteprime laterali vengono ignorate. Senza estensione o dopo
+10 secondi senza aggiornamenti si torna automaticamente alle sessioni Windows.
+I player nativi in riproduzione mantengono la precedenza. Installazione, permessi,
+limiti e disattivazione: [guida dell'estensione](apps/youtube-extension/README.md).
