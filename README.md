@@ -163,6 +163,11 @@ cache limitata in memoria: nessuna immagine del gioco entra nel repository. Proc
 protetti o applicazioni senza icona possono mostrare il nome e un segnaposto APP.
 L'icona segue il primo piano, quindi cambia anche passando a un'altra app con Alt-Tab.
 La scoperta automatica dei giochi installati non è ancora implementata.
+La ricognizione successiva ha trovato nel catalogo locale della NVIDIA App le
+associazioni di FC26 e Battlefield 6 ai rispettivi eseguibili. È una possibile fonte
+in sola lettura per automatizzare il riconoscimento e recuperare le icone anche quando
+il processo non espone il percorso; l’adapter non è ancora integrato. Icona e sfondo
+panoramico sono risorse distinte: il recupero automatico delle copertine resta da fare.
 
 ### Modalità Gaming e utente Discord nell’header (0.2.2)
 

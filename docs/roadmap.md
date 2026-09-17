@@ -461,6 +461,36 @@ inclusa NVIDIA, per i giochi rilevati o altri dati del PC.
 - NVML può fornire ulteriori dati GPU dove supportati; FPS/frame-time restano un
   adapter separato, con attribuzione al processo reale tramite PresentMon.
 
+### Chiarimento e ricognizione locale delle immagini — 17 settembre 2026
+
+L’utente intende il recupero automatico di icone/copertine, come nella NVIDIA App;
+il percorso manuale introdotto in 0.2.2 resta un override, non soddisfa da solo questa
+richiesta. FC26 è stato aggiunto all’elenco locale dei giochi su conferma esplicita,
+con backup e senza modificare bf6/Battlefield o le altre preferenze.
+
+La ricognizione in sola lettura ha trovato `%LOCALAPPDATA%/NVIDIA Corporation/NVIDIA
+app/NvBackend/ApplicationStorage.json`: i record di Battlefield 6 e EA SPORTS FC 26
+contengono nome, ShortName, CmsId, directory installata e percorsi degli eseguibili
+in `ImageFiles`/`DetectedFiles`. `ImageFiles` indica qui EXE, non copertine panoramiche.
+La registrazione Windows di disinstallazione conferma entrambi i percorsi. Estrarre
+l’icona direttamente dal file FC26 riesce (32×32 nella prova), mentre leggere il
+percorso dal processo in esecuzione era fallito: introdurre un fallback ai percorsi
+installati verificati, senza attach/iniezione o esecuzione del gioco.
+
+Prossimo incremento: adapter limitato al catalogo locale, parsing difensivo, verifica
+del file/associazione e invalidazione della cache; quel JSON è un formato interno,
+non un’API NVIDIA pubblica garantita. Leggere anche le sorgenti dei launcher dove
+disponibili. La cache Steam esiste su questo PC e Steam distingue esplicitamente
+icone, capsule e immagini hero; serve legare l’asset al titolo esatto. I 17 PNG 456×253
+nella cartella assets NVIDIA includono grafica promozionale, non dimostrano uno sfondo
+di FC26 utilizzabile. Non assegnare immagini in base al solo nome generico o alla
+vicinanza sul disco. Copertina automatica ad alta risoluzione ancora non verificata;
+fallback previsto: icona verificata su sfondo scuro. Nessun file NVIDIA/Steam/EA
+modificato, nessun asset copiato nel repository.
+
+Riferimenti: [icone Windows](https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nn-shlobj_core-iextracticonw),
+[asset della libreria Steam](https://partner.steamgames.com/doc/store/assets/libraryassets).
+
 Fonti: [NVIDIA Driver Settings API](https://docs.nvidia.com/nvapi/group__drsapi.html),
 [NVML device queries](https://docs.nvidia.com/deploy/nvml-api/api/group__nvmlDeviceQueries.html),
 [Windows executable icons](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.icon.extractassociatedicon?view=windowsdesktop-10.0).

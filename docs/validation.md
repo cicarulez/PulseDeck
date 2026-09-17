@@ -767,3 +767,25 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   reconnect. This is a short successful interval, not proof of long-term USB
   reliability. No new physical-image confirmation, PC shutdown/reboot, vendor app,
   firmware change, Aura probe or RGB-control action was performed.
+
+### FC26 opt-in and automatic artwork investigation
+
+- User explicitly approved adding FC26. Backed up the current configuration outside
+  Git and appended only `FC26` through the validated local API; original bf6 and
+  Battlefield entries and other preferences retained. No binary update/restart.
+- User clarified that game imagery should be found automatically, rather than
+  requiring manual image selection. Read the installed NVIDIA App's local application
+  catalog and selected Windows uninstall metadata. Both sources identify installed
+  FC26/Battlefield 6 executables. A direct Windows ExtractAssociatedIcon call against
+  FC26's registered file succeeded with a 32×32 icon; its live-process MainModule
+  lookup had been unavailable. This is isolated evidence for a future fallback,
+  not an icon-provider fix already deployed.
+- Confirmed Steam library image cache exists. Inspected only selected NVIDIA asset
+  metadata and two images: the 456×253 PNG cache includes promotional/partial graphics;
+  no trustworthy FC26 background association was established. NVIDIA `ImageFiles`
+  entries examined are executable paths, not high-resolution cover-image paths.
+  No vendor settings/assets were changed, no account/browser credentials inspected,
+  no vendor binary executed and no private catalog or image committed.
+- Display was connected at the configuration follow-up. Foreground then was Windows
+  Terminal, so an actual FC26 automatic transition and its physical presentation
+  still need observation after the game returns to the foreground.
