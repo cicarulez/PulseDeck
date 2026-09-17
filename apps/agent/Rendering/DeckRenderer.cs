@@ -11,6 +11,7 @@ public sealed class DeckRenderer : IDisposable
 {
     private readonly SKTypeface typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
     private readonly SKTypeface bold = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+    private readonly WidgetTrends trends = new();
     private readonly StaticBackground backgrounds = new();
     private readonly StaticBackground gameArtwork = new();
     public string BackgroundStatus => backgrounds.Status;
@@ -82,6 +83,11 @@ public sealed class DeckRenderer : IDisposable
         var widgets = WidgetCatalog.Expand(config.Widgets).ToDictionary(w => w.Slot, w => WidgetCatalog.Resolve(w, state.Hardware));
         void ValueText(WidgetReading widget, float x, float y, float size, float maxWidth, float minimumSize = 18)
         {
+            if (widget.Upload is { } upload)
+            {
+                Text($"↓ {widget.DisplayValue} {widget.DisplayUnit}  ↑ {upload.DisplayValue} {upload.DisplayUnit}", x, y, size, maxWidth: maxWidth, minimumSize: minimumSize);
+                return;
+            }
             var text = widget.DisplayValue + (widget.Value.HasValue && widget.DisplayUnit.Length > 0 ? " " + widget.DisplayUnit : "");
             using var font = new SKFont(typeface, size);
             if (font.MeasureText(text) > maxWidth) size = Math.Max(minimumSize, size * maxWidth / font.MeasureText(text));
@@ -135,6 +141,8 @@ public sealed class DeckRenderer : IDisposable
             if (available && state.Media.DurationSeconds > 0)
                 canvas.DrawRect(x, y + 164, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * width, 4, accentPaint);
         }
+        var widgetTrends = WidgetCatalog.Expand(config.Widgets).ToDictionary(w => w.Slot,
+            w => trends.Read(w, widgets[w.Slot], state.Timestamp));
         void WidgetCard(int i, float x, float y, float cellWidth)
         {
             const float cellHeight = 80;
@@ -143,7 +151,18 @@ public sealed class DeckRenderer : IDisposable
             var widget = widgets[WidgetCatalog.Slots[i].Id];
             if (widget.Hidden) return;
             canvas.DrawRoundRect(SKRect.Create(x, y, cellWidth, cellHeight), 8, 8, card);
+            var trend = widgetTrends[widget.Slot];
+            if (trend != 0)
+                Text(trend > 0 ? "↑" : "↓", x + cellWidth - 31, y + 25, 24,
+                    trend > 0 ? new SKColor(255, 120, 105) : new SKColor(112, 224, 144), true);
             var style = config.Widgets.FirstOrDefault(w => w.Slot == widget.Slot)?.Style ?? "auto";
+            if (widget.Upload is { } upload)
+            {
+                Text(widget.Label, x + 16, y + 19, 13, muted, maxWidth: cellWidth - 32);
+                Text($"↓ {widget.DisplayValue} {widget.DisplayUnit}", x + 16, y + 44, 23, maxWidth: cellWidth - 32);
+                Text($"↑ {upload.DisplayValue} {upload.DisplayUnit}", x + 16, y + 69, 23, maxWidth: cellWidth - 32);
+                return;
+            }
             if (style == "ring")
             {
                 var bounds = SKRect.Create(x + 16, y + 14, 52, 52);
@@ -156,7 +175,12 @@ public sealed class DeckRenderer : IDisposable
                 }
                 else Text("—", x + 31, y + 47, 18, muted);
                 Text(widget.Label, x + 84, y + 20, 13, muted, maxWidth: cellWidth - 100);
-                if (widget.Capacity is { } capacity && widget.Value is not null)
+                if (widget.Unit == "%" && widget.Capacity is { } ramTotal && widget.Used is { } ramUsed)
+                {
+                    ValueText(widget, x + 84, y + 47, 26, cellWidth - 100);
+                    Text($"{ramUsed:0.#} / {ramTotal:0.#} GiB", x + 84, y + 68, 17, muted, maxWidth: cellWidth - 100);
+                }
+                else if (widget.Capacity is { } capacity && widget.Value is not null)
                 {
                     Text($"{widget.DisplayValue} / {capacity:0.#} {widget.DisplayUnit}", x + 84, y + 58, 26, maxWidth: cellWidth - 100, minimumSize: 22);
                 }
@@ -164,7 +188,7 @@ public sealed class DeckRenderer : IDisposable
             }
             else
             {
-                Text(widget.Label, x + 16, y + 24, 14, muted, maxWidth: cellWidth - 32);
+                Text(widget.Label, x + 16, y + 24, 14, muted, maxWidth: cellWidth - (trend == 0 ? 32 : 65));
                 ValueText(widget, x + 16, y + 60, 30, cellWidth - 32, 18);
             }
             if (style == "bar" || style == "auto" && WidgetCatalog.Slots[i].IsBar)

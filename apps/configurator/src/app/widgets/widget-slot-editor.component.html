@@ -5,11 +5,12 @@
     <label class="wide">Dato da mostrare<select [ngModel]="selection()" (ngModelChange)="select($event)">
       <option value="none">Nascondi questa posizione</option>
       <optgroup label="Riepilogo hardware">@for (metric of hardware()?.metrics ?? []; track metric.id) { <option [value]="metricKey(metric.id)">{{ metric.label }} · {{ metric.unit }}</option> }</optgroup>
+      <optgroup label="Rete · download e upload insieme">@for (adapter of networks(); track adapter.hardwareId) { <option [value]="networkKey(adapter)">{{ adapter.hardwareName }} · ↓ / ↑</option> }</optgroup>
       @if (missing()) { <option [value]="selection()">{{ widget().sensorName }} · sensore attualmente non rilevato</option> }
       @for (group of groups(); track group.id) { <optgroup [label]="group.name">@for (sensor of group.sensors; track sensorKey(sensor)) { <option [value]="sensorKey(sensor)">{{ sensor.name }} · {{ sensor.sensorType }} {{ sensor.unit }}{{ sensor.value === null ? ' · senza lettura' : '' }}</option> }</optgroup> }
     </select></label>
     <label>Etichetta sul display<input type="text" maxlength="24" [disabled]="widget().source === 'none'" [ngModel]="widget().label" (ngModelChange)="patch({ label: $event })" placeholder="Nome del sensore"></label>
-    @if (compact()) { <label>Indicatore<select [disabled]="widget().source === 'none'" [ngModel]="widget().style" (ngModelChange)="patch({ style: $event })"><option value="auto">Originale della posizione</option><option value="value">Valore numerico</option><option value="bar">Barra</option><option value="ring">Anello</option></select></label> }
+    @if (compact() && widget().source !== 'network') { <label>Indicatore<select [disabled]="widget().source === 'none'" [ngModel]="widget().style" (ngModelChange)="patch({ style: $event })"><option value="auto">Originale della posizione</option><option value="value">Valore numerico</option><option value="bar">Barra</option><option value="ring">Anello</option></select></label> }
     @if (usesScale()) {
       @if (widget().source === 'metric' && widget().metricId === 'ram.used') { <p class="note">La scala segue la RAM fisica utilizzabile rilevata. L’anello mostra RAM usata, totale e libera.</p> }
       @else { <label>Valore a indicatore pieno<input type="number" min="0.001" max="1000000000000000" step="any" [disabled]="widget().source === 'none'" [ngModel]="widget().maximum" (ngModelChange)="patch({ maximum: $event })"><small>Nell’unità del sensore: 100 per una percentuale, 3000 per una ventola in RPM, byte/s per la rete.</small></label> }

@@ -637,3 +637,18 @@ manuale dalla cartella `youtube-extension`, inclusa nelle build; nessun obbligo 
 usare PulseDeck. Test automatici e trasporto verificati; dopo le istruzioni di
 attivazione l’utente ha confermato che funziona perfettamente sul proprio Chrome.
 Dettagli e limiti della verifica in `docs/validation.md`.
+
+## Griglia hardware e trend (0.4.1)
+
+Su richiesta dell’utente, griglia Meteo/Gaming a tre colonne: CPU/GPU/RAM con anelli
+nella prima riga; temperature CPU/GPU e frequenza RAM nella seconda; potenze CPU/GPU
+e Rete nella terza; clock CPU/GPU e ventola nella quarta. La RAM mostra percentuale
+e GiB usati/totali. Il riordino è applicato alla configurazione di questo PC,
+senza migrare forzatamente configurazioni esistenti o cambiare i default legacy.
+
+Nuova sorgente widget `network`, selezionabile dal configuratore: download e upload
+simultanei della stessa interfaccia, senza aggregare adattatori virtuali o filtri.
+Per temperature e potenze, frecce ↑ rosse / ↓ verdi rispetto a 15 secondi prima,
+con soglie iniziali di 2 °C e 5 W. Sotto soglia nessuna freccia. Dati mancanti,
+interruzioni e cambio di sensore cancellano lo storico; le frecce indicano variazioni,
+non allarmi o superamenti di limiti termici. Soglie attualmente fisse.

@@ -8,6 +8,8 @@ public sealed record WidgetSlot(string Id, string Name, bool IsBar);
 public sealed record WidgetReading(string Slot, string Label, double? Value, string Unit, double Maximum, bool Hidden)
 {
     public double? Capacity { get; init; }
+    public double? Used { get; init; }
+    public WidgetReading? Upload { get; init; }
     private double Divisor => Unit == "B/s" && Value is { } v ? Math.Abs(v) >= 1048576 ? 1048576 : Math.Abs(v) >= 1024 ? 1024 : 1 : 1;
     public string DisplayUnit => Unit == "B/s" && Divisor > 1 ? Divisor == 1048576 ? "MiB/s" : "KiB/s" : Unit;
     public string DisplayValue => Value is { } value && double.IsFinite(value)
@@ -55,14 +57,14 @@ public static class WidgetCatalog
             return "Unknown or duplicate widget slot.";
         foreach (var widget in widgets)
         {
-            if (widget.Source is not ("metric" or "sensor" or "none")) return "Unknown widget source.";
+            if (widget.Source is not ("metric" or "sensor" or "network" or "none")) return "Unknown widget source.";
             if (widget.Style is not ("auto" or "value" or "bar" or "ring")) return "Unknown widget style.";
             if (widget.Label is null || widget.Label.Length > 24 || widget.Label.Any(char.IsControl)) return "Widget labels must contain at most 24 printable characters.";
             if (!double.IsFinite(widget.Maximum) || widget.Maximum <= 0 || widget.Maximum > 1e15) return "Widget maximum must be a positive finite number.";
             if (widget.MetricId is null || widget.SensorId is null || widget.SensorName is null
                 || widget.MetricId.Length > 100 || widget.SensorId.Length > 1024 || widget.SensorName.Length > 256) return "Invalid widget binding.";
             if (widget.Source == "metric" && !MetricIds.Contains(widget.MetricId)) return "Unknown summary metric.";
-            if (widget.Source == "sensor" && (string.IsNullOrWhiteSpace(widget.SensorId) || string.IsNullOrWhiteSpace(widget.SensorName)))
+            if (widget.Source is "sensor" or "network" && (string.IsNullOrWhiteSpace(widget.SensorId) || string.IsNullOrWhiteSpace(widget.SensorName)))
                 return "Select a sensor for this widget.";
         }
         return null;
@@ -76,6 +78,14 @@ public static class WidgetCatalog
 
     public static WidgetReading Resolve(WidgetConfig widget, HardwareSnapshot hardware)
     {
+        if (widget.Source == "network")
+        {
+            // Bind both directions to one adapter; never sum virtual/filter duplicates.
+            double? Read(string name) => hardware.Sensors.FirstOrDefault(s => s.HardwareId == widget.SensorId
+                && s.HardwareName == widget.SensorName && s.SensorType == "Throughput" && s.Name == name)?.Value;
+            return new(widget.Slot, widget.Label.Length > 0 ? widget.Label : "RETE", Read("Download Speed"), "B/s", 0, false)
+                { Upload = new(widget.Slot, "UPLOAD", Read("Upload Speed"), "B/s", 0, false) };
+        }
         // Match name as well as ID: LibreHardwareMonitor can reuse a source ID.
         var sensor = widget.Source == "sensor"
             ? hardware.Sensors.FirstOrDefault(s => s.Id == widget.SensorId && s.Name == widget.SensorName) : null;
@@ -83,10 +93,11 @@ public static class WidgetCatalog
         var value = sensor?.Value ?? metric?.Value;
         if (value is { } v && !double.IsFinite(v)) value = null;
         var label = widget.Label.Length > 0 ? widget.Label : sensor?.Name ?? metric?.Label ?? widget.SensorName;
-        var capacity = widget.Source == "metric" && widget.MetricId == "ram.used"
+        var capacity = widget.Source == "metric" && widget.MetricId is "ram.used" or "ram.load"
             ? hardware.Metrics.FirstOrDefault(m => m.Id == "ram.total")?.Value : null;
         if (capacity is not { } total || !double.IsFinite(total) || total <= 0) capacity = null;
         var maximum = widget.Source == "metric" && widget.MetricId == "ram.used" ? capacity ?? 0 : widget.Maximum;
-        return new(widget.Slot, label, value, sensor?.Unit ?? metric?.Unit ?? "", maximum, widget.Source == "none") { Capacity = capacity };
+        return new(widget.Slot, label, value, sensor?.Unit ?? metric?.Unit ?? "", maximum, widget.Source == "none") { Capacity = capacity, Used = widget.Source == "metric" && widget.MetricId == "ram.load"
+            ? hardware.Metrics.FirstOrDefault(m => m.Id == "ram.used")?.Value : null };
     }
 }

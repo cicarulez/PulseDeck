@@ -4,7 +4,7 @@ export interface NewsItem { source: string; title: string; url: string; publishe
 export interface NewsSnapshot { status: string; channels: { name: string; url: string; status: string; items: NewsItem[] }[]; items: NewsItem[]; fetchedAt: string | null; }
 export interface WeatherLocation { name: string; latitude: number; longitude: number; }
 export interface WeatherPlace extends WeatherLocation { label: string; }
-export interface WidgetConfig { slot: string; source: 'metric' | 'sensor' | 'none'; metricId: string; sensorId: string; sensorName: string; label: string; maximum: number; style: 'auto' | 'value' | 'bar' | 'ring'; }
+export interface WidgetConfig { slot: string; source: 'metric' | 'sensor' | 'network' | 'none'; metricId: string; sensorId: string; sensorName: string; label: string; maximum: number; style: 'auto' | 'value' | 'bar' | 'ring'; }
 export interface WidgetSlot { id: string; name: string; isBar: boolean; }
 export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; }
 export interface GameTheme { processName: string; backgroundPath: string; }

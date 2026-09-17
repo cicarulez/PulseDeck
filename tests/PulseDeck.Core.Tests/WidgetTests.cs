@@ -58,6 +58,22 @@ public class WidgetTests
     }
 
     [Fact]
+    public void CombinedNetworkKeepsDirectionsOnSelectedAdapterAndMissingUploadExplicit()
+    {
+        SensorReading Sensor(string adapter, string name, double value) => new(adapter + name, name, adapter, adapter, "Network", "Throughput", value, null, null, "B/s");
+        var hardware = new HardwareSnapshot([], "connected") { Sensors = [Sensor("ethernet", "Download Speed", 2048),
+            Sensor("ethernet", "Upload Speed", 1024), Sensor("virtual", "Upload Speed", 99999)] };
+        var widget = new WidgetConfig("extra1", "network", "", "ethernet", "ethernet", "RETE");
+        var reading = WidgetCatalog.Resolve(widget, hardware);
+        Assert.Equal("2", reading.DisplayValue); Assert.Equal("1", reading.Upload!.DisplayValue);
+        Assert.Null(reading.Fraction);
+        reading = WidgetCatalog.Resolve(widget, hardware with { Sensors = hardware.Sensors.Where(s => s.Name != "Upload Speed" || s.HardwareId != "ethernet").ToArray() });
+        Assert.Equal(2048, reading.Value); Assert.Equal("—", reading.Upload!.DisplayValue);
+        var config = WidgetCatalog.Defaults(); config[8] = widget;
+        Assert.Null(WidgetCatalog.Validate(config));
+    }
+
+    [Fact]
     public void RamCapacityUsesPhysicalMemoryAndDoesNotInventMissingTotals()
     {
         SensorReading Sensor(string hardware, string name, double? value) => new(hardware + name, name, hardware, hardware, "Memory", "Data", value, null, null, "GiB");

@@ -1234,3 +1234,37 @@ Sources: [Chromium shared system media controls](https://chromium.googlesource.c
 [Chrome extension network requests](https://developer.chrome.com/docs/extensions/develop/concepts/network-requests),
 [Chrome manifest key](https://developer.chrome.com/docs/extensions/reference/manifest/key),
 [Service worker lifecycle](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle).
+
+## Combined network widget and hardware grid — 2026-09-17 (0.4.1)
+
+- Added an optional `network` source binding one adapter by hardware ID and name;
+  download/upload resolve independently, scale B/s to KiB/s/MiB/s and keep missing
+  directions explicit. Virtual/filter adapters are not summed. Existing widget
+  editor exposes the combined source and preserves absent bindings. Legacy defaults
+  and saved configurations are not automatically reordered.
+- User approved the 3-column, 4-row hardware arrangement and subsequently requested
+  red upward/green downward trend arrows on temperature and power widgets. Renderer
+  uses a 15-second comparison, thresholds 2 °C and 5 W, with no arrow below threshold.
+  Missing data, binding changes or gaps over five seconds reset the history; first
+  arrow requires a fresh baseline. Other units do not get trend arrows.
+- RAM percentage rings additionally show used/total physical GiB. Current hardware
+  exposes CPU `Cores (Average)`, RAM `Memory` clock at 1800 MHz and motherboard
+  `Fan #2`; fan header has no verified physical mapping, so its label remains
+  `VENTOLA #2`. RAM clock is the sensor reading in MHz, not an inferred DDR data rate.
+- 88 Core tests and 17 renderer tests passed, Angular production build and Windows
+  publish passed. New regressions cover network direction isolation, missing upload,
+  trend thresholds, data gaps and rebinding. Actual deployment observations follow.
+- Installed 0.4.1 after old agent/task exit; build backup
+  `%LOCALAPPDATA%\PulseDeck\before-widgets-041-20260917-235036`. Credentials and
+  settings preserved during deployment; then applied the explicitly requested widget
+  changes through the API after backing up `before-grid-041-20260917-235156.json`.
+  Existing non-widget values and the four hidden widget bindings were verified
+  unchanged. Saving materialized the previously implicit `gamingVoiceActivity: true`
+  default; its effective behavior is unchanged.
+  An initial request with incorrect text encoding was rejected without changing
+  configuration; UTF-8 submission succeeded.
+- Inspected actual Windows preview: three percentage rings, physical RAM used/total,
+  correct column alignment, both Ethernet directions, real CPU/RAM/GPU clocks and
+  Fan #2. COM5 acknowledged 64 frames with zero errors/recoveries. PresentMon remained
+  `ready`; live media source was `youtube-extension`. Trend thresholds are covered
+  by tests; no live above-threshold arrow transition was captured in this check.
