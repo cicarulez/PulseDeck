@@ -1,6 +1,6 @@
 # Piano di sviluppo PulseDeck
 
-Aggiornato il 17 settembre 2026. Questo file conserva decisioni, priorità e verifiche
+Aggiornato il 18 settembre 2026. Questo file conserva decisioni, priorità e verifiche
 per riprendere il lavoro nelle prossime sessioni. Le attività future non sono già
 implementate e non richiedono di installare tutte le dipendenze in anticipo.
 
@@ -46,6 +46,7 @@ nella sessione Windows dell'utente, senza console aperta.
 | In pausa | Tema con colori Aura | Accenti e barre coordinati al PC | Cambi colore reali, testo leggibile, comportamento corretto quando Aura non è disponibile |
 | P2 | FPS e tempi dei fotogrammi | Informazioni del gioco in primo piano | Misure reali attribuite al processo corretto, confronto con uno strumento di riferimento |
 | P2 | Chi parla su Discord | Indicatore vocale distinto dal mute | Due utenti, cambio interlocutore, silenzio, mute e riconnessione verificati |
+| Backlog | Disposizione dedicata al profilo Musica | Composizione distinta da Desktop anche nei layout Meteo/Compatto | Copertina, titolo, artista e avanzamento leggibili; transizioni corrette tra riproduzione, pausa e Gaming |
 | P3 | Musica e sfondi | Temi statici e associazioni per gioco/app | Cambio traccia, pausa, sorgente multimediale alternativa; sfondo nitido sul display |
 | P3 | Regole contestuali avanzate | Widget/profili diversi per app attiva | Priorità esplicite e nessun cambio continuo durante Alt-Tab |
 | P3 | Gestione quotidiana | Icona nella tray, recupero del display e aggiornamenti | Uscita senza processi residui, scollegamento USB, sospensione/ripresa, ripristino del colore |
@@ -713,3 +714,34 @@ eseguibili principale e trial comunque rilevati. Verifiche in `docs/validation.m
 
 Aggiunte anche miniature accanto agli eseguibili del catalogo, su richiesta:
 caricamento progressivo, cache condivisa delle copertine e segnaposto esplicito.
+
+
+## Backlog — layout Musica e completamento Aura Sync
+
+Richiesti il 18 settembre 2026 come attività future; questa aggiunta documenta
+il lavoro da riprendere, senza avviare implementazioni o prove Aura.
+
+### Disposizione dedicata al profilo Musica
+
+- Progettare una composizione riconoscibile anche nei layout Meteo e Compatto,
+  dove attualmente cambia sostanzialmente solo la dicitura del profilo.
+- Definire insieme all'utente la disposizione: proposta iniziale con maggiore
+  spazio a copertina, titolo, artista e avanzamento, mantenendo i widget utili.
+- Conservare la priorità Gaming e le sorgenti multimediali attuali, inclusi i
+  video YouTube; decidere il comportamento visivo durante pausa e assenza di dati.
+- Completamento: verificare anteprima e pannello fisico, cambio traccia, titoli
+  lunghi, copertina mancante e passaggi Desktop/Musica/Gaming senza oscillazioni.
+
+### Completare l'integrazione Aura Sync
+
+- Riprendere dalle evidenze della sezione [Aura Sync](#aura-sync-il-pannello-segue-il-pc),
+  senza ripetere i tentativi già documentati. Le prove operative restano in pausa
+  fino alla ripresa del lavoro; inserire questa voce nel backlog non reinstalla la sonda.
+- Primo obiettivo: leggere i colori effettivamente applicati al PC e usarli per
+  gli accenti del pannello, senza acquisire il controllo RGB né modificare i LED.
+- Verificata una sorgente passiva affidabile, completare provider, selezione nel
+  configuratore e integrazione nel renderer condiviso, con colore manuale quando
+  Aura non è disponibile e contrasto sufficiente per il testo.
+- Completamento: osservare cambi di colore reali, convivenza con Armoury Crate,
+  avvio/riavvio e indisponibilità della sorgente. La presenza dei servizi ASUS o
+  un getter SDK funzionante non basta a dimostrare la lettura dell'effetto attivo.
