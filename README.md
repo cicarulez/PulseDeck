@@ -376,7 +376,9 @@ Gli script eseguono i test Core e di rendering, pubblicano l'agent win-x64 con r
 interfaccia, licenze e script di avvio/importazione/installazione in `artifacts/windows`.
 Scaricano inoltre PresentMon e le librerie Discord Voice da versioni e SHA-256
 fissati in `scripts/gaming-dependencies.json`; richiedono accesso HTTPS a GitHub.
-Non installano servizi o driver aggiuntivi.
+Non installano servizi o driver aggiuntivi. La build dell’agent scarica anche il
+sorgente fissato di Discord.Net.WebSocket per applicare la correzione DAVE descritta
+in `src/PulseDeck.Discord/README.md`; il sorgente resta nella cache `obj/`.
 Per i test reali servono Windows e i dispositivi: la sola build in WSL non verifica
 Spotify, sensori, Discord o USB. La raggiungibilità del loopback Windows da WSL dipende
 dalla configurazione locale.

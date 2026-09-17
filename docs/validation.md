@@ -1108,3 +1108,72 @@ Sources: [PresentMon console](https://github.com/GameTechDev/PresentMon/blob/v2.
 [Discord.Net audio events](https://docs.discordnet.dev/api/Discord.Audio.IAudioClient.html),
 [DAVE setup](https://docs.discordnet.dev/guides/voice/libdave.html),
 [Windows endpoint volume](https://learn.microsoft.com/en-us/windows/win32/api/endpointvolume/nn-endpointvolume-iaudioendpointvolume).
+
+## FPS CSV schema and Discord Voice reconnect correction — 2026-09-17 (0.3.1)
+
+- User confirmed the BF6 session timer works, but reported absent FPS and intermittent
+  speaking detection with a transient connection warning in Discord.
+- Confirmed FPS parsing defect: PresentMon 2.5.1 `--v1_metrics` emits `msBetweenPresents` (lowercase
+  initial m), while our parser required `MsBetweenPresents`. The old unit fixture
+  used the other spelling and missed the real schema. Column matching is now
+  case-insensitive; tests exercise both spellings, actual PID filtering, rejected
+  samples and expiry. API diagnostics include the accepted-sample count and the
+  latest bounded collector error instead of silently discarding all stderr.
+- Native Discord logs showed repeated MLS Welcome rejection for unrecognized
+  participants. Discord.Net 3.20.1 supplies a lazy decryptor map to libdave membership
+  validation; it can omit existing silent channel members and self. Added the
+  narrowly patched `PulseDeck.Discord` project, building pinned, checksum-verified
+  upstream WebSocket source with the authenticated channel roster plus self included.
+  Core/Rest/Dave packages, DAVE encryption and unknown-member checks are retained.
+  Native payload/key-package log output is suppressed; only classified error codes
+  enter application diagnostics. Voice is not reported ready before MLS success.
+- Fixed a separate reconnect delay: normal departure from Gaming now resets the
+  failure backoff, allowing immediate connection on return; actual failures retain
+  bounded retries. A one-second hold makes brief real speech visible at the panel's
+  sampling rate. Silent initial/duplicate stop events do not create or prolong speech;
+  disconnection and member departure clear activity.
+- Signed-in Windows harness using the actual configured bot/channel completed two
+  encrypted joins, separated by leaving Gaming, with no classified encryption or
+  connection failure. Both departures reported inactive. One human participant was
+  present; no speech transition was observed during that harness run. This validates
+  handshake/rejoin, not sustained voice reliability or multiple-person turnover.
+- 75 Core tests and 17 renderer tests passed; Angular production build and Windows
+  publish passed. The patched Discord assembly compiled without warnings. A direct
+  non-elevated PresentMon probe was stopped by privilege requirements and is not
+  counted as an in-game FPS check; the deployed agent runs elevated as before.
+- Installed 0.3.1 after waiting for the old agent and startup task to exit. Backup:
+  `%LOCALAPPDATA%\PulseDeck\before-gaming-031-20260917-225346`.
+  Existing configuration/credential hashes were preserved and the existing task was
+  reused unchanged. COM5 identity verified on reconnect, then partial frames resumed
+  with zero recoveries/errors. User requested another BF6/voice check; see any
+  additional observations below rather than assuming the fixes prove live FPS.
+
+Sources: [PresentMon v1 header](https://github.com/GameTechDev/PresentMon/blob/v2.5.1/PresentMon/CsvOutput.cpp),
+[Discord.Net DAVE member input](https://github.com/discord-net/Discord.Net/blob/3.20.1/src/Discord.Net.WebSocket/Audio/DaveSessionManager.cs).
+
+## Start FPS collection before BF6 anti-cheat — 2026-09-17 (0.3.2)
+
+- User confirmed Discord reentry works after 0.3.1, while FPS remained absent.
+  Live diagnostics showed PresentMon returning access denied even with the agent
+  elevated. BF6 was already running when the old collector attempted to create
+  its ETW session. This matches upstream PresentMon issue 573; fixing CSV parsing
+  alone could not solve this separate capture lifecycle problem.
+- Collector now starts with the agent, including on the desktop, filtered to
+  configured game executable names. It keeps the same private trace across
+  Alt-Tab and game exit. Display samples are still selected by the current game's
+  exact PID, with a cached header replayed when selection changes. No security or
+  anti-cheat settings were changed. If collection cannot start, the API explains
+  that the game must be closed before retrying. Changing configured game process
+  names also restarts capture and can require closing the game.
+- User closed BF6 before installation. Deployed 0.3.2 after the old agent/task
+  exited; backup `%LOCALAPPDATA%\PulseDeck\before-gaming-032-20260917-230244`.
+  Configuration and encrypted credential hashes were unchanged; startup task reused.
+  PresentMon PID 51516 remained alive on the desktop, and the API reported `ready`
+  before BF6 was reopened. COM5 reconnected with the verified device identity and
+  no transport errors/recoveries. This readiness check alone does not prove FPS.
+- 75 Core tests passed after the lifecycle change, Angular production build and
+  self-contained Windows publish passed. Renderer unchanged since its 17 passing
+  tests above. BF6 was still closed during this check; actual FPS after reopening
+  and preservation of this collector across live Alt-Tab remain to be verified.
+
+Source: [PresentMon BF6 capture startup failure](https://github.com/GameTechDev/PresentMon/issues/573).

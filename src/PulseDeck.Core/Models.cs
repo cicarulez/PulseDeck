@@ -66,6 +66,7 @@ public sealed record VoiceMember(string Id, string Name, bool Mute, bool Deaf)
 public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMember? Tracked, string Status, string? Detail = null)
 {
     public string SpeakingStatus { get; init; } = "unavailable";
+    public string? SpeakingDetail { get; init; }
 }
 public sealed record DisplaySnapshot(bool Connected, string Port, string? DeviceId, string Status, string? Error = null)
 {

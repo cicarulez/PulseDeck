@@ -40,7 +40,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     var session = sessions.Read(game, now);
                     if (game is not null && session is null && active.ProcessId != game.ProcessId) game = null;
                     embeddedDiscord.SetGaming(settings.GamingLayout && profile == "gaming");
-                    var frameRate = fps.Read(profile == "gaming" ? session : null, now);
+                    var frameRate = fps.Read(profile == "gaming" ? session : null, settings, now);
                     var next = new DeckState(now, profile, active.ProcessName,
                         hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status, frameRate.Status)
                         { Foreground = active, Game = game, GameSession = session, Fps = frameRate, Volume = volume.Read(),

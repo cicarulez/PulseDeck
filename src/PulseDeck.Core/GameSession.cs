@@ -2,7 +2,10 @@ namespace PulseDeck.Core;
 
 public sealed record GameSession(int ProcessId, string ProcessName, DateTimeOffset StartedAt, double ElapsedSeconds);
 public sealed record FpsSnapshot(string Status, double? FramesPerSecond = null, double? FrameTimeMs = null,
-    int? ProcessId = null, string? Detail = null);
+    int? ProcessId = null, string? Detail = null)
+{
+    public long SamplesAccepted { get; init; }
+}
 public sealed record GameArtworkSnapshot(string Status = "unavailable", string? Path = null, string? Source = null);
 
 public static class GameSessions

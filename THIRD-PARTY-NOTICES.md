@@ -63,3 +63,9 @@ Game covers can be fetched from Steam Store by exact title match. Artwork remain
 owned by its publisher, cached under the user's PulseDeck data directory, and is
 not redistributed with the application. Store endpoints and NVIDIA's local catalog
 are optional, undocumented formats; missing or ambiguous matches remain unavailable.
+
+PulseDeck 0.3.1 builds Discord.Net.WebSocket 3.20.1 from the pinned upstream source
+with a DAVE recognized-roster fix. It retains MIT licensing and the original
+assembly identity; informational version identifies `pulsedeck.dave-roster.1`.
+See `src/PulseDeck.Discord/README.md` and `PatchDiscordRoster.cs` for exact provenance
+and the source change. Core/Rest/Dave remain the unmodified NuGet dependencies.

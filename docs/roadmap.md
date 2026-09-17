@@ -600,3 +600,24 @@ osservate transizioni vocali: vedere la validazione effettiva.
 Volume master di Windows nell’header di tutti i layout, accanto all’orologio; spazio
 nickname/stato Discord ridotto. Lettura del dispositivo multimediale predefinito,
 senza modificare volume o mute.
+
+### Correzione 0.3.1
+
+L’utente ha confermato il timer in BF6. Corretto il parser FPS sullo schema reale
+PresentMon v1 (`msBetweenPresents`). Corretto l’elenco riconosciuto nell’handshake
+DAVE di Discord.Net tramite build locale del solo WebSocket, sorgente ufficiale
+fissato e verificato; due ingressi cifrati sul canale reale riusciti. Rimossi l’attesa
+errata dopo Alt-Tab e i log nativi contenenti payload. Evidenziazione vocale mantenuta
+per un secondo dopo un intervento reale per adattarla alla cadenza del pannello.
+Non confondere gli ingressi riusciti con la verifica di conversazioni prolungate:
+seguire le osservazioni effettive in `docs/validation.md`.
+
+### Correzione 0.3.2
+
+Confermato dall’utente il rientro Discord. La cattura FPS incontra anche un secondo
+problema: l’anti-cheat di BF6 nega l’avvio della sessione ETW a gioco già aperto.
+PresentMon ora parte insieme all’agent e resta attivo sul desktop, filtrato ai nomi
+dei giochi configurati; Alt-Tab mantiene la raccolta e seleziona i campioni per PID.
+Dopo un riavvio dell’agent o una modifica dei processi configurati può servire
+chiudere il gioco, attendere lo stato `ready` e riaprirlo. Nessuna modifica alle
+impostazioni di sicurezza. Le misure effettive sono riportate in `docs/validation.md`.

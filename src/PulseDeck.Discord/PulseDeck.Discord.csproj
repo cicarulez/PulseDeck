@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Pinned upstream WebSocket source, with only the documented DAVE roster fix. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Discord.Net.WebSocket</AssemblyName>
+    <RootNamespace>Discord.WebSocket</RootNamespace>
+    <Version>3.20.1</Version>
+    <InformationalVersion>3.20.1+pulsedeck.dave-roster.1</InformationalVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UpstreamRoot>$(MSBuildThisFileDirectory)obj/upstream</UpstreamRoot>
+    <UpstreamSource>$(UpstreamRoot)/Discord.Net-f63bed073b08f25a856bed4a003849f7e600a405/src/Discord.Net.WebSocket</UpstreamSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.Core" Version="3.20.1" />
+    <PackageReference Include="Discord.Net.Rest" Version="3.20.1" />
+    <PackageReference Include="Discord.Net.Dave" Version="3.20.1" />
+  </ItemGroup>
+  <UsingTask TaskName="PatchDiscordRoster" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup><SourceFile ParameterType="System.String" Required="true" /></ParameterGroup>
+    <Task><Code Type="Fragment" Language="cs" Source="PatchDiscordRoster.cs" /></Task>
+  </UsingTask>
+  <Target Name="PrepareDiscordSource" BeforeTargets="CoreCompile">
+    <MakeDir Directories="$(UpstreamRoot)" />
+    <DownloadFile SourceUrl="https://codeload.github.com/discord-net/Discord.Net/zip/f63bed073b08f25a856bed4a003849f7e600a405"
+                  DestinationFolder="$(UpstreamRoot)" DestinationFileName="source.zip" Condition="!Exists('$(UpstreamRoot)/source.zip')" />
+    <GetFileHash Files="$(UpstreamRoot)/source.zip" Algorithm="SHA256"><Output TaskParameter="Items" ItemName="UpstreamHash" /></GetFileHash>
+    <Error Condition="'%(UpstreamHash.FileHash)' != '45A288A76524329350E86F7299229BEB4A5DF35FD1D19BE8A0A7CBB5013152F6'" Text="Discord.Net source checksum mismatch." />
+    <Unzip SourceFiles="$(UpstreamRoot)/source.zip" DestinationFolder="$(UpstreamRoot)" SkipUnchangedFiles="false" />
+    <PatchDiscordRoster SourceFile="$(UpstreamSource)/Audio/DaveSessionManager.cs" />
+    <ItemGroup>
+      <Compile Include="$(UpstreamSource)/**/*.cs" Exclude="$(UpstreamSource)/obj/**;$(UpstreamSource)/bin/**" />
+      <Content Include="$(UpstreamRoot)/Discord.Net-f63bed073b08f25a856bed4a003849f7e600a405/LICENSE" Link="licenses/Discord.Net.WebSocket.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+</Project>

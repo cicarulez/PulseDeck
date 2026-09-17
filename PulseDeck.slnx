@@ -5,6 +5,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/PulseDeck.Core/PulseDeck.Core.csproj" />
+    <Project Path="src/PulseDeck.Discord/PulseDeck.Discord.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PulseDeck.Core.Tests/PulseDeck.Core.Tests.csproj" />
