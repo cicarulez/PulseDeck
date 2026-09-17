@@ -1014,4 +1014,7 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   removed captions are absent, enlarged RAM/weather/media/header/news-time text
   fits without overlap. At 79 acknowledged frames the display was connected,
   transmitting partial frames with zero recovery attempts/errors; weather and news
-  were connected. Physical readability approval for this revision is still pending.
+  were connected.
+- The user subsequently confirmed on the physical display that all marked text is
+  readable and both captions marked for removal are gone: “Sì, tutto corretto e
+  leggibile”. This confirms the 0.2.6 readability changes on the panel.

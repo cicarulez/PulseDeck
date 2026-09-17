@@ -553,4 +553,5 @@ fonte e natura stimata del meteo rimangono nel configuratore. Ingranditi nome ap
 RAM usata/totale e libera, tempo Spotify, umidità, vento, ora meteo e data/ora news.
 Umidità, vento e ora meteo ora hanno una riga ciascuno. I 12 sensori e la dimensione
 scelta per il titolo news restano invariati; recupero USB della 0.2.5 conservato.
-Verifica fisica della nuova leggibilità ancora distinta dalle prove del renderer.
+L’utente ha confermato sul pannello fisico la leggibilità dei testi ingranditi e
+la rimozione delle due scritte indicate nello screenshot.
