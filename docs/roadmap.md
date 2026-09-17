@@ -136,12 +136,25 @@ Il crash `0xC0000005` resta riproducibile nel vecchio host .NET anche con HAL na
 il percorso interamente nativo lo evita, senza stabilire la causa esatta.
 
 Dopo il rilascio delle collezioni restano riferimenti COM aperti (HAL=5, dispositivo=4
-alla terza enumerazione, inclusa una radice intenzionale ciascuno). Il processo breve
-ne limita la durata; non forzare rilasci aggiuntivi né considerare verificato un host
-continuativo. Prossimo passo: chiarire la proprietà dei riferimenti e verificare un
-ricevitore in processo separato, poi il rilevamento nel servizio Aura attivo. La sonda
-ha timeout, controlli espliciti e pulizia della chiave privata; non viene installata
-nel servizio ASUS o nell'agent.
+alla terza enumerazione; 32/31 dopo trenta, inclusa una radice intenzionale ciascuno).
+La verifica diretta dei nostri contratti, senza SDK, torna invece a 1/1/1 per cento
+cicli, includendo entrambi i metodi di enumerazione. La proprietà dei riferimenti
+nel percorso SDK resta da chiarire: processo breve, nessun rilascio forzato e nessuna
+promessa di funzionamento continuativo.
+
+**Ricevitore separato verificato:** un secondo processo riceve due messaggi
+sintetici attraverso memoria condivisa/eventi privati; il buffer conserva solo il
+valore più recente. Senza messaggi restituisce `unavailable`. La prova di timeout
+ha terminato entrambi i processi osservati, senza chiavi temporanee residue. Il
+trasferimento diretto delle interfacce COM ASUS tra processi non ha funzionato;
+il collegamento privato evita quella dipendenza. Nessuna prova dentro LightingService.
+
+Questa è una verifica del trasporto: la callback ricevente HAL è predisposta per
+inoltrare un singolo valore grezzo come non verificato, ma **non è stata invocata
+da Aura**. Nessun effetto dichiarato supportato e nessun colore Aura reale ricevuto.
+Prossimo passo: determinare contratto e descrittore degli effetti/colore impacchettato
+e verificare il rilevamento nel servizio Aura attivo.
+Nessun provider o ricevitore persistente viene installato nell'agent in questa fase.
 
 Il modulo GmAcc installato include già una modalità virtuale, ma usa il canale
 locale 11000 occupato da Aura Wallpaper e quel ramo precede quello Wallpaper.

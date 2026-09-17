@@ -2,9 +2,19 @@
 param(
     [ValidateRange(1,100)][int]$Iterations = 3,
     [switch]$EmptyDevices,
+    [switch]$SeparateProcess,
+    [switch]$TestTransport,
+    [switch]$CheckContracts,
+    [ValidateRange(0,10)][int]$ObserveSeconds = 0,
     [ValidateRange(1,60)][int]$TimeoutSeconds = 20
 )
 $ErrorActionPreference = 'Stop'
+if ($CheckContracts -and ($SeparateProcess -or $TestTransport -or $EmptyDevices -or $ObserveSeconds)) {
+    throw 'Contract checks are a separate mode.'
+}
+if ($ObserveSeconds -and -not ($SeparateProcess -or $TestTransport)) {
+    throw 'ObserveSeconds requires a receiver process.'
+}
 $exe = Join-Path $PSScriptRoot 'PulseDeck.AuraProbe.exe'
 if (-not (Test-Path -LiteralPath $exe)) { throw 'Build the native probe and run this script from its output directory.' }
 $scratchKey = 'Software\PulseDeck\AuraProbe\' + [Guid]::NewGuid().ToString('N')
@@ -14,6 +24,10 @@ $process = $null
 try {
     $mode = if ($EmptyDevices) { 'empty' } else { 'device' }
     $arguments = '"' + $scratchKey + '" ' + $Iterations + ' ' + $mode
+    if ($TestTransport) { $arguments += " transport-test" }
+    elseif ($SeparateProcess) { $arguments += " separate" }
+    if ($SeparateProcess -or $TestTransport) { $arguments += " " + $ObserveSeconds }
+    if ($CheckContracts) { $arguments = "--check-contracts" }
     $start = New-Object Diagnostics.ProcessStartInfo($exe, $arguments)
     $start.UseShellExecute = $false
     $start.CreateNoWindow = $true

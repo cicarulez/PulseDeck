@@ -133,6 +133,8 @@ e carica il nostro modulo software in un processo isolato. Con un host nativo x8
 l'SDK enumera anche **PulseDeck Virtual Probe**, un dispositivo virtuale 1×1 con
 un LED, superando il crash della sonda .NET. La comparsa in Armoury Crate e la
 ricezione dei colori Aura restano da verificare; nessun provider è attivo nell'agent.
+È stato provato anche un ricevitore separato con messaggi sintetici dichiarati e
+chiusura automatica in caso di timeout: non costituisce ancora una lettura Aura.
 
 ## Avvio automatico senza finestre
 

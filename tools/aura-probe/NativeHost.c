@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "DiscoveryHal.h"
+#include "Receiver.h"
 
 static HRESULT invoke(IDispatch *object, wchar_t *name, WORD flags,
                       VARIANT *argument, VARIANT *result) {
@@ -43,11 +44,17 @@ static BOOL scratch_path_valid(const char *path) {
 #define DISPATCH(value) REQUIRE((value).vt == VT_DISPATCH && (value).pdispVal)
 
 int main(int argc, char **argv) {
-    if (argc != 4 || !scratch_path_valid(argv[1]) ||
+    if (argc > 1 && !strcmp(argv[1], "--receiver")) return RunReceiver(argc, argv);
+    if (argc == 2 && !strcmp(argv[1], "--check-contracts")) return CheckProbeContracts();
+    BOOL separate = (argc == 5 || argc == 6) && (!strcmp(argv[4], "separate") || !strcmp(argv[4], "transport-test"));
+    BOOL transport_test = separate && !strcmp(argv[4], "transport-test");
+    if ((argc != 4 && !separate) || !scratch_path_valid(argv[1]) ||
         (strcmp(argv[3], "empty") && strcmp(argv[3], "device"))) return 2;
     char *end = NULL;
     long iterations = strtol(argv[2], &end, 10);
     if (*end || iterations < 1 || iterations > 100) return 2;
+    long observe_seconds = argc == 6 ? strtol(argv[5], &end, 10) : 0;
+    if (*end || observe_seconds < 0 || observe_seconds > 10) return 2;
     BOOL empty = strcmp(argv[3], "empty") == 0;
     SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
     HRESULT initialized = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
@@ -57,6 +64,8 @@ int main(int argc, char **argv) {
     const char *category = "CLSID\\{109DC3E4-B9FF-4AF3-9008-AB13705D4E5F}\\Instance\\"
         "{E9BBD754-6CF4-492E-BA89-782177A2771B}\\Instance\\{702D21B6-3A25-4D2C-9F73-F64C78E212A8}";
     IDispatch *sdk = NULL;
+    Receiver *receiver = NULL;
+    ReceiverResult receiver_result = {0};
     HKEY root = NULL, classes = NULL, entry = NULL;
     BOOL redirected = FALSE, registered = FALSE;
     int exit_code = 1;
@@ -66,6 +75,9 @@ int main(int argc, char **argv) {
     index.lVal = 0;
 
     CHECK(CoCreateInstance(&sdk_clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IDispatch, (void**)&sdk));
+    if (separate) CHECK(StartReceiver(&receiver));
+    if (transport_test) CHECK(TestReceiverTransport(receiver));
+    SetProbeReceiver(receiver);
     CHECK(RegisterProbe(empty));
     registered = TRUE;
     REGCHECK(RegOpenKeyExA(HKEY_CURRENT_USER, argv[1], 0, KEY_ALL_ACCESS, &root));
@@ -118,6 +130,7 @@ int main(int argc, char **argv) {
     REQUIRE(stats.activations == 1 && stats.enumerations >= iterations);
     REQUIRE(empty ? stats.capabilities == 0 : stats.capabilities >= iterations);
     REQUIRE(stats.effect_requests == 0 && stats.sync_requests == 0);
+    if (observe_seconds) Sleep((DWORD)observe_seconds * 1000);
     exit_code = 0;
 
 cleanup:
@@ -131,6 +144,11 @@ cleanup:
     if (entry) RegCloseKey(entry);
     if (classes) RegCloseKey(classes);
     if (root) RegCloseKey(root);
+    SetProbeReceiver(NULL);
+    if (receiver && FAILED(StopReceiver(receiver, &receiver_result))) exit_code = 1;
+    if (separate && (receiver_result.unverified_callbacks ||
+        receiver_result.synthetic_samples != (transport_test ? 2 : 0) ||
+        receiver_result.has_sample != (transport_test ? 1 : 0))) exit_code = 1;
     CoUninitialize();
     stats = GetProbeStats();
     /* SDK references may survive releasing its returned collections. Do not
@@ -141,10 +159,14 @@ cleanup:
     }
     if (!exit_code) {
         printf("{\"scope\":\"isolated SDK; not Armoury Crate\",\"detected\":true,"
-               "\"deviceName\":\"%s\",\"deviceCount\":%d,\"iterations\":%ld,"
+               "\"receiverProcessId\":%lu,\"syntheticSamples\":%ld,\"unverifiedCallbacks\":%ld,"
+               "\"hasColorSample\":%s,\"colorSource\":\"%s\",\"deviceName\":\"%s\",\"deviceCount\":%d,\"iterations\":%ld,"
                "\"halActivations\":%ld,\"halEnumerations\":%ld,\"capabilityReads\":%ld,"
                "\"effectRequests\":%ld,\"syncRequests\":%ld,"
                "\"referencesAtExit\":{\"hal\":%ld,\"device\":%ld,\"factory\":%ld}}\n",
+               receiver_result.process_id, receiver_result.synthetic_samples, receiver_result.unverified_callbacks,
+               receiver_result.has_sample ? "true" : "false",
+               receiver_result.has_sample ? "synthetic-test" : "unavailable",
                empty ? "" : "PulseDeck Virtual Probe", empty ? 0 : 1, iterations,
                stats.activations, stats.enumerations, stats.capabilities,
                stats.effect_requests, stats.sync_requests,

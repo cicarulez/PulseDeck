@@ -2,6 +2,7 @@
 #define COBJMACROS
 #include <windows.h>
 #include <oleauto.h>
+#include <stdio.h>
 #include "DiscoveryHal.h"
 
 static const GUID probe_clsid = {0x702d21b6,0x3a25,0x4d2c,{0x9f,0x73,0xf6,0x4c,0x78,0xe2,0x12,0xa8}};
@@ -10,6 +11,8 @@ static LONG activations, enumerations, capabilities, effect_requests, sync_reque
 static LONG factory_refs = 1;
 static BOOL empty_devices;
 static DWORD cookie;
+static Receiver *receiver;
+void SetProbeReceiver(Receiver *target) { receiver = target; }
 static const GUID device_iid = {0x61711778,0xab59,0x4026,{0x89,0xe8,0x7a,0x63,0x42,0x2c,0x29,0xc2}};
 typedef struct Device Device;
 typedef struct DeviceVtbl {
@@ -41,9 +44,12 @@ static HRESULT STDMETHODCALLTYPE device_capability(Device *self, BSTR *xml) {
     return *xml ? S_OK : E_OUTOFMEMORY;
 }
 static HRESULT STDMETHODCALLTYPE device_effect(Device *self, ULONG effect, ULONG *colors, ULONG count) {
-    (void)self; (void)effect; (void)colors; (void)count;
+    (void)self; (void)effect;
     InterlockedIncrement(&effect_requests);
-    return E_NOTIMPL;
+    /* This is an incoming HAL callback, never invoked by our probe. Keep the
+       packed word unverified until its effect/color contract is validated. */
+    if (!colors || count != 1) return E_INVALIDARG;
+    return receiver ? PublishReceiverColor(receiver, colors[0], FALSE) : E_NOTIMPL;
 }
 static HRESULT STDMETHODCALLTYPE device_sync(Device *self, ULONG effect, ULONGLONG time) {
     (void)self; (void)effect; (void)time;
@@ -128,4 +134,37 @@ ProbeStats GetProbeStats(void) {
     ProbeStats stats = {activations, enumerations, capabilities, effect_requests,
         sync_requests, hal.refs, device.refs, factory_refs};
     return stats;
+}
+
+/* Exercise both interface-return paths with a caller that releases every returned
+   reference. No ASUS SDK, service, effect or synchronization method is invoked. */
+int CheckProbeContracts(void) {
+    for (int iteration = 0; iteration < 100; iteration++) {
+        void *instance = NULL;
+        if (FAILED(factory_create(&factory, NULL, &hal_iid, &instance))) return 1;
+        Hal *test_hal = instance;
+        ULONG count = 0;
+        if (FAILED(test_hal->lpVtbl->Enumerate(test_hal, NULL, &count)) || count != 1) return 1;
+        IUnknown *item = NULL;
+        if (FAILED(test_hal->lpVtbl->Enumerate(test_hal, &item, &count)) || !item) return 1;
+        Device *test_device = NULL;
+        if (FAILED(IUnknown_QueryInterface(item, &device_iid, (void**)&test_device))) return 1;
+        BSTR xml = NULL;
+        if (FAILED(test_device->lpVtbl->GetCapability(test_device, &xml)) || !xml) return 1;
+        SysFreeString(xml);
+        test_device->lpVtbl->Release(test_device);
+        IUnknown_Release(item);
+        VARIANT array = {0};
+        if (FAILED(test_hal->lpVtbl->Enumerate2(test_hal, &array, &count)) ||
+            array.vt != (VT_ARRAY | VT_UNKNOWN) || count != 1) return 1;
+        LONG index = 0;
+        item = NULL;
+        if (FAILED(SafeArrayGetElement(array.parray, &index, &item)) || !item) return 1;
+        IUnknown_Release(item);
+        VariantClear(&array);
+        test_hal->lpVtbl->Release(test_hal);
+        if (hal.refs != 1 || device.refs != 1 || factory_refs != 1) return 1;
+    }
+    puts("{\"scope\":\"own COM contracts only\",\"iterations\":100,\"referencesBalanced\":true}");
+    return 0;
 }

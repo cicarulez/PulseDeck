@@ -20,6 +20,9 @@ then run in a normal Windows PowerShell session (administrator rights not needed
 ```powershell
 ./Test-HalDiscovery.ps1
 ./Test-HalDiscovery.ps1 -EmptyDevices
+./Test-HalDiscovery.ps1 -CheckContracts
+./Test-HalDiscovery.ps1 -SeparateProcess
+./Test-HalDiscovery.ps1 -TestTransport
 ```
 
 Only the development build needs MinGW; running the probe needs the locally
@@ -41,9 +44,11 @@ are requested. Factory/enumeration/capability counters are checked and returned
 as JSON; any failed assertion or HRESULT makes the child exit nonzero.
 
 No physical HAL, `SwitchMode`, `Apply`, LED setter or service control is invoked.
-The virtual HAL advertises no effects; its mandatory effect/synchronization
-callbacks return `E_NOTIMPL`, and the test requires zero calls to them. No RGB
-values are sampled, synthesized or represented as the PC's colors.
+The virtual HAL advertises no effects. Its incoming effect callback can forward
+one raw word as an unverified sample to the receiver, but the test never calls
+it and requires zero effect/synchronization requests. Synchronization remains
+`E_NOTIMPL`. No PC RGB values are sampled. Synthetic transport patterns are generated only
+by the explicit `-TestTransport` mode and are labeled `synthetic-test`.
 
 The parent waits for process exit and removes the private tree on success, failure
 or timeout. No system-wide COM registration, startup task or ASUS setting is changed.
@@ -67,9 +72,49 @@ The native executable also refuses scratch paths outside its exact private prefi
 - Detection by the running LightingService, an Armoury Crate tile, live Aura color
   reception and physical color matching: **not verified**.
 
-Next: investigate reference ownership and an isolated receiver process before
-attempting live service discovery. The probe does not provide installation or
-registration commands for LightingService. Do not load it into that service.
+## Receiver process and reference ownership
+
+`-CheckContracts` checks our factory/HAL/device ownership directly, without loading
+ASUS code: 100 iterations exercise both pointer-array and SAFEARRAY return paths,
+release BSTRs/interfaces/arrays, and assert all root reference counts return to one.
+This passed. With the SDK, 30 device enumerations left counters 32/31/1 instead of
+5/4/1 after three. The excess is specific to the SDK integration path; its exact
+ownership contract remains unresolved. Do not compensate with arbitrary Release
+calls or keep that enumeration loop alive indefinitely.
+
+`-SeparateProcess` starts a receiver child using an inherited, anonymous shared
+memory mapping and events. The HAL and SDK remain together in the original native
+host. The receiver does not load ASUS code, enumerate devices or access hardware.
+Only an explicit handle list is inherited. A job object terminates the receiver
+when the host exits or crashes; the child is assigned while suspended, before it
+can execute. An independent 15-second deadline also bounds the receiver lifetime.
+Normal stop waits for exit before closing its mapping/events.
+
+The IPC buffer stores only the latest sample. Publication does not wait for the
+consumer; sequence/version checks protect snapshots. `-TestTransport` sends two
+opaque test patterns through this transport, verifies their acknowledgements and
+exact contents, then runs the ordinary SDK discovery checks. This passed with
+`syntheticSamples=2`, `unverifiedCallbacks=0`, `colorSource=synthetic-test`. The
+ordinary receiver mode produces `hasColorSample=false`, `colorSource=unavailable`.
+
+**The receiving HAL callback is wired but has not been exercised by Aura.** It
+accepts only one packed word, forwards it as unverified, and never writes to
+hardware. Its effect/packed-color semantics and live delivery remain unverified;
+no effect is advertised yet. No real Aura color was received. Direct COM interface marshaling between
+the two experimental processes failed (empty enumeration and a stack-overflow in
+an adapter experiment); private IPC was selected instead of relying on those vendor
+proxy contracts. No such experiments ran inside LightingService.
+
+For lifecycle diagnostics, `-ObserveSeconds 10` keeps the separate-process test alive
+briefly. Running it with `-TimeoutSeconds 3` intentionally fails. On Windows, both
+native processes were observed before that timeout; afterwards neither process nor
+scratch registry key remained. This is a supervisor test, not a successful discovery
+run. `-CheckContracts` cannot be combined with the receiver/discovery options.
+
+Next: determine the effect/packed-color contract and supported-effect descriptor,
+and establish live HAL discovery before any physical color comparison. There are
+no installation or registration commands for LightingService; no persistent receiver
+or agent provider has been installed.
 
 The installed GmAcc HAL's virtual branch uses loopback 11000, already owned by
 Aura Wallpaper, and precedes the wallpaper branch. Its global settings remain

@@ -235,6 +235,34 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   in Armoury Crate, actual color reception, dynamic effects and physical LED color
   matching. No user action in Armoury Crate is required for this isolated milestone.
 
+## Aura receiver isolation and lifetime — 2026-09-17
+
+- Direct checks of our native COM contracts passed 100 cycles, covering both
+  enumeration return shapes, BSTR/interface/SAFEARRAY cleanup and root reference
+  counts of 1/1/1 after each cycle. No ASUS SDK loaded in this check.
+- SDK enumeration passed 30 iterations but retained HAL/device/factory references
+  of 32/31/1 at exit, versus 5/4/1 after three. This isolates the excess to the SDK
+  integration path; it does not establish the vendor's ownership contract or a fix.
+- Direct cross-process COM experiments failed (zero SDK devices and a native
+  adapter stack-overflow). They ran only in disposable probes. Chose a private
+  IPC receiver while keeping SDK/HAL together in the existing native test host.
+- Receiver uses anonymous shared memory/events with an explicit inherited handle
+  list. Its job is kill-on-close and assigned before its suspended thread resumes;
+  it also has a 15-second lifetime limit. No ASUS code or hardware calls in receiver.
+- `-SeparateProcess` passed with one SDK device, no samples and source unavailable;
+  the empty-HAL variant passed too. `-TestTransport` passed two exact synthetic
+  pattern/acknowledgement checks with zero effect/synchronization requests. Output
+  labels samples synthetic. Incoming HAL callback is wired to forward a single raw
+  word as unverified, but was never invoked; no effect is advertised. Synchronization
+  remains E_NOTIMPL. **No actual Aura colors received.**
+- Real process-tree timeout test observed two native processes, then forced the
+  supervisor's three-second timeout during a ten-second observation interval.
+  Both native processes exited and the supervisor removed its private registry key.
+  This expected-failure test complements the normal exit checks.
+- Compiled with warnings treated as errors. Agent installation, configuration,
+  startup tasks and ASUS service settings unchanged. No LED setter, Apply,
+  SwitchMode, service restart, system HAL registration or physical RGB test.
+
 ## Windows shutdown and display power — 2026-09-17
 
 - Root cause: the runtime only released the serial port at exit, and the hidden

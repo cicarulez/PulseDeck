@@ -123,7 +123,13 @@ native x86 process. It validates discovery and device metadata using a process-l
 registry view; it does not register a device with the running ASUS service. The
 PowerShell parent enforces a deadline and removes its private registry tree. SDK
 references retained after enumeration are reported and contained by process exit;
-live RGB reception and a continuous receiver remain unverified.
+live RGB reception and a continuous receiver remain unverified. A second native
+process now exercises a private latest-value IPC transport using inherited shared
+memory/events; it does not load ASUS code. The SDK host owns a kill-on-close job
+containing that receiver, assigned before resuming its first thread. The test mode
+labels its two patterns synthetic, while normal mode reports unavailable. The incoming
+HAL effect callback can forward one raw word as unverified; no effect is advertised
+and no such callback has been observed. The probe itself never invokes LED setters.
 
 ## Windows startup
 
