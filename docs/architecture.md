@@ -360,3 +360,25 @@ DNS lookup and local/private destinations. Feed errors are status-only in the AP
 The renderer replaces only y=446..479 with source, one headline and publication time;
 rotation is tied to snapshot time and configured interval, never a smooth marquee.
 The configurator exposes source status and complete headlines linked to publishers.
+
+## Electron desktop shell
+
+`apps/desktop` packages the existing Angular configurator in an unprivileged
+Electron window at the fixed agent origin `http://127.0.0.1:5178`. There is no
+preload/IPC bridge, Node integration or duplicate data/USB owner. Context isolation,
+sandbox, denied permissions/downloads and a local content security policy apply.
+Navigation stays on the exact agent origin. HTTPS links require confirmation and
+open in the default browser; arbitrary URL schemes are rejected.
+
+The desktop checks `/api/health`, optionally runs the existing `PulseDeck`
+scheduled task once, then waits a bounded interval. It never launches an elevated
+Electron instance or reconnects a deliberately disconnected display. Closing the
+window exits Electron alone. A second invocation focuses the existing window.
+The configurator's explicit Stop button still stops the agent. Desktop binaries
+live in `%LOCALAPPDATA%\PulseDeck\desktop-app`; Chromium user data lives in
+`%LOCALAPPDATA%\PulseDeck\desktop`, independently of the agent's config/credentials.
+
+Build and install scripts are separate from the agent package; updating only this
+shell requires closing Electron, not replacing any running agent DLL. The package
+currently has no signing, installer wizard or automatic update mechanism.
+Reference: [Electron security](https://www.electronjs.org/docs/latest/tutorial/security).

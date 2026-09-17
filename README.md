@@ -3,7 +3,8 @@
 Un pannello locale per Windows che porta sensori hardware, musica, informazioni di
 Discord e profili contestuali sul display TURZX 8,8″ 1920×480.
 
-Il configuratore è disponibile su **http://127.0.0.1:5178**. Puoi chiudere il browser:
+Il configuratore è disponibile su **http://127.0.0.1:5178** e nella finestra desktop
+Electron **PulseDeck**. Puoi chiudere il browser:
 l'agent continua a lavorare in background. L'avvio automatico non apre né console
 né browser e collega il display.
 
@@ -394,3 +395,16 @@ multipla: non è già supportato da PulseDeck.
 Licenza **GPL-3.0-or-later**, incluso il codice di encoding adattato dal progetto
 upstream. Vedi [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Non sono inclusi
 programmi TURZX, temi proprietari o asset Battlefield/EA.
+
+## Finestra desktop Electron
+
+Da WSL esegui `./scripts/build-desktop.sh` (Node 24.15+); da Windows usa
+`scripts/build-desktop.ps1`. Il pacchetto è in `artifacts/desktop/PulseDeck-win32-x64`.
+Esegui `artifacts/desktop/Install-PulseDeckDesktop.ps1` in Windows per installarlo
+in `%LOCALAPPDATA%\PulseDeck\desktop-app` e aggiungere PulseDeck al menu Start.
+L’agent deve essere già installato; il wrapper riusa l’attività pianificata esistente.
+
+Chiudere la finestra lascia il display attivo. **Arresta PulseDeck** nel configuratore
+ferma invece l’agent. Una seconda apertura riporta in primo piano la stessa finestra.
+Il menu Visualizza offre zoom e Ricollega. Il browser rimane disponibile allo stesso
+indirizzo locale. Per sviluppare il wrapper: `cd apps/desktop`, `npm ci`, `npm start`.

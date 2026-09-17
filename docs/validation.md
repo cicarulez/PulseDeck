@@ -1038,3 +1038,23 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   used/total remains legible and aligned. Configurator and health report 0.2.7.
   At 21 acknowledged frames, partial transmission continued without errors or
   recoveries. Physical confirmation of these two removals is still pending.
+
+## Electron configurator shell — 2026-09-17
+
+- Added an independent Windows x64 desktop package (Electron 44.4.1, Packager
+  20.3.0), reusing the running 0.2.7 frontend/API. Two URL-boundary tests passed;
+  npm audit reported zero vulnerabilities. Packaged successfully from WSL.
+- Installed under `%LOCALAPPDATA%\PulseDeck\desktop-app` with a Start menu
+  shortcut. No agent DLL, scheduled task, display settings or credentials changed.
+- Windows Electron loaded Angular with AGENT ONLINE, the live PNG preview and
+  widget controls. CDP inspection confirmed `require` and `process` are undefined
+  in the renderer. Screenshot inspected outside Git. Debugging was enabled only
+  for this check; the normal shortcut has no debugging arguments.
+- Launching again retained the same window PID (1864), with exactly one main
+  window. Closing the shell left zero Electron processes while agent PID 58664
+  continued on COM5 at 368 acknowledged frames without errors/recoveries. Reopened
+  normally after the test. The agent was never restarted for this installation.
+- Agent-absent scheduled-task startup and retry/error dialogs were not exercised
+  against the live installation; the panel was kept running. External-link browser
+  handoff, a fresh Windows login and user acceptance remain unverified. This package
+  is unsigned and has no auto-updater. No additional USB/physical-panel claim.

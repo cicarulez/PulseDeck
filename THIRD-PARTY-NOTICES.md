@@ -20,6 +20,7 @@ Other dependencies retain their own licenses:
 | Component | License | Project |
 | --- | --- | --- |
 | .NET / ASP.NET Core / SignalR / System.Drawing.Common | MIT | https://github.com/dotnet |
+| Electron | MIT; bundled Chromium/Node retain their own notices | https://github.com/electron/electron |
 | Angular | MIT | https://github.com/angular/angular |
 | RxJS | Apache-2.0 | https://github.com/ReactiveX/rxjs |
 | SkiaSharp | MIT; bundled Skia has its own notices | https://github.com/mono/SkiaSharp |
@@ -35,7 +36,7 @@ The optional weather layout uses data from [Open-Meteo](https://open-meteo.com/)
 and location search based on [GeoNames](https://www.geonames.org/). See the service's
 [terms](https://open-meteo.com/en/terms), [forecast documentation](https://open-meteo.com/en/docs)
 and [geocoding attribution](https://open-meteo.com/en/docs/geocoding-api).
-Attribution appears in the panel and configurator. Weather icons are drawn by
+Attribution appears in the configurator. Weather icons are drawn by
 PulseDeck; no third-party icon collection is bundled.
 
 ## News feed presets

@@ -559,3 +559,11 @@ Su successiva richiesta, la 0.2.7 elimina la seconda riga con i GB liberi dal
 widget RAM ad anello e mantiene il solo valore principale usato/totale.
 Rimossa anche la riga “Dati locali delle…” dal meteo; l’ora del dato resta
 disponibile nello stato API.
+
+## Configuratore desktop Electron
+
+Aggiunto wrapper Windows del frontend Angular con istanza singola, zoom, link
+esterni nel browser e chiusura indipendente dall’agent. Avvio tramite l’attività
+PulseDeck esistente se il backend non risponde. Pacchetto e aggiornamento separati:
+nessuna seconda acquisizione o connessione USB. Firma e aggiornamenti automatici
+restano attività future.

@@ -1,0 +1,19 @@
+{
+  "name": "pulsedeck-desktop",
+  "productName": "PulseDeck",
+  "version": "0.2.7",
+  "private": true,
+  "description": "Desktop window for the PulseDeck local configurator",
+  "author": "PulseDeck contributors",
+  "license": "GPL-3.0-or-later",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test policy.test.cjs",
+    "package:win": "electron-packager . PulseDeck --platform=win32 --arch=x64 --out=../../artifacts/desktop --overwrite --asar --ignore=policy.test.cjs --ignore=package-lock.json"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.4.1"
+  }
+}
