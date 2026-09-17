@@ -19,7 +19,7 @@ Other dependencies retain their own licenses:
 
 | Component | License | Project |
 | --- | --- | --- |
-| .NET / ASP.NET Core / SignalR | MIT | https://github.com/dotnet |
+| .NET / ASP.NET Core / SignalR / System.Drawing.Common | MIT | https://github.com/dotnet |
 | Angular | MIT | https://github.com/angular/angular |
 | RxJS | Apache-2.0 | https://github.com/ReactiveX/rxjs |
 | SkiaSharp | MIT; bundled Skia has its own notices | https://github.com/mono/SkiaSharp |

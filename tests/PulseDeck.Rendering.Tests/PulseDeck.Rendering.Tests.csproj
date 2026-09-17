@@ -9,5 +9,6 @@
     <ProjectReference Include="../../src/PulseDeck.Core/PulseDeck.Core.csproj" />
     <Compile Include="../../apps/agent/Rendering/*.cs" Link="Rendering/%(Filename)%(Extension)" />
     <Compile Include="../../apps/agent/Providers/MediaArtwork.cs" Link="MediaArtwork.cs" />
+    <Compile Include="../../apps/agent/Providers/ApplicationIcon.cs" Link="ApplicationIcon.cs" />
   </ItemGroup>
 </Project>

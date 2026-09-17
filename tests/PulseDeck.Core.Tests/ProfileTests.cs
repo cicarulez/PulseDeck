@@ -28,6 +28,27 @@ public class ProfileTests
         Assert.Equal("music", selector.Select(new() { ProfileMode = "music" }, "bf6", false, now));
         Assert.Equal("desktop", selector.Select(new() { ProfileDelaySeconds = 0 }, "bf6-launcher", false, now));
     }
+    [Fact]
+    public void GameBadgeUsesActualForegroundRatherThanManualProfileOrDebounce()
+    {
+        var config = new DeckConfig { ProfileMode = "gaming" };
+        Assert.False(ProfileSelector.IsGame(config, "explorer"));
+        Assert.False(ProfileSelector.IsGame(config, "bf6-launcher"));
+        Assert.True(ProfileSelector.IsGame(config, "BF6.exe"));
+    }
+
+    [Fact]
+    public void RetiredAnimationFlagDoesNotResetExistingConfiguration()
+    {
+        var config = System.Text.Json.JsonSerializer.Deserialize<DeckConfig>(
+            """{"animateBackground":true,"accentColor":"#123456","profileMode":"music"}""",
+            new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))!;
+        Assert.Null(config.Validate());
+        Assert.Equal("#123456", config.AccentColor);
+        Assert.Equal("music", config.ProfileMode);
+        Assert.DoesNotContain("animateBackground", System.Text.Json.JsonSerializer.Serialize(config));
+    }
+
     [Theory]
     [InlineData("file:///C:/secret")]
     [InlineData("http://user:pass@localhost")]

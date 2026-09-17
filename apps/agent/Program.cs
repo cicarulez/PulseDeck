@@ -12,6 +12,7 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<ConfigStore>();
 builder.Services.AddSingleton<HardwareProvider>();
 builder.Services.AddSingleton<MediaProvider>();
+builder.Services.AddSingleton<ForegroundProvider>();
 builder.Services.AddSingleton<EmbeddedDiscordService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<EmbeddedDiscordService>());
 builder.Services.AddHttpClient<DiscordProvider>(client => client.Timeout = TimeSpan.FromMilliseconds(1200));

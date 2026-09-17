@@ -4,7 +4,6 @@ export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; 
 export interface DeckConfig {
   widgets: WidgetConfig[];
   layout: 'classic' | 'compact';
-  animateBackground: boolean;
   schemaVersion: number; profileMode: string; gameProcesses: string[]; profileDelaySeconds: number;
   discordMode: string; discordBaseUrl: string; trackedMemberId: string; displayPort: string; backgroundPath: string; accentColor: string;
 }
@@ -22,5 +21,5 @@ export interface DeckState {
   hardware: HardwareState;
   media: { playing: boolean; title: string; artist: string; app: string; positionSeconds: number; durationSeconds: number; status: string; artworkId: string | null };
   discord: { members: VoiceMember[]; tracked: VoiceMember | null; status: string; detail: string | null };
-  display: DisplayState; fpsStatus: string; animationStatus: 'off' | 'enabled' | 'suspended';
+  display: DisplayState; fpsStatus: string; foreground: { processId: number; processName: string; displayName: string; isGame: boolean; iconId: string | null; iconStatus: string };
 }

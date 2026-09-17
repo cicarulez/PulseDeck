@@ -11,7 +11,6 @@ public sealed record DeckConfig
     public string TrackedMemberId { get; init; } = "";
     public string DisplayPort { get; init; } = "COM5";
     public string BackgroundPath { get; init; } = "";
-    public bool AnimateBackground { get; init; }
     public string AccentColor { get; init; } = "#a9ff69";
     public string Layout { get; init; } = "compact";
 
@@ -46,6 +45,10 @@ public sealed record MediaSnapshot(bool Playing, string Title, string Artist, st
 {
     public string? ArtworkId { get; init; }
 }
+public sealed record ForegroundSnapshot(int ProcessId, string ProcessName, string DisplayName, bool IsGame, string? IconId, string IconStatus)
+{
+    public static ForegroundSnapshot Empty { get; } = new(0, "", "Non disponibile", false, null, "unavailable");
+}
 public sealed record VoiceMember(string Id, string Name, bool Mute, bool Deaf);
 public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMember? Tracked, string Status, string? Detail = null);
 public sealed record DisplaySnapshot(bool Connected, string Port, string? DeviceId, string Status, string? Error = null)
@@ -60,5 +63,5 @@ public sealed record DisplaySnapshot(bool Connected, string Port, string? Device
 public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string ForegroundApp, HardwareSnapshot Hardware,
     MediaSnapshot Media, DiscordSnapshot Discord, DisplaySnapshot Display, string FpsStatus = "not-configured")
 {
-    public string AnimationStatus { get; init; } = "off";
+    public ForegroundSnapshot Foreground { get; init; } = ForegroundSnapshot.Empty;
 }

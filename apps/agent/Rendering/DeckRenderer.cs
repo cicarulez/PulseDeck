@@ -11,14 +11,25 @@ public sealed class DeckRenderer : IDisposable
 {
     private readonly SKTypeface typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
     private readonly SKTypeface bold = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-    private readonly BackgroundFrames backgrounds = new();
+    private readonly StaticBackground backgrounds = new();
     public string BackgroundStatus => backgrounds.Status;
     public int BackgroundFrameCount => backgrounds.Count;
     private SKBitmap? cover;
     private string? coverId;
+    private SKBitmap? appIcon;
+    private string? appIconId;
+    private readonly SKShader baseGradient = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(1920, 480),
+        [new SKColor(10, 16, 24), new SKColor(19, 35, 43), new SKColor(9, 15, 24)], [0, .55f, 1], SKShaderTileMode.Clamp);
 
-    public RenderedFrame Render(DeckState state, DeckConfig config, MediaArtwork? artwork = null)
+    public RenderedFrame Render(DeckState state, DeckConfig config, MediaArtwork? artwork = null, ApplicationIcon? applicationIcon = null)
     {
+        var nextAppIconId = state.Foreground.IconId == applicationIcon?.Id ? applicationIcon?.Id : null;
+        if (appIconId != nextAppIconId)
+        {
+            appIcon?.Dispose(); appIcon = null; appIconId = nextAppIconId;
+            if (nextAppIconId is not null)
+                try { appIcon = SKBitmap.Decode(applicationIcon!.Png); } catch { }
+        }
         var nextCoverId = state.Media.Status == "connected" && state.Media.ArtworkId == artwork?.Id ? artwork?.Id : null;
         if (coverId != nextCoverId)
         {
@@ -29,7 +40,8 @@ public sealed class DeckRenderer : IDisposable
         using var bitmap = new SKBitmap(new SKImageInfo(1920, 480, SKColorType.Bgra8888, SKAlphaType.Premul));
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(new SKColor(10, 16, 18));
-        var background = backgrounds.Get(config.BackgroundPath, config.AnimateBackground);
+        using (var basePaint = new SKPaint { Shader = baseGradient }) canvas.DrawRect(0, 0, 1920, 480, basePaint);
+        var background = backgrounds.Get(config.BackgroundPath);
         if (background is not null)
         {
             float scale = Math.Max(1920f / background.Width, 480f / background.Height);
@@ -178,11 +190,12 @@ public sealed class DeckRenderer : IDisposable
         }
         Text("PULSEDECK", 32, 42, 23, accent, true);
         Text("RECON / " + state.Profile.ToUpperInvariant(), 320, 42, 18, muted);
+        if (appIcon is not null) canvas.DrawBitmap(appIcon, SKRect.Create(642, 14, 40, 40));
+        else Text("APP", 643, 41, 13, muted);
+        Text(state.Foreground.IsGame ? "GIOCO IN PRIMO PIANO" : "APP IN PRIMO PIANO", 698, 25, 11, state.Foreground.IsGame ? accent : muted, true);
+        Text(state.Foreground.DisplayName, 698, 49, 20, maxWidth: 450);
         Text(state.Timestamp.ToLocalTime().ToString("HH:mm:ss"), 1760, 42, 22);
-        if (state.AnimationStatus == "suspended")
-            Text("Animazione sospesa dopo errore USB", 990, 42, 15, muted, maxWidth: 720);
-        else if (BackgroundStatus is "unavailable" or "static-limit")
-            Text(BackgroundStatus == "unavailable" ? "Sfondo non disponibile" : "Sfondo statico: animazione oltre i limiti", 990, 42, 15, muted, maxWidth: 720);
+        if (BackgroundStatus == "unavailable") Text("Sfondo non disponibile", 1320, 42, 15, muted, maxWidth: 390);
         canvas.DrawLine(32, 66, 1888, 66, line);
         if (config.Layout == "compact") Compact();
         else
@@ -241,5 +254,5 @@ public sealed class DeckRenderer : IDisposable
         var pixels = new byte[1920 * 480 * 4]; Marshal.Copy(bitmap.GetPixels(), pixels, 0, pixels.Length);
         return new(encoded.ToArray(), pixels);
     }
-    public void Dispose() { cover?.Dispose(); backgrounds.Dispose(); typeface.Dispose(); bold.Dispose(); }
+    public void Dispose() { appIcon?.Dispose(); cover?.Dispose(); backgrounds.Dispose(); baseGradient.Dispose(); typeface.Dispose(); bold.Dispose(); }
 }

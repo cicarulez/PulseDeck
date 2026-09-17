@@ -66,14 +66,10 @@ The agent runs in the interactive user session so that foreground windows and
 Windows media sessions are available. Hardware data availability depends on
 permissions and the hardware's sensor support. Values are never fabricated.
 
-Rendering targets one update per second, or two when background animation is enabled.
-Provider snapshots are acquired together at most about once per second and reused on
-the intermediate render. Serial delivery is still synchronous, so slow providers or
-writes reduce cadence; no frame queue is introduced. GIF timing selects the current
-frame and skips missed frames rather than accumulating work. `AnimationGuard` suspends
-requested animation on a real transport recovery/error, holds frame zero at normal cadence,
-and requires an explicit disable/enable or asset change to retry. It does not reconnect
-or renew USB retry budgets. API state and preview expose suspension. Smooth video remains future work.
+Rendering and shared provider acquisition target one update per second. Serial delivery
+is still synchronous, so slow providers or writes reduce cadence; no frame queue is
+introduced. The animated-background experiment was retired at the user's request in
+0.2.1: no animation clock, retry guard or fast render cadence remains in the agent.
 
 ## Sensor inventory and embedded Discord
 
@@ -99,7 +95,7 @@ contains the integration mode and tracked user, never the token.
    named application/display FPS and frame-time metrics.
 2. Discord speaking proof: test a bot voice connection in the target server;
    keep unsupported/offline activity separate from silence and mute.
-3. Validate album-art transitions and improve media-driven themes and animation cadence.
+3. Extend static themes and investigate installed-game discovery from reliable local sources.
 4. Tray lifecycle and physical unplug/replug and suspend/resume validation of bounded USB recovery.
 5. Extend the fixed-slot sensor editor to per-display themes and layouts. Add video only after throughput
    and CPU/GPU overhead measurements on the actual display.
@@ -128,7 +124,7 @@ unknown capacity does not become a fictitious 100 GiB total. Network widgets bin
 specific interface sensor (including its name), with adaptive B/s/KiB/s/MiB/s display
 and original byte-based scales. Music and Discord keep dedicated areas in each layout.
 
-## Media artwork and animated backgrounds
+## Media artwork and static backgrounds
 
 `MediaProvider` reads the selected session's Windows `Thumbnail` (the same Spotify-first
 selection as metadata). `MediaArtworkCache` retains one bounded, normalized PNG in
@@ -143,20 +139,33 @@ Neither media artwork nor user assets are persisted or bundled by this provider.
 
 Reference: [Windows media properties and Thumbnail](https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssessionmediaproperties?view=winrt-26100).
 
-`BackgroundFrames` owns decoded Skia bitmaps and durations, invalidated by path,
-modification time or animation setting. GIF/WebP frames are reconstructed by Skia with
-no assumed prior frame, including disposal/dependency handling. Source limits are
-32 MiB and 4 megapixels; animation limits are 120 frames and 64 MiB decoded. Oversize
-animations fall back to the first frame with a visible warning. Decode failures clear
-the cache and retain the base canvas with an unavailable warning. A monotonic clock
-selects a looping frame. Disabling animation returns to frame zero; no decoding occurs
-every tick. `/api/rendering` exposes status/count without leaking files or image bytes.
-The renderer crops centrally to fill 4:1; pre-cropped user assets remain outside Git.
+`StaticBackground` caches only one decoded image, invalidated by path/modification time.
+Inputs are limited to 32 MiB and 4 megapixels. Legacy GIF/animated WebP files decode
+only frame zero; unknown legacy `animateBackground` JSON is ignored without resetting
+other configuration. Missing/invalid files clear the cache and leave the built-in dark
+Skia gradient with a warning. `/api/rendering` still reports status and count (0 or 1).
+No user artwork is bundled. The rendering tests link the real renderer/cache classes
+and synthetic images, including static handling of old GIFs and stale-icon rejection.
 
-The rendering test project links the actual renderer/cache classes and uses synthetic
-images only. It covers artwork bounds/invalidation, extra-slot output, stale-art refusal,
-animation looping/disable and corrupt/deleted files on Linux. Windows media and USB
-checks remain separate, as do physical visibility and sustained-load confirmation.
+## Foreground identity and executable icon
+
+`ForegroundProvider` reads the current HWND/PID and disposes each `Process` handle.
+It obtains the executable path internally and extracts file description and associated
+icon with Windows/.NET APIs. It does not read window titles, attach to games, inject
+code or load their executable as a running program. Full paths are not exposed by API.
+A bounded 32-entry cache retains names/PNGs, refreshing after 60 seconds (10 on missing
+icons). Extracted icons and bitmaps are disposed after PNG encoding. Protected processes
+retain their process name where available; lookup failures clear the current icon.
+
+`DeckState.foreground` adds PID, process/display names, game classification, icon hash
+and availability. Existing `foregroundApp` remains compatible. `ProfileSelector.IsGame`
+provides the same exact process-name matching for badge and automatic profile selection;
+the badge follows actual foreground regardless of manual profile or profile debounce.
+The renderer accepts PNG bytes directly and displays them only for a matching snapshot
+hash. Alt-Tab updates the app identity on the next tick; no old game icon is retained.
+
+References: [GetForegroundWindow](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getforegroundwindow),
+[Icon.ExtractAssociatedIcon](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.icon.extractassociatedicon?view=windowsdesktop-10.0).
 
 Aura SDK passive sampling has not produced trustworthy live colors on the tested
 installation. It remains outside the runtime; see the evidence in the roadmap.

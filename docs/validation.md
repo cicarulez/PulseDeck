@@ -649,3 +649,52 @@ background or colored pixel artifacts. Live sensor/media updates continue.
 - The GIF was deliberately left static after the failed animated transport trial;
   this observation does not indicate a decoding failure. Animation remains disabled.
   Stable animated USB delivery and long-duration reliability are still outstanding.
+
+## Static background and foreground executable icon — 2026-09-17 (0.2.1)
+
+- User explicitly abandoned GIF animation and chose a dark, discreet static theme.
+  Added the built-in dark gradient and removed animation UI/configuration, frame
+  timing/cache and animation guard. Legacy unknown animation flags are ignored
+  without resetting other preferences; legacy GIF files decode frame zero only.
+  User assets/backups remain untouched outside Git. Rendering returns to about 1 Hz.
+- Added Windows foreground PID/process/file-description/icon lookup. Icons are
+  extracted with System.Drawing.Common 10.0.12, cached in memory with a 32-entry
+  limit and refreshed after 60 seconds (10 for missing icons). Process handles,
+  source icons and intermediate bitmaps are disposed. No executable path or window
+  title goes into API state; no game injection, launcher scan or NVIDIA setting write.
+  A restricted/unreadable process retains its name where possible, with no old icon.
+- Game badge shares exact configured-process matching with ProfileSelector. Manual
+  Gaming or profile debounce cannot incorrectly identify the foreground browser as
+  a game. Actual app identity follows Alt-Tab independently of profile debounce.
+- 51 Core and 8 rendering tests passed; production Angular build and self-contained
+  Windows publish succeeded. Coverage includes retired-flag compatibility, exact
+  game classification, current/stale icon matching and legacy static GIF handling.
+  Existing full-frame and recovery tests remain unchanged.
+- Clean starting Git state `cd0883a`. Before deployment 0.2.0 was connected with
+  712 acknowledged frames and zero recoveries at the initial check. New app copied
+  only after the agent and hidden launcher exited, with app/config/DPAPI credentials
+  and task XML backed up. Config/credential hashes matched across binary deployment;
+  separately saved only an empty background path to choose the requested built-in
+  theme (the obsolete animation flag is omitted on save). Other preferences retained.
+- Final 0.2.1 runs hidden/elevated in interactive session 2, one agent, existing
+  PulseDeck task Running and legacy TURZX task Disabled. Shutdown logged screen-off,
+  standby COM3 was observed, startup woke identified COM5 and acknowledged frames.
+- Windows API returned Windows Terminal Host with available icon. The actual shared
+  preview then showed Google Chrome and its icon after a foreground transition;
+  subsequent API observation showed WhatsApp.Root with a different icon hash.
+  Dark background, existing ten widgets, Spotify artwork and Discord remained visible.
+  No game was launched for this check: actual game icon and physical readability
+  still require user confirmation, while classification is covered by tests.
+- Browser settings checked at desktop and 390px: background field empty, animation
+  selector absent, existing game list retained, no horizontal overflow or console
+  errors. Widget editor still has sixteen slots and ten visible bindings.
+- One pre-existing-style USB timeout recovered automatically in static mode: 62
+  frames confirmed with one recovery at that observation. This is not a claim the
+  earlier USB reliability issue is solved; no animation test was performed.
+  Final check: 136 frames, one recovery, connected; installed agent/Core DLL hashes
+  match the tested publish, current application icon available.
+- Read-only `nvidia-smi` successfully queried RTX 5070 Ti/driver 610.88 plus utilization,
+  temperature, VRAM and power. No new NVIDIA provider was installed. Official NVAPI
+  DRS documentation describes driver profiles/applications, not proof of locally
+  installed games; no documented public NVIDIA App library API was found in this
+  investigation. Sources and future launcher-based discovery are in the roadmap.

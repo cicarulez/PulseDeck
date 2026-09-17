@@ -40,17 +40,10 @@ public class RendererTests
         Assert.Equal(baseline.Pixels, renderer.Render(State, config).Pixels);
     }
 
-    private sealed class Clock : TimeProvider
-    {
-        public long Milliseconds { get; set; }
-        public override long TimestampFrequency => 1000;
-        public override long GetTimestamp() => Milliseconds;
-    }
-
     [Fact]
-    public void AnimationLoopsAndCanBeStoppedOrRemovedWithoutRetainingOldPixels()
+    public void LegacyGifUsesOnlyFirstFrameAndRemovingItClearsTheCache()
     {
-        // Two synthetic 1x1 frames (red, blue), 100 ms each. No external assets.
+        // Two synthetic 1x1 frames: old files remain readable, never animated.
         var gif = Convert.FromHexString("47494638396101000100800000FF00000000FF"
             + "21F904000A0000002C0000000001000100000202440100"
             + "21F904000A0000002C00000000010001000002024C01003B");
@@ -58,22 +51,30 @@ public class RendererTests
         try
         {
             File.WriteAllBytes(path, gif);
-            var clock = new Clock();
-            using var background = new BackgroundFrames(clock);
-            Assert.Equal(SKColors.Red, background.Get(path, true)!.GetPixel(0, 0));
-            Assert.Equal(2, background.Count);
-            Assert.Equal("animated", background.Status);
-            clock.Milliseconds = 150;
-            Assert.Equal(SKColors.Blue, background.Get(path, true)!.GetPixel(0, 0));
-            clock.Milliseconds = 250;
-            Assert.Equal(SKColors.Red, background.Get(path, true)!.GetPixel(0, 0));
-            Assert.Equal(SKColors.Red, background.Get(path, false)!.GetPixel(0, 0));
+            using var background = new StaticBackground();
+            Assert.Equal(SKColors.Red, background.Get(path)!.GetPixel(0, 0));
             Assert.Equal(1, background.Count);
             Assert.Equal("static", background.Status);
-            Assert.Null(background.Get("", true));
+            Assert.Same(background.Get(path), background.Get(path));
+            Assert.Null(background.Get(""));
             Assert.Equal("none", background.Status);
         }
         finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void ActiveApplicationIconMustMatchCurrentSnapshotAndClearsOnExit()
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig();
+        var icon = new ApplicationIcon("test-icon", ArtworkTests.Picture(SKColors.Magenta));
+        var active = State with { Foreground = new(42, "testgame", "Synthetic game", true, "test-icon", "available") };
+        var without = renderer.Render(active, config);
+        var withIcon = renderer.Render(active, config, applicationIcon: icon);
+        Assert.False(without.Pixels.AsSpan().SequenceEqual(withIcon.Pixels));
+        Assert.Equal(without.Pixels, renderer.Render(active, config, applicationIcon: icon with { Id = "other-app" }).Pixels);
+        var exited = State with { Foreground = ForegroundSnapshot.Empty };
+        Assert.Equal(renderer.Render(exited, config).Pixels, renderer.Render(exited, config, applicationIcon: icon).Pixels);
     }
 
     [Fact]
@@ -84,7 +85,7 @@ public class RendererTests
         {
             File.WriteAllText(path, "invalid test image");
             using var renderer = new DeckRenderer();
-            var config = new DeckConfig { BackgroundPath = path, AnimateBackground = true };
+            var config = new DeckConfig { BackgroundPath = path };
             Assert.NotEmpty(renderer.Render(State, config).Png);
             Assert.Equal("unavailable", renderer.BackgroundStatus);
             File.Delete(path);

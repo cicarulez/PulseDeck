@@ -20,7 +20,8 @@ nella sessione Windows dell'utente, senza console aperta.
 - Layout compatto con 16 posizioni, valori/barre/anelli e layout classico a otto;
   associazioni precedenti conservate, nuove posizioni nascoste e scale configurabili.
 - Copertine dalla sessione Windows, RAM fisica usata/libera/totale e velocità di rete.
-- GIF/WebP locali con cache limitata e cadenza massima di 2 fotogrammi/s.
+- Sfondo scuro statico e nome/icona dell’app in primo piano da Windows (0.2.1).
+- Esperimento GIF abbandonato dall’utente; rimossi animazione e selettore.
 - PawnIO installato e letture di CPU, scheda madre, ventole, RAM, GPU e dischi.
 - Spotify tramite sessioni multimediali Windows; profili Desktop/Musica/Gaming.
 - Discord integrato: bot collegato, cache dei partecipanti e stato mute/deaf.
@@ -42,7 +43,7 @@ nella sessione Windows dell'utente, senza console aperta.
 | In pausa | Tema con colori Aura | Accenti e barre coordinati al PC | Cambi colore reali, testo leggibile, comportamento corretto quando Aura non è disponibile |
 | P2 | FPS e tempi dei fotogrammi | Informazioni del gioco in primo piano | Misure reali attribuite al processo corretto, confronto con uno strumento di riferimento |
 | P2 | Chi parla su Discord | Indicatore vocale distinto dal mute | Due utenti, cambio interlocutore, silenzio, mute e riconnessione verificati |
-| P3 | Musica e sfondi | Verificare cambi copertina e stabilizzare l’animazione USB prima di aumentare la cadenza | Cambio traccia, pausa, sorgente multimediale alternativa; sfondo nitido sul display |
+| P3 | Musica e sfondi | Temi statici e associazioni per gioco/app | Cambio traccia, pausa, sorgente multimediale alternativa; sfondo nitido sul display |
 | P3 | Regole contestuali avanzate | Widget/profili diversi per app attiva | Priorità esplicite e nessun cambio continuo durante Alt-Tab |
 | P3 | Gestione quotidiana | Icona nella tray, recupero del display e aggiornamenti | Uscita senza processi residui, scollegamento USB, sospensione/ripresa, ripristino del colore |
 
@@ -417,16 +418,39 @@ Non dedurre la voce attiva da mute=false. In caso di incompatibilità mostrare
 - Copertina da miniatura Windows implementata con cache singola, limiti e reset
   traccia/sorgente. Dopo la 0.2.0 l'utente ha confermato layout e copertine funzionanti
   rispondendo alla prova fisica, incluso il cambio brano; restano i cambi di player.
-- Sfondi GIF/WebP implementati fino a 2 fps, con limiti di file/pixel/cache e fallback
-  statico dichiarato. La GIF fornita dall'utente è stata ritagliata localmente in 4:1;
-  nessun asset incluso nel repository. La prova animata ha esaurito i tentativi USB;
-  animazione lasciata disattivata sul PC, con sospensione automatica al primo errore
-  di trasporto per nuove prove. Fluidità superiore e video richiedono nuove misure
-  USB/CPU e mantenimento del recupero limitato.
+- **GIF abbandonate su richiesta dell'utente il 17 settembre.** La 0.2.1 rimuove
+  animazione e selettore, mantiene la lettura statica dei vecchi file e usa uno sfondo
+  scuro integrato. Nessun'altra prova GIF o aumento di frequenza è in programma.
 - Definire regole esplicite: gioco in primo piano, riproduzione multimediale, desktop;
   mantenere override manuale e ritardo prima del cambio, già presenti.
-- Acquisizione condivisa limitata a circa 1 Hz, rendering fino a 2 Hz se animato.
-  Il trasporto è ancora sincrono: una scrittura lenta riduce la cadenza, senza code.
+- Acquisizione condivisa e rendering a circa 1 Hz. Il trasporto resta sincrono:
+  una scrittura lenta riduce la cadenza, senza code.
+
+## App attiva, NVIDIA e giochi installati
+
+Richiesta dell'utente: mostrare l'icona del gioco attivo ed esplorare fonti locali,
+inclusa NVIDIA, per i giochi rilevati o altri dati del PC.
+
+- La 0.2.1 legge nome/icona del programma in primo piano da Windows. La dicitura
+  Gioco usa l'elenco dei processi già configurato, con corrispondenza esatta.
+  Le icone rimangono locali/in memoria. Nessuna iniezione o cattura del gioco.
+- Verifica in sola lettura con `nvidia-smi`: RTX 5070 Ti, driver 610.88; disponibili
+  utilizzo, temperatura, VRAM e potenza. Molti dati sono già coperti dall'inventario
+  LibreHardwareMonitor. Questo controllo non aggiunge un nuovo provider NVIDIA.
+- NVAPI DRS documenta profili e applicazioni associati al driver. Un profilo non
+  dimostra l'installazione locale del gioco. Nella ricerca svolta non è stata trovata
+  un'API pubblica documentata per replicare la libreria rilevata dalla NVIDIA App.
+- Futuro: valutare dati locali dei launcher e verifica del percorso installato, con
+  provenienza esplicita; evitare di presentare l'intero catalogo del driver come
+  giochi presenti. Nessuna scansione estesa dei dischi o modifica dei profili NVIDIA
+  è stata introdotta. App in primo piano, gioco installato e sessione di gioco sono
+  concetti distinti; un launcher o un programma che usa la GPU non basta.
+- NVML può fornire ulteriori dati GPU dove supportati; FPS/frame-time restano un
+  adapter separato, con attribuzione al processo reale tramite PresentMon.
+
+Fonti: [NVIDIA Driver Settings API](https://docs.nvidia.com/nvapi/group__drsapi.html),
+[NVML device queries](https://docs.nvidia.com/deploy/nvml-api/api/group__nvmlDeviceQueries.html),
+[Windows executable icons](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.icon.extractassociatedicon?view=windowsdesktop-10.0).
 
 ## Come riprendere
 

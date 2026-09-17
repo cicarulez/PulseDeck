@@ -20,7 +20,8 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
   resta disponibile il layout classico a otto posizioni.
 - Copertina, titolo, artista, stato e progresso di Spotify o altri player Windows.
 - RAM fisica usata/libera/totale utilizzabile; sensori rete con velocità in B/s, KiB/s o MiB/s.
-- Sfondi locali statici o GIF/WebP animati, con aggiornamento fino a 2 fotogrammi/s.
+- Sfondo statico scuro integrato, oppure un’immagine locale scelta dall’utente.
+- Nome e icona dell’app in primo piano; indicazione Gioco per gli eseguibili configurati.
 - Profili Desktop, Gaming e Musica; selezione manuale o automatica con ritardo configurabile.
 - Bot Discord integrato: partecipanti del canale, mute/deaf e utente da evidenziare.
 - Collegamento TURZX con verifica dell'identità e aggiornamenti completi/parziali.
@@ -132,7 +133,7 @@ Premi **Salva widget** per applicare le modifiche a anteprima e display.
 prepara le associazioni originali e nasconde gli spazi aggiuntivi, da confermare con
 il salvataggio. Un sensore mancante mostra `—` conservando il collegamento.
 
-## Copertine e sfondo animato
+## Copertine, sfondo e app attiva
 
 La copertina proviene dalla miniatura della sessione multimediale Windows: non serve
 un account/API key aggiuntivo. La cache conserva solo l'immagine corrente in memoria,
@@ -140,20 +141,25 @@ si svuota al cambio traccia/sorgente o alla perdita della sessione e viene ricon
 ogni 30 secondi (ogni 5 se manca). Se il player non fornisce un'immagine valida appare
 **Copertina non disponibile**, senza riutilizzare quella di un'altra traccia.
 
-In **Configurazione**, scegli un file locale PNG/JPEG/WebP/GIF. **Sfondo animato**
-abilita GIF e WebP animati fino a 2 fotogrammi/s, mantenendo i sensori a circa 1 Hz.
-Non è riproduzione video fluida: l'USB può ridurre ulteriormente la cadenza. Disattiva
-l'opzione per fermarti al primo fotogramma. Un errore USB sospende automaticamente
-l'animazione fino a una riattivazione esplicita, senza alterare la disconnessione
-volontaria o i tentativi limitati del trasporto. Nella prova del 17 settembre la
-modalità animata ha esaurito il recupero USB: sul PC di sviluppo è lasciata disattivata.
-Lo sfondo ritagliato resta visibile come immagine fissa. L'immagine riempie il pannello con ritaglio
-centrale; prepara il file in rapporto 4:1 per scegliere precisamente l'inquadratura.
+Lo sfondo predefinito è scuro, statico, con sfumature discrete e pannelli leggibili.
+In **Configurazione**, lascia vuoto il percorso per usarlo oppure scegli un PNG/JPEG/
+WebP locale. L'immagine riempie il pannello con ritaglio centrale; un rapporto 4:1
+permette di scegliere precisamente l'inquadratura. File fino a 32 MiB e 4 megapixel;
+un'immagine illeggibile mantiene lo sfondo base con un avviso.
 
-Limiti dello sfondo: file fino a 32 MiB e 4 megapixel; cache animata fino a 120 frame
-e 64 MiB decodificati. Oltre il limite della cache resta il primo frame con avviso;
-file illeggibili mostrano lo sfondo base e un avviso. Immagini, GIF dell'utente e copie
-ritagliate restano fuori Git. `/api/rendering` riporta stato e numero di frame caricati.
+**L'esperimento GIF è stato abbandonato su richiesta dell'utente.** La 0.2.1 rimuove
+animazione, comando UI e cadenza a 2 Hz. Vecchi file/configurazioni rimangono leggibili,
+ma viene decodificato solo il primo fotogramma; il vecchio flag di animazione è ignorato.
+L'aggiornamento normale resta a circa 1 Hz, senza cambiare il protocollo USB.
+
+La testata mostra nome e icona dell'eseguibile in primo piano, ricavati da Windows.
+**Gioco** compare solo se il processo corrisponde all'elenco in Configurazione; le
+altre applicazioni sono indicate come **App**. Il profilo Gaming manuale non trasforma
+un browser in un gioco rilevato. L'icona viene cercata localmente e conservata in una
+cache limitata in memoria: nessuna immagine del gioco entra nel repository. Processi
+protetti o applicazioni senza icona possono mostrare il nome e un segnaposto APP.
+L'icona segue il primo piano, quindi cambia anche passando a un'altra app con Alt-Tab.
+La scoperta automatica dei giochi installati non è ancora implementata.
 
 La prova Aura del 17 settembre 2026 con SDK 3.07.05.0 ha enumerato i dispositivi,
 ma i valori RGB non corrispondevano al giallo fisso confermato dall'utente.

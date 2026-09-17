@@ -3,15 +3,14 @@
     <div class="fields">
       <label>Profilo<select name="profile" [(ngModel)]="draft.profileMode"><option value="auto">Automatico</option><option value="desktop">Desktop</option><option value="gaming">Gaming</option><option value="music">Musica</option></select></label>
       <label>Attesa prima del cambio (secondi)<input name="delay" type="number" min="0" max="30" [(ngModel)]="draft.profileDelaySeconds" required></label>
-      <label class="wide">Processi dei giochi<input name="games" [(ngModel)]="processes" placeholder="bf6, altro-gioco"><small>Nomi esatti, separati da virgole. La regola usa il programma in primo piano.</small></label>
+      <label class="wide">Processi dei giochi<input name="games" [(ngModel)]="processes" placeholder="bf6, altro-gioco"><small>Nomi esatti, separati da virgole. La regola usa il programma in primo piano. Nome e icona sono letti da Windows; i giochi qui elencati ricevono l’indicazione Gioco.</small></label>
     </div>
   </section>
   <section class="panel"><div class="section-title"><span>02 / DISPLAY E ASPETTO</span><h2>Il tuo pannello.</h2></div>
     <div class="fields">
       <label>Porta del TURZX<input name="port" [(ngModel)]="draft.displayPort" pattern="[Cc][Oo][Mm][1-9][0-9]{0,3}" required></label>
       <label>Colore principale<input name="accent" type="color" [(ngModel)]="draft.accentColor"></label>
-      <label class="wide">Immagine di sfondo sul PC Windows<input name="background" [(ngModel)]="draft.backgroundPath" placeholder="C:\Immagini\battlefield.gif"><small>PNG, JPEG, WebP o GIF. Lascia vuoto per lo sfondo Recon. L’immagine riempie il pannello con ritaglio centrale.</small></label>
-      <label>Sfondo animato<select name="animation" [(ngModel)]="draft.animateBackground"><option [ngValue]="false">Fermo · primo fotogramma</option><option [ngValue]="true">Animato · fino a 2 fotogrammi/s</option></select><small>Per GIF e WebP animati. La velocità effettiva dipende dal display; disattiva per tornare allo sfondo fermo.</small></label>
+      <label class="wide">Immagine di sfondo sul PC Windows<input name="background" [(ngModel)]="draft.backgroundPath" placeholder="C:\Immagini\sfondo.png"><small>PNG, JPEG o WebP statico. Lascia vuoto per lo sfondo scuro integrato. L’immagine riempie il pannello con ritaglio centrale.</small></label>
     </div>
   </section>
   <section class="panel"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>
