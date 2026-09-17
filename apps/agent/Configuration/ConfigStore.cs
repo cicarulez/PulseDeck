@@ -35,6 +35,10 @@ public sealed class ConfigStore
         config = config with { Widgets = WidgetCatalog.Expand(config.Widgets) };
         if (config.BackgroundPath.Length > 0 && (!File.Exists(config.BackgroundPath) || !new[] { ".png", ".jpg", ".jpeg", ".webp", ".gif" }.Contains(Path.GetExtension(config.BackgroundPath).ToLowerInvariant())))
             throw new ArgumentException("Background must be an existing PNG, JPEG, WebP or GIF file on this Windows PC.");
+        foreach (var theme in config.GameThemes)
+            if (theme.BackgroundPath.Length > 0 && (!File.Exists(theme.BackgroundPath)
+                || !new[] { ".png", ".jpg", ".jpeg", ".webp" }.Contains(Path.GetExtension(theme.BackgroundPath).ToLowerInvariant())))
+                throw new ArgumentException("Game background must be an existing PNG, JPEG or WebP file on this Windows PC.");
         lock (gate)
         {
             var temporary = path + ".tmp";

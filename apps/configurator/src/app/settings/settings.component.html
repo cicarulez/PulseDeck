@@ -11,13 +11,15 @@
       <label>Porta del TURZX<input name="port" [(ngModel)]="draft.displayPort" pattern="[Cc][Oo][Mm][1-9][0-9]{0,3}" required></label>
       <label>Colore principale<input name="accent" type="color" [(ngModel)]="draft.accentColor"></label>
       <label class="wide">Immagine di sfondo sul PC Windows<input name="background" [(ngModel)]="draft.backgroundPath" placeholder="C:\Immagini\sfondo.png"><small>PNG, JPEG o WebP statico. Lascia vuoto per lo sfondo scuro integrato. L’immagine riempie il pannello con ritaglio centrale.</small></label>
+      <label class="wide">Layout nel profilo Gaming<select name="gamingLayout" [(ngModel)]="draft.gamingLayout"><option [ngValue]="true">Dedicato al gioco e alla GPU</option><option [ngValue]="false">Mantieni il layout scelto in Widget</option></select><small>Il layout dedicato conserva tutti i 16 widget, Spotify e Discord. Lo sfondo del gioco segue il profilo anche mantenendo il layout abituale.</small></label>
     </div>
+    <pd-game-themes [themes]="draft.gameThemes" [processes]="gameProcesses()" [busy]="busy()" (themesChange)="draft.gameThemes = $event" />
   </section>
   <section class="panel"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>
     <div class="fields">
       <label>Collegamento Discord<select name="discordMode" [(ngModel)]="draft.discordMode"><option value="embedded">Integrato in PulseDeck</option><option value="external">Backend esterno</option></select></label>
       @if (draft.discordMode === 'external') { <label>Indirizzo del backend<input name="backend" type="url" [(ngModel)]="draft.discordBaseUrl" required></label> }
-      <label>ID dell’utente da evidenziare<input name="tracked" [(ngModel)]="draft.trackedMemberId" placeholder="Facoltativo"></label>
+      <label>ID dell’utente da evidenziare<input name="tracked" [(ngModel)]="draft.trackedMemberId" placeholder="Facoltativo"><small>Nell’header, accanto all’ora, mostra nickname e stato MIC ATTIVO, MUTE o DEAF di questo utente. Fuori dal canale o senza collegamento lo stato è indicato come non disponibile. MIC ATTIVO non significa che stia parlando.</small></label>
     </div>
     <p class="note">In modalità integrata basta avviare PulseDeck. Il bot legge partecipanti e mute/deaf dal canale configurato; l’indicatore di chi parla richiede ancora un’integrazione dedicata. Le credenziali importate restano protette sul PC.</p>
   </section>

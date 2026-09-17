@@ -149,6 +149,28 @@ and synthetic images, including static handling of old GIFs and stale-icon rejec
 
 ## Foreground identity and executable icon
 
+The 0.2.2 configuration adds `gamingLayout` (default true) and `gameThemes` (empty
+by default) without changing schema 1. Theme entries map exact process names to
+local background paths; case/extension-equivalent duplicate keys are rejected.
+They do not register a game: only the existing `gameProcesses` rules classify it.
+Configuration writes check local files/extensions; the existing bounded static
+decoder enforces byte/pixel limits and clears failed or previous images.
+
+`GameSceneSelector` produces the separate nullable `DeckState.game` after profile
+selection. It retains a known game's presentation only during the bounded automatic
+Alt-Tab delay, clears it on profile exit/manual non-game/rule removal, and switches
+immediately between recognized games. `foreground` always describes actual focus.
+The renderer retains only that scene's matching game icon, separately from the
+foreground icon; no executable assets are persisted. The Gaming composition reuses
+the compact widget-card and media/Discord drawing helpers with narrower cards,
+preserving all sixteen bindings. A GPU text badge comes from real hardware identity;
+neither vendor artwork nor a new NVIDIA provider is included.
+
+`TrackedVoiceHeader` resolves the configured ID against the current connected
+Discord roster, refusing stale `Tracked` snapshots and unrelated members. It exposes
+mute/deaf or explicit unavailable states. Rendering constrains the nickname/status
+to a separate header area before the clock; it makes no speaking inference.
+
 `ForegroundProvider` reads the current HWND/PID and disposes each `Process` handle.
 It obtains the executable path internally and extracts file description and associated
 icon with Windows/.NET APIs. It does not read window titles, attach to games, inject

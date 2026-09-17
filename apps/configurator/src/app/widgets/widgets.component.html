@@ -5,6 +5,7 @@
 <section class="panel layout-picker fields">
   <label>Disposizione del pannello<select [ngModel]="layout()" (ngModelChange)="chooseLayout($event)"><option value="compact">Compatto · 16 widget + musica e Discord</option><option value="classic">Classico · 8 widget + musica e Discord</option></select></label>
   <p>{{ visibleCount() }} / {{ slots().length }} posizioni visibili. Scegli uno spazio e il dato da mostrare. Nel classico, gli otto widget aggiuntivi restano salvati.</p>
+  @if (config().gamingLayout) { <p>Il profilo Gaming usa una disposizione dedicata con gli stessi 16 widget. Puoi disattivarla in Configurazione; qui scegli il layout degli altri profili.</p> }
 </section>
 <div class="positions" aria-label="Posizioni dei widget">@for (slot of slots(); track slot.id; let i = $index) {
   <button type="button" [class.selected]="selected() === slot.id" [class.hidden-slot]="description(slot.id) === 'Nascosto'" [attr.aria-pressed]="selected() === slot.id" (click)="selected.set(slot.id)"><span>{{ positionName(i, slot.name) }}</span><strong>{{ description(slot.id) }}</strong></button>

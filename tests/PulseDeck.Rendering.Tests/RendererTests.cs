@@ -11,6 +11,69 @@ public class RendererTests
         new([], null, "connected"), new(false, "COM5", null, "disconnected"));
 
     [Fact]
+    public void GamingHasDedicatedLayoutPreservesLastSlotAndCanUseBaseLayout()
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig();
+        var gaming = State with { Profile = "gaming" };
+        var original = renderer.Render(gaming, config with { GamingLayout = false });
+        var dedicated = renderer.Render(gaming, config);
+        Assert.NotEqual(original.Pixels, dedicated.Pixels);
+        config.Widgets[15] = new("extra8", "metric", "cpu.load", "", "", "LAST", Style: "ring");
+        var last = renderer.Render(gaming, config);
+        Assert.NotEqual(dedicated.Pixels, last.Pixels);
+        Assert.True(dedicated.Pixels.AsSpan(0, 1920 * 350 * 4).SequenceEqual(last.Pixels.AsSpan(0, 1920 * 350 * 4)));
+        Assert.Equal(renderer.Render(State, config).Pixels, renderer.Render(State, config with { GamingLayout = false }).Pixels);
+    }
+
+    [Fact]
+    public void GameBackgroundSwitchesAndClearsWithoutLeakingIntoOtherProfiles()
+    {
+        var first = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".png");
+        var second = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".png");
+        try
+        {
+            File.WriteAllBytes(first, ArtworkTests.Picture(SKColors.Red));
+            File.WriteAllBytes(second, ArtworkTests.Picture(SKColors.Blue));
+            using var renderer = new DeckRenderer();
+            var config = new DeckConfig { GameProcesses = ["bf6", "other"], GameThemes = [new("BF6.exe", first), new("other", second)] };
+            var game = new ForegroundSnapshot(42, "bf6", "Synthetic game", true, null, "unavailable");
+            var gaming = State with { Profile = "gaming", Game = game };
+            var baseline = renderer.Render(State, config);
+            var red = renderer.Render(gaming, config);
+            Assert.Equal("static", renderer.BackgroundStatus);
+            var blue = renderer.Render(gaming with { Game = game with { ProcessName = "other" } }, config);
+            Assert.NotEqual(red.Pixels, blue.Pixels);
+            Assert.Equal(baseline.Pixels, renderer.Render(State, config).Pixels);
+            Assert.Equal("none", renderer.BackgroundStatus);
+            renderer.Render(gaming with { Game = game with { ProcessName = "bf6-launcher" } }, config);
+            Assert.Equal("none", renderer.BackgroundStatus);
+            File.Delete(first);
+            Assert.NotEmpty(renderer.Render(gaming, config).Png);
+            Assert.Equal("unavailable", renderer.BackgroundStatus);
+            Assert.Equal(baseline.Pixels, renderer.Render(State, config).Pixels);
+        }
+        finally { File.Delete(first); File.Delete(second); }
+    }
+
+    [Fact]
+    public void VoiceHeaderUpdatesMuteAndKeepsClockClear()
+    {
+        using var renderer = new DeckRenderer();
+        var user = new VoiceMember("target", "A very long synthetic nickname that must fit before the clock", false, false);
+        var config = new DeckConfig { TrackedMemberId = "target" };
+        var live = State with { Discord = new([user], user, "connected") };
+        var active = renderer.Render(live, config);
+        var muted = renderer.Render(live with { Discord = new([user with { Mute = true }], null, "connected") }, config);
+        // Header crops change and clock pixels stay intact even for an overlong nickname.
+        Assert.False(active.Pixels.AsSpan(0, 1920 * 65 * 4).SequenceEqual(muted.Pixels.AsSpan(0, 1920 * 65 * 4)));
+        for (var y = 0; y < 65; y++)
+            Assert.True(active.Pixels.AsSpan((y * 1920 + 1750) * 4, 170 * 4).SequenceEqual(muted.Pixels.AsSpan((y * 1920 + 1750) * 4, 170 * 4)));
+        var offline = live with { Discord = live.Discord with { Status = "offline" } };
+        Assert.Equal(renderer.Render(offline with { Discord = new([], null, "offline") }, config).Pixels, renderer.Render(offline, config).Pixels);
+    }
+
+    [Fact]
     public void SixteenthWidgetChangesItsOwnCardAndClassicKeepsItHidden()
     {
         using var renderer = new DeckRenderer();

@@ -14,6 +14,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
     ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly ProfileSelector selector = new();
+    private readonly GameSceneSelector gameSelector = new();
     public DeckState State { get; private set; } = new(DateTimeOffset.UtcNow, "desktop", "",
         new([], "starting"), new(false, "", "", "", 0, 0, "starting"), new([], null, "starting"), new(false, "", null, "disconnected"));
     public byte[]? Preview { get; private set; }
@@ -34,8 +35,10 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     await Task.WhenAll(hardwareTask, mediaTask, discordTask);
                     var now = DateTimeOffset.UtcNow;
                     var active = foreground.Read(settings);
-                    var next = new DeckState(now, selector.Select(settings, active.ProcessName, mediaTask.Result.Playing, now), active.ProcessName,
-                        hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status) { Foreground = active };
+                    var profile = selector.Select(settings, active.ProcessName, mediaTask.Result.Playing, now);
+                    var next = new DeckState(now, profile, active.ProcessName,
+                        hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status)
+                        { Foreground = active, Game = gameSelector.Select(settings, profile, active, now) };
                     var rendered = renderer.Render(next, settings, media.Artwork, foreground.Icon);
                     Preview = rendered.Png;
                     display.Send(rendered.Pixels);

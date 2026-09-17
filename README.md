@@ -23,6 +23,9 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
 - Sfondo statico scuro integrato, oppure un’immagine locale scelta dall’utente.
 - Nome e icona dell’app in primo piano; indicazione Gioco per gli eseguibili configurati.
 - Profili Desktop, Gaming e Musica; selezione manuale o automatica con ritardo configurabile.
+- Layout Gaming dedicato con icona/nome del gioco, identificazione GPU e gli stessi 16 widget;
+  sfondo statico locale associabile a ciascun gioco.
+- Nickname e stato mute/deaf del solo utente Discord seguito nell’header, accanto all’ora.
 - Bot Discord integrato: partecipanti del canale, mute/deaf e utente da evidenziare.
 - Collegamento TURZX con verifica dell'identità e aggiornamenti completi/parziali.
 - Recupero USB limitato per timeout e `needReSend:1`, con reinvio completo e diagnostica.
@@ -160,6 +163,35 @@ cache limitata in memoria: nessuna immagine del gioco entra nel repository. Proc
 protetti o applicazioni senza icona possono mostrare il nome e un segnaposto APP.
 L'icona segue il primo piano, quindi cambia anche passando a un'altra app con Alt-Tab.
 La scoperta automatica dei giochi installati non è ancora implementata.
+
+### Modalità Gaming e utente Discord nell’header (0.2.2)
+
+Il profilo Gaming usa un’area gioco/GPU a sinistra, i 16 widget al centro e musica/
+Discord a destra. Conserva le associazioni e gli stili dei sensori. In **Configurazione →
+Layout nel profilo Gaming** puoi scegliere di mantenere invece il layout abituale.
+La scritta NVIDIA compare solo se la GPU letta dai sensori è NVIDIA; non usa un logo
+copiato né modifica impostazioni del driver. FPS resta esplicitamente non disponibile.
+
+In **Configurazione → Sfondi dei giochi**, aggiungi un processo presente nell’elenco
+giochi e il percorso Windows di un PNG/JPEG/WebP locale. Nessun download automatico.
+Il ritaglio centrale riempie il display e viene oscurato; valgono i limiti di 32 MiB/
+4 megapixel. Vuoto o senza associazione: sfondo generale. File cancellato/non leggibile:
+gradiente scuro con avviso, senza conservare l’immagine del gioco precedente.
+Le associazioni restano salvate se togli un processo dall’elenco, ma non si attivano.
+
+Sfondo e layout seguono il profilo: in automatico rispettano l’attesa configurata.
+Durante un breve Alt-Tab lo sfondo conserva il gioco fino al cambio profilo, mentre
+la testata continua a identificare l’app effettivamente in primo piano. Passando
+direttamente fra due giochi riconosciuti cambia l’associazione al tick successivo.
+Gaming manuale senza un gioco riconosciuto mostra «Nessun gioco in primo piano» e
+lo sfondo generale. Le vecchie configurazioni acquisiscono i nuovi campi in memoria,
+senza riscrittura del file al solo avvio.
+
+L’header usa lo stesso **ID dell’utente da evidenziare** già configurato per Discord.
+Mostra nickname e **MIC ATTIVO**, **MUTE** o **DEAF** dalla presenza corrente nel canale.
+Non seleziona un altro partecipante se quello seguito manca; indica utente fuori canale,
+collegamento non disponibile o utente non scelto. MIC ATTIVO indica solo assenza di mute,
+non attività vocale. Non viene conservato uno stato mute precedente quando Discord cade.
 
 La prova Aura del 17 settembre 2026 con SDK 3.07.05.0 ha enumerato i dispositivi,
 ma i valori RGB non corrispondevano al giallo fisso confermato dall'utente.

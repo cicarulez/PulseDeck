@@ -21,6 +21,7 @@ nella sessione Windows dell'utente, senza console aperta.
   associazioni precedenti conservate, nuove posizioni nascoste e scale configurabili.
 - Copertine dalla sessione Windows, RAM fisica usata/libera/totale e velocità di rete.
 - Sfondo scuro statico e nome/icona dell’app in primo piano da Windows (0.2.1).
+- Layout Gaming dedicato, sfondi locali per gioco e nickname/mute Discord nell’header (0.2.2).
 - Esperimento GIF abbandonato dall’utente; rimossi animazione e selettore.
 - PawnIO installato e letture di CPU, scheda madre, ventole, RAM, GPU e dischi.
 - Spotify tramite sessioni multimediali Windows; profili Desktop/Musica/Gaming.
@@ -319,8 +320,20 @@ RAM usata con totale fisico utilizzabile e quota libera, senza memoria virtuale.
 I sensori rete rimangono associati a una specifica interfaccia per ID e nome, con
 unità di velocità adattive. Anteprima e USB condividono tutta la composizione.
 
-Restano futuri il posizionamento libero, lo spostamento di musica/Discord e i layout
-per display e profilo. Separare configurazione del tema, profilo e sorgenti dati.
+La 0.2.2 aggiunge una composizione Gaming dedicata (gioco/GPU, 16 widget, musica e
+Discord), disattivabile senza perdere il layout base. Sfondi locali associabili per
+processo dal configuratore; nessuna ricerca/download automatico di copertine. Il
+contesto del gioco segue il cambio profilo e conserva lo sfondo durante un breve
+Alt-Tab, senza confonderlo con l’app realmente in primo piano. NVIDIA è una scritta
+basata sull’identità GPU reale; FPS non ancora implementati. Prima immagine reale
+del gioco e verifica fisica del layout Gaming ancora da completare.
+
+Nell’header compare anche nickname e mute/deaf del solo utente Discord configurato,
+con stati espliciti per assenza/disconnessione. Non indica chi sta parlando.
+
+Restano futuri il posizionamento libero, lo spostamento arbitrario di musica/Discord
+e i layout per display e profilo completamente configurabili. Separare configurazione
+del tema, profilo e sorgenti dati.
 
 - ID dei widget stabili e configurazione versionata con migrazione.
 - Binding dei sensori che distingua anche identificatori duplicati nella libreria.

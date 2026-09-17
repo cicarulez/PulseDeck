@@ -704,3 +704,66 @@ background or colored pixel artifacts. Live sensor/media updates continue.
 - User confirmed the dark background and foreground application icon look correct
   on the physical display. A game was explicitly not tested; its actual icon and
   game badge remain pending a real foreground-game check.
+
+## Gaming presentation and tracked Discord header — 2026-09-17 (0.2.2)
+
+- Started from clean `84e2f1a`, installed 0.2.1 connected, one hidden interactive
+  agent, elevated PulseDeck task Running and legacy TURZX startup Disabled. The
+  configured tracked Discord user was present with mute/deaf false. No vendor
+  display process was running. Existing ten widget bindings, manual accent,
+  game-process list and empty general background were preserved during development.
+- Added a Gaming composition with separate game/GPU area, the same sixteen sensor
+  slots and media/Discord area. NVIDIA is a text badge derived from the real GPU
+  hardware type, not an installed-game source or copied vendor logo. FPS remains
+  unavailable. A setting can retain the original compact/classic layout in Gaming.
+- Added per-process local static-image associations, editable in a dedicated Angular
+  settings component. No automatic artwork downloads or bundled game assets. The
+  first real game image has not been supplied; the configured fallback remains dark.
+  Case/extension-equivalent duplicate mappings and malformed entries are rejected.
+- Game presentation is separate from actual foreground identity: automatic profile
+  entry/exit retains the configured delay, brief Alt-Tab retains game artwork, direct
+  game changes replace it, and manual Gaming without a recognized game makes no game
+  detection claim. Missing/deleted images do not retain another game's background.
+- Header shows only the configured member's current nickname and MIC ATTIVO/MUTE/
+  DEAF. Empty configuration, absent member and disconnected source have explicit
+  states. Stale tracked snapshots and other participants cannot supply its status;
+  no speaking detection is implied. Long nicknames are constrained before the clock.
+- 56 Core and 11 rendering tests passed; Angular production build and Windows
+  self-contained publish passed. New checks cover legacy-config defaults, duplicate
+  mapping validation, profile/scene transitions, roster selection/unavailability,
+  gaming card sixteen, per-game background replacement/deletion and header updates.
+  Full-frame bytes, USB recovery and shutdown code/tests remain unchanged.
+- Inspected an isolated rendering preview using an actual state snapshot and a
+  separate explicitly labelled synthetic game fixture. Fixtures stayed outside Git
+  and were never sent to USB or represented as live game data. Adjusted RAM used/
+  total font fitting in the narrower Gaming cards; Windows rendering and physical
+  confirmation are separate checks.
+- Both installation passes backed up app/config/DPAPI credentials/task XML, waited
+  for the agent and launcher to exit, observed logged screen-off/standby COM3, then
+  reused the existing hidden elevated interactive task to wake COM5. Binary-deploy
+  config/credential hashes were unchanged. The second pass corrected an Angular
+  output named `change` colliding with the native input event; it now uses
+  `themesChange`. The malformed request was rejected without overwriting settings.
+- Installed browser checks passed at 1500px and 390px: create association, reject
+  missing file with HTTP 400 and explicit error, save empty-path fallback, reload
+  persisted association, change its process and remove the row. Final normal UI
+  interactions produced no console/page errors or overflow; sixteen widget slots
+  remain available. Test settings were restored, and all prior config values compare
+  equal; only the new default fields are added by the saves.
+- Windows manual Gaming preview showed real GPU/sensor/media/Discord data and the
+  new header; automatic mode was restored in finally. Actual foreground FC26 was
+  not in the existing game list, so `game` remained null rather than being invented.
+  Its executable metadata/icon was unavailable in the read attempted; no game
+  injection or process modification. Adding FC26 was offered separately and has
+  not been assumed. Real configured-game focus/artwork and physical readability,
+  mute/deaf transitions and channel leave/rejoin remain unconfirmed.
+- Final agent/Core DLL and frontend index hashes match the tested staged build.
+  A subsequent USB `needReSend:1|renderCnt:0` exhausted the existing two recovery
+  attempts after 52 acknowledgements, with `userDisconnected=false`. This is a
+  recurrence of the unresolved transport issue, not evidence of a stable new layout
+  or a diagnosed cause. An explicit reconnection was initiated to restore usability.
+- Reconnection succeeded on the identified COM5 device. The follow-up observation
+  reached 72 acknowledged frames, zero recoveries and no transport error since that
+  reconnect. This is a short successful interval, not proof of long-term USB
+  reliability. No new physical-image confirmation, PC shutdown/reboot, vendor app,
+  firmware change, Aura probe or RGB-control action was performed.
