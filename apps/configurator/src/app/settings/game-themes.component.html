@@ -1,5 +1,5 @@
 <div class="theme-heading"><h3>Sfondi dei giochi</h3><button class="button" type="button" (click)="add()" [disabled]="busy() || !available().length || themes().length >= 50">Aggiungi sfondo</button></div>
-<p>Associa un’immagine locale a un processo dell’elenco giochi. Ha precedenza sulla copertina recuperata automaticamente da Steam per titolo esatto. Le copertine scaricate restano nella cartella dati di PulseDeck.</p>
+<p>Associa un’immagine locale a un processo dell’elenco giochi. Ha precedenza sulla immagini recuperate automaticamente da SteamGridDB o Steam per titolo esatto. Le copertine scaricate restano nella cartella dati di PulseDeck.</p>
 @for (theme of themes(); track $index; let i = $index) {
   <div class="theme-row fields">
     <label>Gioco<select [name]="'game-theme-process-' + i" [ngModel]="theme.processName" (ngModelChange)="update(i, { processName: $event })" [disabled]="busy()">
@@ -9,4 +9,4 @@
     <button class="button" type="button" (click)="remove(i)" [disabled]="busy()" [attr.aria-label]="'Rimuovi sfondo per ' + theme.processName">Rimuovi</button>
   </div>
 } @empty { <p>Nessuna immagine manuale: ricerca automatica della copertina; se assente, icona del gioco su sfondo scuro.</p> }
-<p>PNG, JPEG o WebP, fino a 32 MiB e 4 megapixel. Lascia il percorso vuoto per usare lo sfondo generale. Le associazioni si attivano soltanto per i processi presenti nell’elenco giochi.</p>
+<p>PNG, JPEG o WebP, fino a 32 MiB e 4 megapixel. Lascia il percorso vuoto per usare lo sfondo automatico, se disponibile, oppure quello generale. Le associazioni si attivano soltanto per i processi presenti nell’elenco giochi.</p>

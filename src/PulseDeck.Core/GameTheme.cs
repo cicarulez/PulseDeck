@@ -22,9 +22,16 @@ public sealed record GameTheme(string ProcessName, string BackgroundPath)
     {
         if (state.Profile != "gaming" || state.Game is not { } game || !ProfileSelector.IsGame(config, game.ProcessName))
             return config.BackgroundPath;
+        var manual = ManualBackgroundFor(state, config);
+        return manual.Length > 0 ? manual : state.GameArtwork.BackgroundPath ?? config.BackgroundPath;
+    }
+
+    public static string ManualBackgroundFor(DeckState state, DeckConfig config)
+    {
+        if (state.Profile != "gaming" || state.Game is not { } game || !ProfileSelector.IsGame(config, game.ProcessName)) return "";
         return config.GameThemes.FirstOrDefault(t => string.Equals(Path.GetFileNameWithoutExtension(t.ProcessName),
             Path.GetFileNameWithoutExtension(game.ProcessName), StringComparison.OrdinalIgnoreCase))?.BackgroundPath
-            is { Length: > 0 } path ? path : config.BackgroundPath;
+            is { Length: > 0 } path ? path : "";
     }
 }
 

@@ -3,9 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { DeckConfig, NewsSnapshot } from '../models';
 import { NewsSettingsComponent } from './news-settings.component';
 import { WeatherSettingsComponent } from './weather-settings.component';
+import { SteamGridComponent } from './steam-grid.component';
 import { GameThemesComponent } from './game-themes.component';
 
-@Component({ selector: 'pd-settings', standalone: true, imports: [FormsModule, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
+@Component({ selector: 'pd-settings', standalone: true, imports: [FormsModule, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
 export class SettingsComponent {
   newsState = input<NewsSnapshot | null>(null);
   config = input.required<DeckConfig>(); busy = input(false); save = output<DeckConfig>();

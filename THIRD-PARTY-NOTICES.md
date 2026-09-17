@@ -69,3 +69,9 @@ with a DAVE recognized-roster fix. It retains MIT licensing and the original
 assembly identity; informational version identifies `pulsedeck.dave-roster.1`.
 See `src/PulseDeck.Discord/README.md` and `PatchDiscordRoster.cs` for exact provenance
 and the source change. Core/Rest/Dave remain the unmodified NuGet dependencies.
+
+SteamGridDB is an optional artwork provider using the user's API key. Downloaded
+covers and heroes remain owned by their respective rights holders/contributors;
+images are cached in the user's data directory and are not redistributed with
+PulseDeck. API documentation: https://www.steamgriddb.com/api/v2 . No third-party
+SteamGridDB client library or database is bundled.

@@ -6,7 +6,10 @@ public sealed record FpsSnapshot(string Status, double? FramesPerSecond = null, 
 {
     public long SamplesAccepted { get; init; }
 }
-public sealed record GameArtworkSnapshot(string Status = "unavailable", string? Path = null, string? Source = null);
+public sealed record GameArtworkSnapshot(string Status = "unavailable", string? Path = null, string? Source = null)
+{
+    public string? BackgroundPath { get; init; }
+}
 
 public static class GameSessions
 {

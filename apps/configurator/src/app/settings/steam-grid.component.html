@@ -1,0 +1,9 @@
+<div class="theme-heading"><h3>Immagini automatiche · SteamGridDB</h3><span>{{ configured() ? 'Collegato' : 'Facoltativo · non collegato' }}</span></div>
+<p>Copertine e sfondi panoramici per il layout Gaming. Le immagini manuali hanno precedenza; se SteamGridDB non trova un risultato univoco, resta la ricerca su Steam.</p>
+<div class="fields">
+  <label class="wide">Chiave API SteamGridDB<input type="password" autocomplete="new-password" maxlength="256" [ngModelOptions]="{standalone: true}" [(ngModel)]="key" [disabled]="busy()" placeholder="Incolla una chiave per collegare o sostituire quella salvata"><small>La chiave viene verificata e salvata cifrata sul PC. Non viene mostrata di nuovo.</small></label>
+  <button class="button" type="button" [disabled]="busy() || !key.trim()" (click)="connect()">{{ busy() ? 'Attendi…' : 'Collega SteamGridDB' }}</button>
+  @if (configured()) { <button class="button" type="button" [disabled]="busy()" (click)="disconnect()">Rimuovi collegamento</button> }
+</div>
+<p><a href="https://www.steamgriddb.com/profile/preferences/api" target="_blank" rel="noopener noreferrer">Ottieni la chiave dal tuo account SteamGridDB</a>. Il collegamento si applica subito, senza premere “Salva configurazione”. Le immagini scaricate restano nella cache locale.</p>
+@if (message()) { <p role="status">{{ message() }}</p> }

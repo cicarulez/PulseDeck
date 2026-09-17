@@ -19,13 +19,17 @@ builder.Services.AddSingleton<MediaProvider>();
 builder.Services.AddSingleton<InstalledGameCatalog>();
 builder.Services.AddSingleton<ForegroundProvider>();
 builder.Services.AddSingleton<GameSessionProvider>();
+builder.Services.AddSingleton<SteamGridCredentials>();
+builder.Services.AddHttpClient("steamgriddb", client => { client.Timeout = TimeSpan.FromSeconds(8); client.MaxResponseContentBufferSize = 4 * 1024 * 1024; })
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+builder.Services.AddSingleton(provider => new SteamGridArtwork(provider.GetRequiredService<IHttpClientFactory>().CreateClient("steamgriddb"), provider.GetRequiredService<ConfigStore>(), provider.GetRequiredService<SteamGridCredentials>()));
 builder.Services.AddSingleton<PresentMonProvider>();
 builder.Services.AddSingleton<VolumeProvider>();
 builder.Services.AddHttpClient("game-artwork", client => { client.Timeout = TimeSpan.FromSeconds(10); client.MaxResponseContentBufferSize = 4 * 1024 * 1024; });
-builder.Services.AddSingleton(provider => new GameArtworkProvider(provider.GetRequiredService<IHttpClientFactory>().CreateClient("game-artwork"), provider.GetRequiredService<ConfigStore>()));
+builder.Services.AddSingleton(provider => new GameArtworkProvider(provider.GetRequiredService<IHttpClientFactory>().CreateClient("game-artwork"), provider.GetRequiredService<ConfigStore>(), provider.GetRequiredService<SteamGridArtwork>()));
 builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });
 builder.Services.AddSingleton(provider => new WeatherFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("weather")));
-builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.4.2"); })
+builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.5.0"); })
     .ConfigurePrimaryHttpMessageHandler(NewsHttp.CreateHandler);
 builder.Services.AddSingleton(provider => new NewsFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("news")));
 builder.Services.AddSingleton<EmbeddedDiscordService>();
@@ -99,6 +103,19 @@ app.MapGet("/api/weather/locations", async (string? query, IHttpClientFactory cl
     }
     catch (OperationCanceledException) when (token.IsCancellationRequested) { return Results.StatusCode(499); }
     catch { return Results.Json(new { error = "Ricerca meteo non disponibile. Riprova tra poco." }, statusCode: 502); }
+});
+app.MapGet("/api/steamgriddb", (SteamGridCredentials credentials) => new { configured = credentials.Configured });
+app.MapPost("/api/steamgriddb", async (SteamGridKeyRequest request, SteamGridArtwork artwork, SteamGridCredentials credentials, CancellationToken token) =>
+{
+    var key = request.Key?.Trim() ?? "";
+    if (!await artwork.CheckKey(key, token)) return Results.BadRequest(new { error = "Chiave non verificata: controlla la chiave e la connessione a SteamGridDB." });
+    try { credentials.Save(key); return Results.Ok(new { configured = true }); }
+    catch { return Results.Problem("Impossibile salvare la chiave cifrata sul PC."); }
+});
+app.MapDelete("/api/steamgriddb", (SteamGridCredentials credentials) =>
+{
+    try { credentials.Clear(); return Results.Ok(new { configured = false }); }
+    catch { return Results.Problem("Impossibile rimuovere la chiave dal PC."); }
 });
 app.MapGet("/api/config", (ConfigStore store) => store.Current);
 app.MapPut("/api/config", (DeckConfig config, ConfigStore store) =>

@@ -13,6 +13,7 @@
       <label class="wide">Immagine di sfondo sul PC Windows<input name="background" [(ngModel)]="draft.backgroundPath" placeholder="C:\Immagini\sfondo.png"><small>PNG, JPEG o WebP statico. Lascia vuoto per lo sfondo scuro integrato. L’immagine riempie il pannello con ritaglio centrale.</small></label>
       <label class="wide">Layout nel profilo Gaming<select name="gamingLayout" [(ngModel)]="draft.gamingLayout"><option [ngValue]="true">Discord, copertina e sessione</option><option [ngValue]="false">Mantieni il layout scelto in Widget</option></select><small>Discord occupa la colonna sinistra; copertina, durata e FPS del gioco sostituiscono musica e Discord a destra. I sensori rimangono 12 nel layout Meteo, 16 negli altri. Alt-Tab ripristina il layout abituale dopo il ritardo; la durata continua dalla partenza del processo.</small></label>
     </div>
+    <pd-steam-grid />
     <pd-game-themes [themes]="draft.gameThemes" [processes]="gameProcesses()" [busy]="busy()" (themesChange)="draft.gameThemes = $event" />
   </section>
   <section class="panel"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>

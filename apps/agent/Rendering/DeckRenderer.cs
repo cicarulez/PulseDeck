@@ -248,8 +248,7 @@ public sealed class DeckRenderer : IDisposable
         void GamePanel(float x, float width)
         {
             var game = state.Game;
-            var theme = GameTheme.BackgroundFor(state, config);
-            var explicitTheme = theme != config.BackgroundPath ? theme : "";
+            var explicitTheme = GameTheme.ManualBackgroundFor(state, config);
             var picture = gameArtwork.Get(explicitTheme.Length > 0 ? explicitTheme : state.GameArtwork.Path ?? "");
             var bounds = SKRect.Create(x + 12, 98, width - 24, 173);
             canvas.Save(); canvas.ClipRect(bounds);

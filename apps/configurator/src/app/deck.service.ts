@@ -42,6 +42,9 @@ export class DeckService {
     }
     return response.json() as Promise<T>;
   }
+  steamGridStatus() { return this.request<{ configured: boolean }>('/api/steamgriddb'); }
+  connectSteamGrid(key: string) { return this.request<{ configured: boolean }>('/api/steamgriddb', 'POST', { key }); }
+  disconnectSteamGrid() { return this.request<{ configured: boolean }>('/api/steamgriddb', 'DELETE'); }
   async save(config: DeckConfig) {
     this.busy.set(true); this.error.set('');
     try { this.config.set(await this.request<DeckConfig>('/api/config', 'PUT', config)); return true; }

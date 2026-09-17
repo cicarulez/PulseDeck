@@ -424,3 +424,22 @@ su video in pausa; le anteprime laterali vengono ignorate. Senza estensione o do
 10 secondi senza aggiornamenti si torna automaticamente alle sessioni Windows.
 I player nativi in riproduzione mantengono la precedenza. Installazione, permessi,
 limiti e disattivazione: [guida dell'estensione](apps/youtube-extension/README.md).
+
+### Copertine e sfondi da SteamGridDB
+
+In **Configurazione → Display e aspetto → Immagini automatiche · SteamGridDB**, aprire
+il link alle preferenze API del proprio account, incollare la chiave nel campo
+protetto e premere **Collega SteamGridDB**. La chiave viene verificata e salvata con
+DPAPI CurrentUser in `%LOCALAPPDATA%\PulseDeck\steamgriddb.credentials`; nessuna API
+locale restituisce il suo valore. Il collegamento si applica subito.
+
+Con chiave configurata, PulseDeck cerca un titolo esatto e univoco, scarica una
+copertina orizzontale e un'immagine panoramica per Gaming. Le immagini manuali hanno
+precedenza. Senza chiave, senza corrispondenza o se il servizio non risponde resta
+la ricerca Steam; se anche quella manca viene mostrata l'icona disponibile.
+
+Cache immagini per 30 giorni nella cartella `game-artwork`, senza credenziali nelle
+richieste al CDN. **Rimuovi collegamento** cancella la chiave e ripristina la ricerca
+Steam; le immagini già scaricate rimangono nella cache locale. Questa integrazione
+riguarda le immagini: l'elenco dei processi che attivano Gaming resta configurato
+separatamente. Non viene attivata alcuna registrazione storica della telemetria.

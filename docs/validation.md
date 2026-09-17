@@ -1284,3 +1284,36 @@ Sources: [Chromium shared system media controls](https://chromium.googlesource.c
   (separate snapshots, with diagnostic processes running). Refreshed real preview
   showed `PROCESSI 442` under RAM without clipping. COM5 remained connected without
   errors. Preview also showed a green downward GPU power trend arrow from real data.
+
+## Optional SteamGridDB artwork — 2026-09-18 (0.5.0)
+
+- Added exact normalized title lookup, separate static horizontal cover/hero
+  downloads, local 30-day cache and existing Steam fallback. Manual game images
+  retain priority; automatic heroes apply only in Gaming. No change to configured
+  game detection and no telemetry history recording enabled. History proposal is
+  recorded separately in the roadmap backlog.
+- Personal API key is managed by a dedicated configurator component and encrypted
+  with Windows DPAPI CurrentUser outside the repository. Status API returns only
+  `configured`. Bearer authorization is attached only to API requests; CDN hosts
+  are restricted, redirects disabled, downloaded bytes/pixels bounded and decoded
+  before caching.
+- 91 Core tests and 17 renderer tests passed; Angular production build and Windows
+  publish passed. New Core regressions cover exact/ambiguous title matching, image
+  filtering and manual/automatic background precedence and Gaming gating.
+- Temporary Windows integration harness with synthetic HTTP responses verified
+  actual DPAPI encryption/round-trip/removal, distinct cover and hero files, cache
+  reuse, ignoring the cache when disconnected, and API-only authorization. Five
+  synthetic HTTP calls were observed. This was not an authenticated service test.
+- Isolated headless Chromium against the built configurator with mocked API verified
+  connecting/removing the key without submitting the outer settings form, clearing
+  the password field, no Angular page errors and no horizontal overflow at 390 px.
+- Deployed 0.5.0 after the previous agent and scheduled task exited; backup:
+  `%LOCALAPPDATA%\PulseDeck\before-artwork-050-20260918-002857`.
+  Configuration and Discord credential hashes were unchanged. Existing interactive
+  startup task reused; verified display connected on COM5 with no errors/recoveries,
+  acknowledged frame and PresentMon `ready` before any game launch.
+- Actual local SteamGridDB status returned `configured: false`. Real authenticated
+  downloads and appearance of SteamGridDB artwork on the physical panel remain
+  unverified until the user connects a personal key and opens a recognized game.
+
+API reference: [official SteamGridDB client](https://github.com/SteamGridDB/node-steamgriddb).

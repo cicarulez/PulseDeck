@@ -659,3 +659,35 @@ Su richiesta dell’utente, seconda riga/terza colonna mostra ora `PROCESSI`:
 conteggio totale dei processi Windows, aggiornato a ogni lettura hardware. Nuova
 metrica `system.processes`, selezionabile anche dal configuratore. Nessun anello
 o trend per questo valore. La frequenza RAM resta disponibile nell’inventario.
+
+## Backlog — storico locale e analisi delle sessioni
+
+Richiesto il 18 settembre 2026: conservare questa proposta per un incremento futuro;
+nessuna registrazione continua viene attivata con questa voce di backlog.
+
+- SQLite locale, percorso proposto `%LOCALAPPDATA%\PulseDeck\history\telemetry.db`,
+  configurabile; esportazione CSV e backup separati, eventualmente su NAS.
+- Prima versione: 20–30 metriche principali ogni 5 secondi; dettaglio per 30 giorni,
+  aggregati al minuto (minimo/massimo/media) per un anno, sessioni di gioco come eventi.
+- Registrazione opzionale, limite di spazio, retention automatica, scritture in blocchi
+  fuori dal ciclo display; misurare CPU, memoria, latenza e scritture su SSD.
+- Grafici nel tempo, resoconti per gioco, confronti fra driver/impostazioni e diagnosi
+  dei cali FPS. I consumi stimati riguardano solo i componenti con sensori di potenza.
+- Cronologia dei titoli multimediali e attività Discord separata e facoltativa.
+  Credenziali e audio non fanno parte dello storico delle letture.
+- Per 1% low accurati serve progettare l'acquisizione dei tempi dei singoli frame:
+  le medie FPS attuali non sono sufficienti.
+- Stime preliminari a PC acceso 24 ore: 10–25 MB/giorno per 20–30 metriche a 5 s;
+  250–600 MB/giorno per circa 616 sensori a 5 s; 1–3 GB/giorno a 1 s. Da verificare
+  con schema, indici e compressione effettivi prima di scegliere i valori definitivi.
+
+## Immagini automatiche SteamGridDB (0.5.0)
+
+Integrato come servizio opzionale per copertine orizzontali e sfondi dei giochi:
+chiave personale nel configuratore, cifrata con DPAPI CurrentUser, cache locale
+per 30 giorni. Ricerca per titolo esatto normalizzato; corrispondenze ambigue
+non vengono selezionate. Senza chiave o immagini utilizzabili resta la ricerca
+Steam esistente. Gli sfondi manuali mantengono la precedenza; quelli automatici
+valgono solo in Gaming. La rilevazione dei processi di gioco resta separata.
+Implementazione e test completati; download reale da verificare dopo che l'utente
+avrà collegato la propria chiave. Dettagli in `docs/validation.md`.

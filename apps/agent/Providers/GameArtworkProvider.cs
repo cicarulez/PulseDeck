@@ -7,9 +7,10 @@ using PulseDeck.Core;
 namespace PulseDeck.Agent.Providers;
 
 // Exact title matching only. Images and their cache never enter the source tree.
-public sealed class GameArtworkProvider(HttpClient client, ConfigStore config) : IDisposable
+public sealed class GameArtworkProvider(HttpClient client, ConfigStore config, SteamGridArtwork steamGrid) : IDisposable
 {
     private string? title;
+    private int revision = -1;
     private Task<GameArtworkSnapshot>? pending;
     private CancellationTokenSource? request;
     private GameArtworkSnapshot snapshot = new();
@@ -18,6 +19,11 @@ public sealed class GameArtworkProvider(HttpClient client, ConfigStore config) :
 
     public GameArtworkSnapshot Read(ForegroundSnapshot? game, CancellationToken token)
     {
+        if (revision != steamGrid.Revision)
+        {
+            revision = steamGrid.Revision; title = null; results.Clear(); retryAt = default;
+            request?.Cancel(); request?.Dispose(); request = null; pending = null; snapshot = new();
+        }
         var next = game?.DisplayName;
         if (next != title)
         {
@@ -45,6 +51,22 @@ public sealed class GameArtworkProvider(HttpClient client, ConfigStore config) :
     }
 
     private async Task<GameArtworkSnapshot> Fetch(string name, CancellationToken token)
+    {
+        if (steamGrid.Configured)
+        {
+            using var budget = CancellationTokenSource.CreateLinkedTokenSource(token);
+            budget.CancelAfter(TimeSpan.FromSeconds(8));
+            try
+            {
+                var result = await steamGrid.Fetch(name, budget.Token);
+                if (result.Path is not null) return result;
+            }
+            catch (OperationCanceledException) { }
+        }
+        return await FetchSteam(name, token);
+    }
+
+    private async Task<GameArtworkSnapshot> FetchSteam(string name, CancellationToken token)
     {
         try
         {
