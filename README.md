@@ -22,6 +22,7 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
 - Bot Discord integrato: partecipanti del canale, mute/deaf e utente da evidenziare.
 - Collegamento TURZX con verifica dell'identità e aggiornamenti completi/parziali.
 - Avvio nascosto all'accesso Windows, con permessi amministrativi e log su file.
+- Comando di spegnimento del TURZX all'arresto di PulseDeck e alla fine della sessione Windows.
 
 Le letture mancanti appaiono come `—`. Il bot collegato è stato verificato; le
 transizioni ingresso/uscita e mute/deaf con partecipanti richiedono ancora una prova.
@@ -73,8 +74,22 @@ sensori potrebbero mancare. Usa **Arresta PulseDeck** nel configuratore per chiu
 l'agent e liberare la porta seriale.
 
 Per tornare al programma TURZX, arresta PulseDeck e riapri TURZX con il suo tema.
-Il display mantiene l'ultimo fotogramma finché non riceve nuovi dati. PulseDeck non
-modifica firmware o file dei temi originali.
+**Arresta PulseDeck** invia il comando di spegnimento prima di chiudere la porta;
+**Scollega display** libera soltanto la porta, lasciando l'ultimo fotogramma e il
+dispositivo disponibili per un altro programma. PulseDeck non modifica firmware o
+file dei temi originali.
+
+Allo spegnimento, riavvio o logout di Windows, l'agent riceve la notifica di fine
+sessione tramite una finestra invisibile e tenta lo spegnimento del display prima
+di terminare. Annullare lo spegnimento non ferma il pannello. È necessario che
+PulseDeck sia in esecuzione e abbia ancora la connessione USB: una terminazione
+forzata o una perdita di alimentazione non permettono l'invio del comando.
+Il modello provato cambia porta e identità USB in standby (`CT88INCH`, COM3 sul PC
+di sviluppo). PulseDeck riconosce questa modalità e lo risveglia prima di collegarsi
+alla porta attiva configurata, COM5. Non occorre impostare COM3 nel configuratore.
+Il risveglio può richiedere alcuni secondi e un tentativo aggiuntivo: l'avvio
+automatico gestisce i tentativi; dalla pagina usa di nuovo **Collega display** se
+compare ancora il messaggio di risveglio.
 
 ## Scegliere i widget
 

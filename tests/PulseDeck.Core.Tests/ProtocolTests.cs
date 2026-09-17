@@ -4,6 +4,30 @@ using Xunit;
 public class ProtocolTests
 {
     private static byte[] Frame() => new byte[1920 * 480 * 4];
+    [Theory]
+    [InlineData(@"USB\VID_1A86&PID_CA88\CT88INCH", true)]
+    [InlineData(@"usb\vid_1a86&pid_ca88\ct88inch", true)]
+    [InlineData(@"USB\VID_1A86&PID_CA88\OTHER", false)]
+    [InlineData(@"USB\VID_1A86&PID_CA21\CT21INCH", false)]
+    [InlineData("COM3", false)]
+    public void StandbyWakeRequiresTheObservedEightInchIdentity(string identity, bool supported)
+        => Assert.Equal(supported, TurzxProtocol.IsSupportedStandbyDevice(identity));
+    [Theory]
+    [InlineData("video", "79EF6900000001")]
+    [InlineData("media", "96EF6900000001")]
+    [InlineData("off", "83EF6900000001")]
+    public void ShutdownCommandsMatchUpstreamScreenOff(string operation, string prefix)
+    {
+        var command = operation switch
+        {
+            "video" => TurzxProtocol.StopVideoCommand(),
+            "media" => TurzxProtocol.StopMediaCommand(),
+            _ => TurzxProtocol.ScreenOffCommand()
+        };
+        Assert.Equal(Convert.FromHexString(prefix), command[..7]);
+        Assert.Equal(250, command.Length);
+        Assert.All(command[7..], b => Assert.Equal(0, b));
+    }
     [Fact]
     public void FullFrameCommandMatchesSuccessfulPythonProbe()
     {

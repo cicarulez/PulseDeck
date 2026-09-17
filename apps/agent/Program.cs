@@ -19,6 +19,7 @@ builder.Services.AddSingleton<DeckRenderer>();
 builder.Services.AddSingleton<TurzxDisplay>();
 builder.Services.AddSingleton<DeckRuntime>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<DeckRuntime>());
+builder.Services.AddHostedService<WindowsSessionLifetime>();
 var app = builder.Build();
 
 app.Use(async (context, next) =>

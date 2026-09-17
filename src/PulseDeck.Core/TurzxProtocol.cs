@@ -12,6 +12,12 @@ public static class TurzxProtocol
     // Captured from the successful upstream 8.8-inch probe: 4-byte command,
     // 2-byte frame size, 2-byte line size. No extra zero before 0x3840.
     public static byte[] FullFrameCommand() => Packet(Convert.FromHexString("C8EF690038400E10"));
+    // Upstream ScreenOff: stop video, stop media (read 1024-byte status), then turn off.
+    public static byte[] StopVideoCommand() => Packet(Convert.FromHexString("79EF6900000001"));
+    public static byte[] StopMediaCommand() => Packet(Convert.FromHexString("96EF6900000001"));
+    public static byte[] ScreenOffCommand() => Packet(Convert.FromHexString("83EF6900000001"));
+    public static bool IsSupportedStandbyDevice(string pnpId) =>
+        pnpId.Equals(@"USB\VID_1A86&PID_CA88\CT88INCH", StringComparison.OrdinalIgnoreCase);
     public static byte[] Packet(ReadOnlySpan<byte> data, byte padding = 0)
     {
         var result = new byte[((data.Length + 249) / 250) * 250];

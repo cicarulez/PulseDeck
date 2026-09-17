@@ -106,3 +106,31 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   effect test was attempted after this failed static comparison.
 - No Aura provider enabled in PulseDeck. Manual accent remains the supported path;
   this result does not rule out other independently validated passive data sources.
+
+## Windows shutdown and display power — 2026-09-17
+
+- Root cause: the runtime only released the serial port at exit, and the hidden
+  console agent did not explicitly listen for Windows session-end messages.
+- Added a dedicated invisible top-level window, synchronous screen-off before
+  acknowledging confirmed session end, and the same shutdown path for normal stop.
+  A cancelled query leaves the app and display running. No visible UI/service added.
+- 27 Core tests passed, including exact 250-byte screen-off/stop packets and rejection
+  of unrelated standby device identities. Self-contained Windows Release publish passed.
+- `scripts/Test-PulseDeckSessionEnd.ps1 -EndSession`, run elevated on Windows, sent
+  query/cancel/confirmed-end messages only to PulseDeck, without shutting down Windows.
+  The window was invisible; query returned TRUE; cancellation kept USB connected;
+  the confirmed-end handler returned in 3 ms and the agent exited.
+- User visually confirmed the physical screen and backlight turned off.
+- The device changed from COM5 / `0525:A4A7` to COM3 /
+  `USB\VID_1A86&PID_CA88\CT88INCH`. This exposed the need for standby wake detection.
+  Opening that identified standby interface with RTS/CTS restored the awake device.
+- Normal `/api/stop` also logged a successful screen-off command and exited. The
+  Windows startup task was reused after deployment, with settings/credentials intact.
+- Final build automatically opened standby COM3, waited for re-enumeration, and
+  connected to the identified COM5 display via the existing bounded startup retry.
+  Task log: agent started 09:49:48, display connected 09:49:59 (about 11 seconds).
+  One hidden elevated agent remained active with hardware readings and Discord connected.
+- Actual Windows shutdown/restart and logoff were not performed. The synthetic
+  message check verifies the handler and hardware command, not Windows shutdown
+  ordering on this PC. Forced termination, USB errors and power loss remain outside
+  the guarantee of a cooperative shutdown handler.

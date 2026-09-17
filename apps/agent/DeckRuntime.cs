@@ -47,6 +47,6 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
             } while (await timer.WaitForNextTickAsync(stoppingToken));
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
-        finally { display.Disconnect(); }
+        finally { display.Shutdown(); }
     }
 }

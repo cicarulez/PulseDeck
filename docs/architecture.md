@@ -15,6 +15,31 @@ without writing startup options, sends an initial full frame, and computes the
 bounding rectangle of subsequent pixel changes. Transport errors release the
 port and require an explicit reconnect.
 
+`WindowsSessionLifetime` owns an invisible top-level Win32 window on a dedicated
+message thread. It accepts `WM_QUERYENDSESSION` immediately and acts only on
+`WM_ENDSESSION` with a nonzero wParam, leaving cancelled shutdowns untouched.
+Before returning that message, it synchronously asks the display to stop media and
+send the protocol's screen-off command, then requests host termination. Console
+shutdown handlers alone are insufficient because this process loads user32.
+
+Normal host stop uses the same idempotent path. New frames/connects are rejected
+once shutdown starts; access to serial output stays serialized with in-flight
+frames. Lock acquisition and serial operations have short timeouts. Failures are
+logged without blocking Windows indefinitely. Explicit user disconnect remains a
+port release and is not treated as a request to power off someone else's display.
+
+On the tested firmware, screen-off re-enumerates as `USB\VID_1A86&PID_CA88\CT88INCH`
+on COM3. Connect first checks the configured awake port; if absent, it only wakes a
+unique matching standby identity by opening its interface with RTS/CTS, following
+the upstream wake strategy. It then waits up to five seconds for the configured
+awake port and performs the normal VID/PID and HELLO checks before sending frames.
+No generic serial devices or other display revisions receive wake commands.
+
+Protocol reference: [upstream ScreenOff](https://github.com/mathoudebine/turing-smart-screen-python/blob/main/library/lcd/lcd_comm_rev_c.py).
+Windows references: [console handler limitations](https://learn.microsoft.com/en-us/windows/console/setconsolectrlhandler),
+[WM_QUERYENDSESSION](https://learn.microsoft.com/en-us/windows/win32/shutdown/wm-queryendsession),
+[WM_ENDSESSION](https://learn.microsoft.com/en-us/windows/win32/shutdown/wm-endsession).
+
 The agent runs in the interactive user session so that foreground windows and
 Windows media sessions are available. Hardware data availability depends on
 permissions and the hardware's sensor support. Values are never fabricated.

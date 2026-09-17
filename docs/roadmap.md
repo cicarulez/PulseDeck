@@ -23,6 +23,8 @@ nella sessione Windows dell'utente, senza console aperta.
   Le transizioni reali con partecipanti devono ancora essere verificate.
 - Avvio tramite attività pianificata nella sessione utente, con privilegi elevati,
   processo nascosto, log su file e connessione iniziale al display.
+- Gestione della fine sessione Windows e comando di spegnimento del TURZX prima
+  dell'uscita; annullamento della fine sessione senza interrompere il pannello.
 
 ## Ordine proposto
 
