@@ -142,7 +142,8 @@ il salvataggio. Un sensore mancante mostra `—` conservando il collegamento.
 ### Meteo e dodici sensori (0.2.3)
 
 Installata sul PC di sviluppo con Roma selezionata: ricerca/salvataggio città,
-anteprima Windows e trasmissione USB verificati. Leggibilità fisica ancora da confermare.
+anteprima Windows e trasmissione USB verificati. L’utente ha confermato meteo e tutti
+i 12 sensori leggibili sul display fisico, senza residui o pixel anomali.
 
 Scegli **Meteo · 12 sensori + musica e Discord** nella scheda Widget. Le prime dodici
 posizioni occupano tre colonne e quattro righe; le quattro aggiuntive restano salvate

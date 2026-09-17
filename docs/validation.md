@@ -846,5 +846,9 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   not re-tested in this deployment. COM5 reached 144 acknowledged frames with no
   recovery/error at the final follow-up. These checks do not establish physical
   readability, indefinite USB stability or externally induced network-loss handling.
-  Physical weather readability awaits the user's response. No PC shutdown/reboot,
-  firmware, Aura or vendor-app action occurred.
+  No PC shutdown/reboot, firmware, Aura or vendor-app action occurred.
+- User subsequently confirmed the physical 0.2.3 panel: Rome weather on the left
+  and all twelve sensors are readable, with a correct image and no residual content
+  or anomalous pixels. This closes the physical readability/artifact check for this
+  layout; prolonged USB stability and externally induced weather network-loss checks
+  remain separate outstanding validations.

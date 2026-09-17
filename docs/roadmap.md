@@ -324,7 +324,8 @@ generiche della scheda madre. La 0.2.3 è installata con Roma, Italia, seleziona
 ricerca/scelta città e persistenza nel configuratore verificate su Windows,
 con acquisizione indipendente dal rendering e trasmissione USB confermata dall'agent.
 Le condizioni remote sono stime Open-Meteo, con fonte e ora esplicite e nessun dato
-vecchio presentato dopo un errore. Prova fisica del nuovo riquadro ancora da confermare.
+vecchio presentato dopo un errore. L’utente ha confermato la leggibilità del meteo e
+di tutti i 12 sensori sul display fisico, con immagine corretta e senza anomalie.
 
 La 0.2.0 aggiunge una griglia compatta 4×4 oltre al classico a otto posizioni.
 Le associazioni persistono passando fra i layout; migrazione additiva dello schema 1,
