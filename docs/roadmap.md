@@ -320,8 +320,9 @@ introduce una griglia 3×4 anche durante Gaming, con nome/icona del gioco nell�
 sfondo per gioco e media/Discord conservati. Le altre quattro associazioni restano
 salvate per gli altri layout. Sul PC sono attivi i dieci sensori precedenti più
 CPU Package power e GPU Core clock; nessuna attribuzione arbitraria delle ventole
-generiche della scheda madre. Roma, Italia, è la località iniziale richiesta;
-ricerca/scelta città nel configuratore e acquisizione indipendente dal rendering.
+generiche della scheda madre. La 0.2.3 è installata con Roma, Italia, selezionata;
+ricerca/scelta città e persistenza nel configuratore verificate su Windows,
+con acquisizione indipendente dal rendering e trasmissione USB confermata dall'agent.
 Le condizioni remote sono stime Open-Meteo, con fonte e ora esplicite e nessun dato
 vecchio presentato dopo un errore. Prova fisica del nuovo riquadro ancora da confermare.
 

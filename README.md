@@ -141,6 +141,9 @@ il salvataggio. Un sensore mancante mostra `—` conservando il collegamento.
 
 ### Meteo e dodici sensori (0.2.3)
 
+Installata sul PC di sviluppo con Roma selezionata: ricerca/salvataggio città,
+anteprima Windows e trasmissione USB verificati. Leggibilità fisica ancora da confermare.
+
 Scegli **Meteo · 12 sensori + musica e Discord** nella scheda Widget. Le prime dodici
 posizioni occupano tre colonne e quattro righe; le quattro aggiuntive restano salvate
 per gli altri layout. Questa disposizione rimane anche nel profilo Gaming: identità

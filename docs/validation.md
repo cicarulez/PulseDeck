@@ -821,11 +821,30 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   the actual twelve sensors. No synthetic weather was sent to the physical panel.
   Physical readability and externally induced network-loss behavior remain distinct
   from these renderer/feed tests.
-- Installation of 0.2.3 is pending: Windows returned user cancellation for the UAC
-  deployment request, so the elevated script never started. No agent shutdown or
-  binary replacement occurred. The complete package is staged outside Git. The
-  running 0.2.2 remains connected with twelve active sensors in compact layout;
-  the follow-up reached 1,911 acknowledged frames and zero recoveries since its
-  preceding reconnect. Rome/weather layout activation, installed city-search UI
-  checks and physical weather readability have not yet been verified. A new UAC
-  request awaits the user's response; hidden startup and existing settings remain.
+- The first deployment request was cancelled in Windows UAC; that attempt never
+  started the elevated script and left 0.2.2 running with twelve active sensors.
+  The user subsequently explicitly requested another prompt and accepted it.
+- Installed 0.2.3 after backing up the app, configuration, credentials and startup
+  task definitions outside Git. Agent and launcher fully exited before replacement.
+  Normal stop logged screen-off; standby identity CT88INCH appeared on COM3 and
+  automatic wake reconnected the identified 8.8-inch panel on COM5 with acknowledged
+  frames. One health request timed out during startup; readiness subsequently passed.
+  Agent/Core hashes matched the tested package. Configuration and credential hashes
+  were unchanged by deployment. Agent runs without a main window in interactive
+  session 2; PulseDeck task remains Highest/Interactive and TempMonitor_8 disabled.
+- Used the installed configurator to search Roma, select the Lazio/Italy result and
+  save it, then select/save the twelve-sensor weather layout; both PUTs returned 200.
+  Reload preserved Rome and layout. Searching "Roma, Italia" also returned the
+  correct disambiguated result. Switching to sixteen slots and discarding restored
+  twelve. No page errors or horizontal overflow in checked settings/widgets at
+  desktop 1500px and mobile 390px. Final config differs from the deployment backup
+  only in layout/weatherLocation; all sensor bindings and other preferences match.
+- Live weather reported Roma at 26 degrees Celsius, model time 19:30 Europe/Rome,
+  and status connected. Inspected the actual Windows preview: weather, twelve
+  sensors, tracked Discord header and media region fit without overlapping text.
+  The active media session was WhatsApp at capture time; Spotify cover changes were
+  not re-tested in this deployment. COM5 reached 144 acknowledged frames with no
+  recovery/error at the final follow-up. These checks do not establish physical
+  readability, indefinite USB stability or externally induced network-loss handling.
+  Physical weather readability awaits the user's response. No PC shutdown/reboot,
+  firmware, Aura or vendor-app action occurred.
