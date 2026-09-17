@@ -39,6 +39,51 @@ public class DisplayRecoveryTests
         Assert.Contains("needReSend:1", rig.Delivery.LastError);
     }
 
+    [Fact]
+    public void RepeatedResendAfterSuccessfulFullFrameReinitializesBeforeSecondRetry()
+    {
+        var rig = new Rig();
+        rig.FullSuccess(Frame());
+        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(1));
+        rig.Replies.Enqueue("needReSend:1|renderCnt:0"); rig.Delivery.Send(Frame(2));
+        Assert.Equal("partial", rig.Delivery.LastFrameKind);
+        Assert.Equal((uint)1, rig.Delivery.LastFrameCounter);
+        rig.Clock.Advance(2); rig.FullSuccess(Frame(3));
+        Assert.Equal("full", rig.Delivery.LastFrameKind);
+        Assert.Null(rig.Delivery.LastFrameCounter);
+        Assert.Equal(0, rig.Reopens);
+        rig.Replies.Enqueue("needReSend:1|renderCnt:0"); rig.Delivery.Send(Frame(4));
+        Assert.Equal(1, rig.Closes);
+        Assert.Equal((uint)2, rig.Delivery.LastFrameCounter);
+        rig.Clock.Advance(4); rig.Delivery.Send(Frame(5)); Assert.Equal(0, rig.Reopens);
+        rig.Clock.Advance(1); rig.FullSuccess(Frame(5));
+        Assert.Equal(1, rig.Reopens);
+        Assert.Equal(2, rig.Delivery.Attempts);
+        Assert.Equal(2, rig.Delivery.Recoveries);
+        rig.Writes.Clear();
+        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(6));
+        Assert.Equal(new byte[4], rig.Writes[0][10..14]);
+        Assert.Equal((uint)0, rig.Delivery.LastFrameCounter);
+        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(7));
+        Assert.Equal((uint)1, rig.Delivery.LastFrameCounter);
+        Assert.Equal("connected", rig.Delivery.State);
+        Assert.Equal(2, rig.Delivery.Attempts); // a retry success does not renew the budget
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CancellationPreventsEscalatedResendReopen(bool shutdown)
+    {
+        var rig = new Rig(); rig.FullSuccess(Frame());
+        rig.Replies.Enqueue("needReSend:1"); rig.Delivery.Send(Frame(1));
+        rig.Clock.Advance(2); rig.FullSuccess(Frame(2));
+        rig.Replies.Enqueue("needReSend:1"); rig.Delivery.Send(Frame(3));
+        if (shutdown) rig.Cancelled = true; else rig.Delivery.Cancel();
+        rig.Clock.Advance(5); rig.Writes.Clear(); rig.Delivery.Send(Frame(4));
+        Assert.Empty(rig.Writes); Assert.Equal(0, rig.Reopens);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -100,7 +145,8 @@ public class DisplayRecoveryTests
         }
         Assert.Equal("error", rig.Delivery.State);
         Assert.Equal(2, rig.Delivery.Attempts);
-        Assert.Equal(1, rig.Closes);
+        Assert.Equal(2, rig.Closes);
+        Assert.Equal(1, rig.Reopens);
         rig.Writes.Clear();
         for (var i = 0; i < 100; i++) { rig.Clock.Advance(60); rig.Delivery.Send(Frame()); }
         Assert.Empty(rig.Writes);

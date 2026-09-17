@@ -156,11 +156,13 @@ public sealed class TurzxDisplay : IDisposable
                 Error = delivery.State is "recovering" or "error" ? delivery.LastError : null,
                 RecoveryAttempts = delivery.Attempts, Recoveries = delivery.Recoveries,
                 AcknowledgedFrames = delivery.AcknowledgedFrames,
-                LastTransportError = delivery.LastError, LastAcknowledgedAt = delivery.LastAcknowledgedAt
+                LastTransportError = delivery.LastError, LastAcknowledgedAt = delivery.LastAcknowledgedAt,
+                LastFrameKind = delivery.LastFrameKind, LastFrameCounter = delivery.LastFrameCounter
             };
             if (next.Status != status.Status || attempts != delivery.Attempts || recoveries != delivery.Recoveries)
-                logger.LogInformation("TURZX {Port}: {State}; recovery attempts {Attempts}/2, recoveries {Recoveries}, acknowledged frames {Frames}; last error: {Error}",
-                    next.Port, next.Status, next.RecoveryAttempts, next.Recoveries, next.AcknowledgedFrames, next.LastTransportError);
+                logger.LogInformation("TURZX {Port}: {State}; recovery attempts {Attempts}/2, recoveries {Recoveries}, acknowledged frames {Frames}; frame {Kind}, counter {Counter}; last error: {Error}",
+                    next.Port, next.Status, next.RecoveryAttempts, next.Recoveries, next.AcknowledgedFrames,
+                    next.LastFrameKind, next.LastFrameCounter, next.LastTransportError);
             status = next;
         }
     }

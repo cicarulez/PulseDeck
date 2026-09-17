@@ -52,7 +52,9 @@ nella sessione Windows dell'utente, senza console aperta.
 
 Il `needReSend:1` osservato durante la prova widget è ora gestito reinviando il
 fotogramma completo più recente; i timeout richiedono riapertura e nuova verifica
-dell'identità. Due tentativi, dopo almeno 2 e 5 secondi, poi **Collega display**.
+dell'identità. Dalla 0.2.5, se il reinvio ricade dopo il primo tentativo, il secondo
+riapre e reinizializza la connessione identificata prima del frame completo.
+Restano due tentativi, dopo almeno 2 e 5 secondi, poi **Collega display**.
 Il budget si rinnova dopo 60 frame consecutivi confermati, non dopo un singolo
 successo. Disconnessione volontaria e arresto annullano il recupero; nessun risveglio
 automatico in questa fase. Test con trasporto simulato coprono fallimenti e cancellazione;
@@ -60,8 +62,12 @@ le evidenze Windows e i limiti delle prove fisiche sono in `docs/validation.md`.
 La 0.1.1 installata ha recuperato autonomamente un timeout reale al primo tentativo;
 verificati anche arresto dell'agent e risveglio COM3 → COM5. L'utente ha confermato
 visivamente l'immagine completa e corretta, con dati aggiornati e senza residui o
-pixel anomali dopo il recupero. Restano una richiesta di reinvio reale e le prove
-di cavo/sospensione.
+pixel anomali dopo il recupero. Successivamente sono stati osservati reinvii reali
+e ricadute dopo un frame completo confermato: la 0.2.5 affronta questo secondo caso.
+Il secondo tentativo della 0.2.5 ha recuperato una ricaduta reale senza intervento;
+l’utente ha confermato che ora, sensori e news riprendono con immagine corretta.
+La causa del primo errore resta da diagnosticare; restano le prove di cavo/sospensione
+e di stabilità prolungata. Tipo/contatore del frame sono ora disponibili nei log/API.
 
 La ricerca Aura è in pausa e non blocca il lavoro grafico con palette manuali.
 La precedente priorità alla prova serviva a non progettare un tema attorno

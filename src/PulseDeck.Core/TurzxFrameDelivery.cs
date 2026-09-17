@@ -17,6 +17,8 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
     public long AcknowledgedFrames { get; private set; }
     public string? LastError { get; private set; }
     public DateTimeOffset? LastAcknowledgedAt { get; private set; }
+    public string? LastFrameKind { get; private set; }
+    public uint? LastFrameCounter { get; private set; }
     public string State => !active ? (failed ? "error" : "disconnected") : pending ? "recovering" : "connected";
 
     public void Start(int firmware)
@@ -28,6 +30,8 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
         AcknowledgedFrames = 0;
         LastAcknowledgedAt = null;
         LastError = null;
+        LastFrameKind = null;
+        LastFrameCounter = null;
     }
 
     public void Cancel()
@@ -59,6 +63,8 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
             }
             if (previous is null)
             {
+                LastFrameKind = "full";
+                LastFrameCounter = null;
                 Write(TurzxProtocol.Packet(Convert.FromHexString("86EF6900000001")));
                 Write(TurzxProtocol.Packet([0x2c], 0x2c));
                 Write(TurzxProtocol.FullFrameCommand());
@@ -69,6 +75,8 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
             }
             else if (TurzxProtocol.ChangedRegion(previous, pixels) is { } rect)
             {
+                LastFrameKind = "partial";
+                LastFrameCounter = counter;
                 var (header, payload) = TurzxProtocol.PartialFrame(pixels, rect, rom, counter++);
                 Write(header);
                 Write(payload);
@@ -100,7 +108,10 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
             LastError = e.Message;
             previous = null; // Never diff against an unacknowledged frame.
             healthyFrames = 0;
-            mustReopen = e is not ResendRequestedException;
+            // A full resend can be acknowledged while subsequent partial frames
+            // still fail. Escalate within the existing two-attempt budget to the
+            // same identity-checked reinitialization used after a transport error.
+            mustReopen = e is not ResendRequestedException || Attempts > 0;
             if (mustReopen || Attempts >= 2 || cancelled()) close();
             active = !cancelled() && Attempts < 2;
             pending = active;

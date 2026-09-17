@@ -927,3 +927,61 @@ background or colored pixel artifacts. Live sensor/media updates continue.
   readable on the physical display. This closes the enlarged-text readability
   check; it is not an additional confirmation of rotation timing or long-term USB
   stability beyond the separate observations recorded above.
+
+## Recurring display-only freeze — 2026-09-17 (0.2.5)
+
+- User reported a freeze and clarified it affected only the physical PulseDeck
+  display. Windows process and health API remained responsive. Display status was
+  error with `needReSend:1|renderCnt:0`, two attempts/two recoveries, 129 acknowledged
+  frames and userDisconnected=false. Log sequence shows full-frame recovery twice
+  followed by another resend; ordinary acquisition/UI were not the stopped component.
+- Saved diagnostics/config/state outside Git before one explicit reconnection.
+  COM5 resumed, but the same pattern exhausted again at 116 acknowledgements after
+  roughly two minutes. This reproduces the limitation without configuration changes
+  or synthetic image/fault injection; manual reconnection is only temporary relief.
+- Changed the second existing retry to close/reopen/reinitialize the identified
+  awake device when a resend recurs after the first attempt, including after a
+  successful full resend. The first request still tries a full frame on the open
+  port. Reopen uses the established identity/ROM checks and resets the partial
+  counter; it never invokes standby wake. No third attempt, loop or renewed budget
+  after one successful recovery. Explicit disconnect/shutdown cancellation preserved.
+- Added last attempted frame kind and partial counter to API/status-change logs to
+  distinguish future failures. The origin of the first resend is not established.
+  Reviewed the pinned upstream revision-C driver; its partial count increment alone
+  does not establish that arbitrary counter resets on an open session are valid.
+  The fix therefore reuses the already-tested connection initialization path.
+- 70 Core and 15 renderer tests passed, plus Angular production build and Windows
+  publish. New checks reproduce full success followed by another partial rejection,
+  verify second-attempt reopen/counter restart and cancellation before that reopen.
+  Persistent resends still exhaust exactly two retries. Verified full-frame command
+  C8 EF 69 00 38 40 0E 10 and all encoding tests remain unchanged.
+- Published 0.2.5 into a new deployment directory after the first supervisor found
+  an old completion marker and left the installed version unchanged. For the actual
+  deployment, one guarded connection restored the error-state port for normal
+  shutdown; it would not override a user-disconnected state. Backed up the app,
+  config, credentials and task definitions; old agent/launcher exited fully before
+  replacement. Screen-off logged, standby COM3 observed, startup woke COM5 again.
+  Agent/Core hashes matched the tested package and config/credential hashes were
+  unchanged. One startup health probe timed out before readiness succeeded.
+- Installed health/footer report 0.2.5; agent is hidden in interactive session 2,
+  task remains Highest/Interactive and TempMonitor_8 disabled. Rome weather, twelve
+  sensors, all three news channels and the approved 24 px footer remain configured.
+- A real resend recurred on 0.2.5 at acknowledgement 137, partial counter 136.
+  The first retry acknowledged full frame 138, but partial counter 137 was rejected
+  again. The second retry reinitialized the port and acknowledged full frame 139;
+  subsequent partial frames resumed with counter zero. The passive observation then
+  reached acknowledgement 188 / partial counter 48 without another reconnect command.
+  This directly exercises the new escalation on the real device, not a simulated
+  transport error. The original first resend still occurs; its cause is unresolved.
+- User explicitly confirmed after that automatic recovery that clock, sensors and
+  news update again and the physical image is correct. Inspected the current Windows
+  preview as well; weather, twelve sensors, Spotify and news remain intact. No PC
+  shutdown/reboot, firmware, vendor-app or Aura action was performed.
+- Completed a five-minute passive sampling window after startup: final state was
+  connected with 338 acknowledged frames, partial counter 198, two recoveries from
+  the single observed outage, attempt budget reset to zero, and weather/news still
+  connected. After full recovery frame 139, 199 further partial frames succeeded
+  without another manual connection or transport error. Budget reset was logged at
+  frame 198 after sixty consecutive acknowledged frames. This verifies the bounded
+  recovery improvement and short-term continuity, not elimination of the initial
+  USB fault or a long-duration/cable/suspend reliability guarantee.

@@ -15,7 +15,11 @@ without writing startup options, sends an initial full frame, and computes the
 bounding rectangle of subsequent pixel changes. `TurzxFrameDelivery` owns the
 acknowledged frame baseline and bounded recovery policy in portable Core code.
 A complete `needReSend:1` reply invalidates that baseline and schedules a full frame
-on the open port. Timeouts, malformed replies and I/O failures close the port;
+on the open port. If a resend recurs after the first attempt (even after an
+acknowledged full frame), the second attempt closes/reopens and reinitializes the
+identified connection, resetting its partial counter. This uses the existing retry
+budget rather than adding attempts. Timeouts, malformed replies and I/O failures
+close the port;
 recovery revalidates VID/PID and the original HELLO identity before reinitializing.
 Recovery never wakes standby devices. Explicit connection retains the wake path.
 
@@ -34,7 +38,8 @@ between operations; an already running serial call retains its timeout. There is
 background recovery task to resurrect a disconnected/stopping device. The startup
 launcher uses `connect?startup=true`, which respects manual disconnection and active
 recovery. Diagnostic counters and the last acknowledgement/error are additive API
-fields; the configuration schema remains unchanged. Angular's display controls
+fields, including last attempted frame kind/partial counter in 0.2.5; the
+configuration schema remains unchanged. Angular's display controls
 show recovery status and keep Disconnect available while recovery is pending.
 
 `WindowsSessionLifetime` owns an invisible top-level Win32 window on a dedicated

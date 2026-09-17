@@ -32,7 +32,9 @@ eseguite sono descritte in [docs/validation.md](docs/validation.md).
 - Nickname e stato mute/deaf del solo utente Discord seguito nell’header, accanto all’ora.
 - Bot Discord integrato: partecipanti del canale, mute/deaf e utente da evidenziare.
 - Collegamento TURZX con verifica dell'identità e aggiornamenti completi/parziali.
-- Recupero USB limitato per timeout e `needReSend:1`, con reinvio completo e diagnostica.
+- Recupero USB limitato per timeout e `needReSend:1`: reinvio completo e, se ricade,
+  riapertura verificata al secondo tentativo (0.2.5), con diagnostica. Recupero da
+  ricaduta reale verificato; l’utente ha confermato immagine e aggiornamenti corretti.
 - Avvio nascosto all'accesso Windows, con permessi amministrativi e log su file.
 - Comando di spegnimento del TURZX all'arresto di PulseDeck e alla fine della sessione Windows.
 
