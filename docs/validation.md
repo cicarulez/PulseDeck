@@ -1582,3 +1582,22 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   full/partial frames without transport errors. The private live preview confirmed
   the larger cover and moved playback/lyrics-status labels. That preview remains
   outside source control; only synthetic images are used for public documentation.
+
+## Frozen physical display incident — 2026-09-18 (0.7.4)
+
+- User reported an apparent agent freeze. The agent/API remained responsive with
+  fresh state (under one second old), live hardware/media/Discord and FPS ready.
+  The display alone was in `error`: `needReSend:1|renderCnt:0`, two recovery attempts
+  exhausted, six earlier recoveries and 476 acknowledged frames. Last successful
+  acknowledgement was 10:40:52 UTC; logs identified a partial frame (counter 31)
+  as the final rejected transfer. No process crash was observed; stderr was empty.
+- Preserved a minimal incident snapshot in the private runtime directory, then
+  explicitly reconnected COM5 through the existing identity-checked API. Agent
+  and PresentMon processes remained unchanged. The display initially resumed,
+  requested another resend around frame 21, and recovered after the existing
+  full-resend then port-reinitialization sequence. At 10:53:29 UTC, 71 frames had
+  been acknowledged on the new connection and state continued updating.
+- Reconnection restores output but does not resolve the intermittent partial-frame
+  rejection. The underlying cause is not established. No firmware, verified
+  full-frame command, retry budget, user configuration or credentials were changed.
+  Longer physical stability and root-cause isolation remain open.
