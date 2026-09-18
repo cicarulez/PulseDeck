@@ -7,6 +7,21 @@ using Xunit;
 public class RendererTests
 {
     [Fact]
+    public void MusicRamShowsOnlyPercentageWhileDesktopKeepsCapacity()
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig { Layout = "weather" };
+        config.Widgets[2] = new("bar3", "metric", "ram.load", "", "", "RAM", Style: "ring");
+        config.Widgets[7] = config.Widgets[7] with { Source = "none" };
+        var media = new MediaSnapshot(true, "Synthetic track", "Artist", "Spotify.exe", 2, 180, "connected");
+        var hardware = new HardwareSnapshot([new("ram.load", "RAM", 50, "%"), new("ram.total", "Total", 64, "GiB"), new("ram.used", "Used", 32, "GiB")], "connected");
+        var otherHardware = new HardwareSnapshot([new("ram.load", "RAM", 50, "%"), new("ram.total", "Total", 32, "GiB"), new("ram.used", "Used", 16, "GiB")], "connected");
+        var state = State with { Profile = "music", Media = media, Hardware = hardware, Lyrics = new("loading", SpotifyLyrics.Key(media)) };
+        Assert.Equal(renderer.Render(state, config).Pixels, renderer.Render(state with { Hardware = otherHardware }, config).Pixels);
+        Assert.NotEqual(renderer.Render(state with { Profile = "desktop" }, config).Pixels,
+            renderer.Render(state with { Profile = "desktop", Hardware = otherHardware }, config).Pixels);
+    }
+    [Fact]
     public void MusicUsesThreeRowsOfThreeSensorCards()
     {
         using var renderer = new DeckRenderer();

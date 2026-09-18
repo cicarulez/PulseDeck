@@ -180,7 +180,9 @@ public sealed class DeckRenderer : IDisposable
                 }
                 else Text("—", x + (compact ? 20 : 31), y + 47, 18, muted);
                 Text(widget.Label, textX, y + 20, 13, muted, maxWidth: textWidth);
-                if (widget.Unit == "%" && widget.Capacity is { } ramTotal && widget.Used is { } ramUsed)
+                if (compact && widget.Unit == "%")
+                    ValueText(widget, textX, y + 58, 26, textWidth);
+                else if (widget.Unit == "%" && widget.Capacity is { } ramTotal && widget.Used is { } ramUsed)
                 {
                     ValueText(widget, textX, y + 47, compact ? 24 : 26, textWidth);
                     Text($"{ramUsed:0.#} / {ramTotal:0.#} GiB", compact ? x + 12 : textX, y + (compact ? 72 : 68), compact ? 14 : 17, muted, maxWidth: compact ? cellWidth - 24 : textWidth);

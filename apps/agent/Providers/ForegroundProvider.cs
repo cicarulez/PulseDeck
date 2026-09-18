@@ -12,6 +12,7 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
 {
     private sealed record Entry(string Name, ApplicationIcon? Icon, DateTimeOffset Expires);
     private readonly Dictionary<string, Entry> cache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly TerminalIcon terminalIcon = new();
     public ApplicationIcon? Icon { get; private set; }
 
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
@@ -70,7 +71,7 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
                     if (!cache.ContainsKey(path) && cache.Count >= 32) cache.Remove(cache.Keys.First());
                     cache[path] = entry;
                 }
-                Icon = entry.Icon;
+                Icon = terminalTitle is null ? entry.Icon : terminalIcon.Read(path, terminalTitle) ?? entry.Icon;
                 return snapshot with { DisplayName = terminalTitle ?? discovered?.Name ?? installed?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
             }
             catch { return snapshot; } // Restricted processes still keep their actual process name.

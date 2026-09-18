@@ -1492,3 +1492,33 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   of the executable description. Longer titles retain the header's ellipsis.
   A controlled tab-switch sequence and physical readability feedback from the
   user remain unverified; no foreground or playback controls were sent.
+
+## Music RAM percentage and WSL icon — 2026-09-18 (0.7.3)
+
+- Music's narrow RAM ring now shows only its percentage, aligned with CPU/GPU;
+  wider cards retain used/total capacity. A pixel regression verifies that changing
+  capacity at a fixed percentage affects Desktop but leaves Music unchanged.
+- For Windows Terminal titles explicitly beginning with `WSL` followed by a word
+  boundary (space, colon or dash), use the installed Terminal Linux/Tux PNG from
+  `ProfileIcons`. This is a title convention, not selected-profile introspection;
+  arbitrary renamed tabs and custom profile icons are not resolved. Non-WSL titles
+  and absent/unreadable assets fall back to the existing executable icon.
+  No Terminal assets are copied into the repository or distributed with PulseDeck.
+- An actual UI Automation probe exposed the selected tab title but no profile ID
+  or icon. The signed-in user's Terminal installation includes the Linux asset in
+  scale-100 and scale-200 variants. Reads are size-limited and cached; every title
+  is checked before returning the cache to avoid retaining Tux on other tabs.
+- All 22 renderer/provider tests passed, including title boundary, tab fallback,
+  missing asset and Music-only RAM regressions. Angular production build and
+  self-contained Windows publish passed.
+- Deployed 0.7.3 with backup
+  `%LOCALAPPDATA%\PulseDeck\before-terminal-073-20260918-115844`; configuration,
+  Discord and SteamGridDB credentials preserved. COM5 acknowledged frames with
+  verified device identity and no transport errors. Live state was Desktop with
+  PowerShell foreground, correctly retaining its native icon.
+- A separate Windows harness loaded the installed Tux PNG using the production
+  resolver, verified non-WSL fallback and rendered a synthetic Music preview with
+  the production renderer. Visual inspection confirmed Tux next to the full
+  example tab title and RAM with only a percentage, aligned with CPU/GPU. No
+  synthetic readings were sent to the display. Live Spotify/Terminal confirmation
+  remains pending; no user windows or playback were manipulated.

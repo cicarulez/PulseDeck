@@ -10,5 +10,6 @@
     <Compile Include="../../apps/agent/Rendering/*.cs" Link="Rendering/%(Filename)%(Extension)" />
     <Compile Include="../../apps/agent/Providers/MediaArtwork.cs" Link="MediaArtwork.cs" />
     <Compile Include="../../apps/agent/Providers/ApplicationIcon.cs" Link="ApplicationIcon.cs" />
+    <Compile Include="../../apps/agent/Providers/TerminalIcon.cs" Link="TerminalIcon.cs" />
   </ItemGroup>
 </Project>
