@@ -1836,5 +1836,29 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   to idle, selecting the expanded roster. Display acknowledgements advanced from
   31 to 105 with connected status throughout, and FPS collection remained ready.
   No member IDs, names, audio or shared-screen content were included in the monitor.
-  Live game-to-desktop switching, channel departure/re-entry and the user's final
-  visual confirmation were not observed during this interval.
+  Live game-to-desktop switching and channel departure/re-entry were not observed
+  during this interval. The user subsequently confirmed speaking, streaming and
+  remaining connected through Alt-Tab.
+
+## Restore the split panel after leaving Discord — 2026-09-18 (0.7.10)
+
+- Desktop expands Discord only when the tracked user is present in the connected
+  roster and no media session is connected. On departure, restore the small
+  roster plus Media Session, including its explicit empty placeholder. Other
+  participants remaining in the channel do not keep it expanded. Without a
+  tracked ID, a nonempty connected roster controls expansion. Disconnected/stale
+  roster state cannot keep the expanded layout.
+- 37 renderer/provider tests passed, including departure with others remaining,
+  a stale tracked snapshot, disconnected status, empty/unconfigured rosters and
+  return to the channel across Compact, Weather and Classic. Angular production
+  build and self-contained Windows publish passed.
+- Before deployment, the live 0.7.9 state already showed the tracked user absent
+  and voice inactive, confirming the existing voice policy had disengaged without
+  depending on profile. No voice lifecycle changes were needed for this release.
+- Deployed after the previous agent/task exited; backup:
+  `%LOCALAPPDATA%\PulseDeck\before-discord-0710-20260918-234154`.
+  Configuration and Discord/SteamGridDB credential hashes were preserved.
+  The 0.7.10 agent verified COM5 and resumed full/partial acknowledgements. The
+  follow-up state showed Desktop, tracked user absent, voice inactive and media
+  idle (the split-panel condition), with 13 acknowledged frames and FPS ready.
+  The physical panel's final appearance still awaits user confirmation.

@@ -314,7 +314,9 @@ public sealed class DeckRenderer : IDisposable
                 Text("Vento " + Number(weather.WindSpeed, " km/h"), 48, 397, 20, maxWidth: 300);
             }
         }
-        var expandDesktopDiscord = state.Profile == "desktop" && state.Media.Status != "connected";
+        var discordPresent = state.Discord.Status == "connected" && state.Discord.Members.Any(member =>
+            string.IsNullOrWhiteSpace(config.TrackedMemberId) || member.Id == config.TrackedMemberId);
+        var expandDesktopDiscord = state.Profile == "desktop" && discordPresent && state.Media.Status != "connected";
         void Compact(bool gaming)
         {
             var weatherLayout = config.Layout == "weather";

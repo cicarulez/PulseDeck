@@ -10,6 +10,31 @@ public class RendererTests
     [InlineData("compact")]
     [InlineData("weather")]
     [InlineData("classic")]
+    public void LeavingDiscordRestoresEmptyMediaEvenWhenOthersRemain(string layout)
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig { Layout = layout, TrackedMemberId = "me" };
+        var me = new VoiceMember("me", "Tracked participant", false, false);
+        var other = new VoiceMember("other", "Other participant", false, false);
+        var state = State with { Media = new(false, "", "", "", 0, 0, "idle"), Discord = new([], null, "connected") };
+        byte[] MediaArea(DeckState snapshot, DeckConfig settings) => renderer.Render(snapshot, settings).Pixels
+            .Skip(1920 * 90 * 4).Take(1920 * 200 * 4).Chunk(1920 * 4)
+            .SelectMany(row => row.Skip(1410 * 4).Take(465 * 4)).ToArray();
+        var empty = MediaArea(state, config);
+        var inside = state with { Discord = new([me, other], me, "connected") };
+        Assert.NotEqual(empty, MediaArea(inside, config));
+        // A stale Tracked object must not keep the roster expanded after departure.
+        Assert.Equal(empty, MediaArea(state with { Discord = new([other], me, "connected") }, config));
+        Assert.Equal(empty, MediaArea(inside with { Discord = inside.Discord with { Status = "offline" } }, config));
+        Assert.Equal(empty, MediaArea(state, config with { TrackedMemberId = "" }));
+        Assert.NotEqual(empty, MediaArea(state with { Discord = new([other], null, "connected") }, config with { TrackedMemberId = "" }));
+        Assert.NotEqual(empty, MediaArea(inside, config)); // Returning expands again.
+    }
+
+    [Theory]
+    [InlineData("compact")]
+    [InlineData("weather")]
+    [InlineData("classic")]
     public void DesktopUsesMediaSpaceForEightDiscordMembersAndRestoresPausedMedia(string layout)
     {
         using var renderer = new DeckRenderer();
