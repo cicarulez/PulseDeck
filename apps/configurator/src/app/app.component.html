@@ -30,6 +30,6 @@
     } @else {
       @if (deck.config(); as config) { <pd-settings [newsState]="deck.state()?.news ?? null" [config]="config" [busy]="deck.busy()" (save)="save($event)" /> }
     }
-    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.6.0 · Windows</span></footer>
+    <footer><span>PULSEDECK / LOCAL DISPLAY ENGINE</span><button class="button" [disabled]="!deck.connected()" (click)="deck.stop()">Arresta PulseDeck</button><span>v0.7.0 · Windows</span></footer>
   </main>
 </div>

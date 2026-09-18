@@ -16,6 +16,7 @@ public sealed record DeckConfig
     public string Layout { get; init; } = "compact";
     public WeatherLocation? WeatherLocation { get; init; }
     public NewsOptions News { get; init; } = new();
+    public bool SpotifyLyrics { get; init; } = true;
     public bool GamingLayout { get; init; } = true;
     public bool GamingVoiceActivity { get; init; } = true;
     public GameTheme[] GameThemes { get; init; } = [];
@@ -58,6 +59,7 @@ public sealed record MediaSnapshot(bool Playing, string Title, string Artist, st
 {
     public string? ArtworkId { get; init; }
     public string Source { get; init; } = "windows";
+    public string Album { get; init; } = "";
 }
 public sealed record ForegroundSnapshot(int ProcessId, string ProcessName, string DisplayName, bool IsGame, string? IconId, string IconStatus)
 {
@@ -94,4 +96,5 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
     public VolumeSnapshot Volume { get; init; } = new();
     public WeatherSnapshot Weather { get; init; } = new();
     public NewsSnapshot News { get; init; } = new();
+    public LyricsSnapshot Lyrics { get; init; } = new();
 }

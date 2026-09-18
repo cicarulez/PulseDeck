@@ -1373,3 +1373,59 @@ API reference: [official SteamGridDB client](https://github.com/SteamGridDB/node
   endpoint returned a decodable 160×90 Battlefield 6 JPEG (6,258 bytes); unknown ID
   returned 404. At the check, display connected with 11 acknowledged frames and no
   error, SteamGridDB configured and FPS `ready`. No game was launched by the agent.
+
+## Spotify lyrics, Discord header and motherboard recovery — 2026-09-18 (0.7.0)
+
+- Added LRCLIB fetching only for the selected Windows Spotify session in Music.
+  Match title, artist and duration (within two seconds); propagate album metadata.
+  Requests are serialized with a short delay, bounded response/time limits,
+  `Retry-After` handling, a 30-day local successful-response cache and a short
+  in-memory negative cache. Track/source/profile changes clear prior lyrics.
+- Dedicated Spotify composition shows cover, previous/current/next timed lines
+  and six configured widgets. Unsynchronized text is paginated every 15 seconds
+  and explicitly labelled. Missing/instrumental/unavailable results retain the
+  usual layout with a status. Existing automatic profile rules still apply on
+  pause; forced Music can show a stationary timed line while paused. No Spotify
+  credentials or audio are read. Current display cadence is approximately 1 Hz.
+- Header nickname/mute/deaf is now omitted when the configured user is absent
+  from the connected roster, including a disconnected Discord provider and stale
+  Tracked snapshots. Volume and clock are unaffected.
+- Before restarting, captured the reported fan failure: admin and PawnIO true,
+  hardware generally connected with no detail, only two GPU fan readings and no
+  motherboard sensor readings at all. Widget still bound to
+  `/lpc/nct6799d/0/fan/1`, name `Fan #2`, user label `VENTOLA CPU`.
+  Physical fan-header mapping is not newly verified by this investigation.
+- Added a motherboard-group-only reinitialization after 30 seconds of missing
+  configured LPC readings, at most three attempts with 60/120-second delays.
+  Valid zero RPM never triggers it; a minute of healthy readings resets the budget.
+  No fan control, RGB control, full agent restart or FPS trace restart is performed
+  by this recovery. The original enumeration failure's cause remains unknown.
+- 118 Core and 18 renderer tests passed. Regressions cover Spotify identity,
+  stale-track clearing, timestamp parsing/offsets, seeks/gaps, duration mismatch,
+  profile isolation, header clearing and bounded sensor recovery. Initial parallel
+  builds caused a retried file-copy warning; subsequent sequential checks passed.
+  Angular build passed on Node 24.15 after the installed Node 24.13 was rejected.
+- Windows synthetic harness verified Spotify-only requests, cache across provider
+  instances, no refetch on pause, source/track clearing and honoring a mocked 429
+  Retry-After across different tracks. Inspected a synthetic renderer preview.
+  Isolated Chromium verified the settings toggle saves, zero Angular errors and
+  no overflow at 390 px. No synthetic readings were sent to the physical panel.
+- First deployment preflight stopped on a missing PowerShell module autoload before
+  stopping the agent or replacing files. Explicitly imported the standard Windows
+  modules and reran. Deployed 0.7.0 with backup
+  `%LOCALAPPDATA%\PulseDeck\before-music-070-20260918-103619`, preserving config and
+  Discord/SteamGridDB credential hashes and the interactive startup task.
+- Live Spotify reported ANEMA E CORE / Serena Brancale, duration 166.611 seconds,
+  LRCLIB status `synced` with 68 timed entries at position 23.7 seconds. COM5 was
+  connected without error; PresentMon `ready`. Tracked Discord user absent.
+  Motherboard readings returned on restart, with Fan #2 approximately 837 RPM.
+  This is not a live validation of the new automatic reinitialization path;
+  that path's outage/retry policy is tested synthetically and awaits a recurrence.
+
+Sources: [LRCLIB API](https://lrclib.net/docs),
+[LibreHardwareMonitor motherboard group lifecycle](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/Computer.cs).
+- A nine-second live observation saw playback progress 80.7 → 89.7 seconds and
+  selected lyric indices 28 → 29 → 31 → 32. Fan #2 stayed readable (about 797–833
+  RPM); no display errors. No audio was captured; perceptual lyric alignment,
+  live pause/seek behavior and a natural recurrence of the sensor loss still
+  require observation. Automated tests cover pause/seek selection and retry policy.

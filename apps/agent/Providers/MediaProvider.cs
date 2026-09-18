@@ -48,7 +48,7 @@ public sealed class MediaProvider(BrowserMediaStore browser, IHttpClientFactory 
             if (playing) position += Math.Max(0, (DateTimeOffset.Now - timeline.LastUpdatedTime).TotalSeconds) * (playback.PlaybackRate ?? 1);
             if (duration > 0) position = Math.Min(position, duration);
             return new(playing, metadata.Title, metadata.Artist, session.SourceAppUserModelId, position, duration, "connected")
-                { ArtworkId = artwork.Current?.Id };
+                { ArtworkId = artwork.Current?.Id, Album = metadata.AlbumTitle };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch

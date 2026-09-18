@@ -475,3 +475,35 @@ Ogni voce del catalogo mostra una miniatura della copertina, caricata solo quand
 si avvicina all'area visibile. Riusa la cache immagini SteamGridDB/Steam del display,
 con al massimo due download contemporanei e un segnaposto se manca una copertina.
 Le miniature JPEG sono ridotte a 160×90; non vengono aggiunte immagini al repository.
+
+### Testi Spotify e layout Musica (0.7.0)
+
+Il profilo Musica può mostrare copertina, testi e sei widget. La funzione è attiva
+solo quando la sessione multimediale selezionata è l'app Spotify Windows; non si
+attiva per YouTube, browser, altri player o nel profilo Gaming. In Configurazione
+→ Display e aspetto, **Testi nel profilo Musica** permette di disabilitarla.
+
+PulseDeck cerca su [LRCLIB](https://lrclib.net/docs) usando titolo, artista, album
+(se disponibile) e durata, senza inviare audio o credenziali Spotify. Verifica
+titolo, artista e durata prima di accettare il risultato. I testi sincronizzati
+seguono la posizione Windows, anche dopo un salto nel brano; l'aggiornamento resta
+quello del display, circa una volta al secondo. I testi senza timestamp vengono
+mostrati in pagine ogni 15 secondi, indicate come non sincronizzate. Se mancano,
+il pannello abituale resta visibile con lo stato della ricerca. In automatico,
+la pausa segue le normali regole del profilo e può riportare al Desktop; forzando
+Musica, la riga sincronizzata rimane ferma alla posizione del player in pausa.
+
+Cache locale per 30 giorni sotto `%LOCALAPPDATA%\PulseDeck\lyrics`, richieste
+serializzate e gestione di `Retry-After`. Cambio traccia, sorgente o profilo
+cancellano subito il testo precedente. Copertura e precisione dipendono dal
+catalogo LRCLIB e dalla versione esatta della registrazione.
+
+Il nickname e lo stato microfono nell'header sono ora visibili solo se l'utente
+configurato è presente nel canale Discord collegato. Volume e orologio rimangono.
+
+Quando mancano per almeno 30 secondi sensori LPC configurati nei widget, con PawnIO
+installato e privilegi amministrativi, PulseDeck reinizializza solo il gruppo
+scheda madre: massimo tre tentativi, con attese di 60 e 120 secondi. Zero RPM è
+valido e non causa recupero. Dopo un minuto di letture sane il limite si ripristina.
+Non modifica curve delle ventole o impostazioni RGB; il dettaglio hardware segnala
+le letture mancanti e l'esaurimento dei tentativi.

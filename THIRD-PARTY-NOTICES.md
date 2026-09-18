@@ -75,3 +75,10 @@ covers and heroes remain owned by their respective rights holders/contributors;
 images are cached in the user's data directory and are not redistributed with
 PulseDeck. API documentation: https://www.steamgriddb.com/api/v2 . No third-party
 SteamGridDB client library or database is bundled.
+
+## LRCLIB lyrics
+
+Optional Spotify lyrics are retrieved at runtime from https://lrclib.net/ and
+attributed on the display. Lyrics remain the content of their respective right
+holders; no downloaded lyrics are bundled in the application or repository.
+Tests use original synthetic text. API documentation: https://lrclib.net/docs.

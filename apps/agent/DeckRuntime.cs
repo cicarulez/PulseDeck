@@ -10,7 +10,7 @@ namespace PulseDeck.Agent;
 public sealed class DeckHub : Hub;
 
 public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, MediaProvider media,
-    DiscordProvider discord, EmbeddedDiscordService embeddedDiscord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
+    DiscordProvider discord, EmbeddedDiscordService embeddedDiscord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, LyricsProvider lyrics, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
     ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly ProfileSelector selector = new();
@@ -46,6 +46,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                         hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status, frameRate.Status)
                         { Foreground = active, Game = game, GameSession = session, Fps = frameRate, Volume = volume.Read(),
                             GameArtwork = gameArtwork.Read(game, stoppingToken),
+                            Lyrics = lyrics.Read(mediaTask.Result, profile, settings.SpotifyLyrics, stoppingToken),
                             News = news.Read(settings.News, stoppingToken),
                             Weather = weather.Read(settings.WeatherLocation, settings.Layout == "weather", stoppingToken) };
                     var rendered = renderer.Render(next, settings, media.Artwork, foreground.Icon);

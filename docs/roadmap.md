@@ -745,3 +745,20 @@ il lavoro da riprendere, senza avviare implementazioni o prove Aura.
 - Completamento: osservare cambi di colore reali, convivenza con Armoury Crate,
   avvio/riavvio e indisponibilità della sorgente. La presenza dei servizi ASUS o
   un getter SDK funzionante non basta a dimostrare la lettura dell'effetto attivo.
+
+## Musica Spotify con testi e letture ventole (0.7.0)
+
+Avviata su richiesta l'implementazione della disposizione Musica: per la sola
+sessione Spotify selezionata, copertina a sinistra, testo al centro e sei widget
+a destra. Testi da LRCLIB, sincronizzati se disponibili; altrimenti pagine statiche
+non sincronizzate. Senza testo resta la disposizione abituale. Gli altri player
+e Gaming mantengono i rispettivi layout. Opzione nel configuratore e cache locale.
+Il backlog Musica resta valido per ulteriori personalizzazioni e per altri player;
+Aura rimane un'attività futura, non coinvolta in questa versione.
+
+Su ulteriore richiesta, header Discord nascosto se l'utente configurato non è
+nel canale. Indagata anche l'assenza di Fan #2: nella sessione guasta mancavano
+tutti i sensori della scheda madre, con PawnIO presente e agent amministratore.
+Aggiunto recupero limitato del gruppo scheda madre quando mancano sensori LPC
+configurati; la causa iniziale resta da accertare, senza attribuirla a una
+ventola fisicamente ferma. Dettagli delle verifiche in `docs/validation.md`.

@@ -16,7 +16,7 @@ export interface DeckConfig {
   widgets: WidgetConfig[];
   layout: 'classic' | 'compact' | 'weather';
   weatherLocation: WeatherLocation | null; news: NewsOptions;
-  gamingLayout: boolean; gamingVoiceActivity: boolean; gameThemes: GameTheme[];
+  spotifyLyrics: boolean; gamingLayout: boolean; gamingVoiceActivity: boolean; gameThemes: GameTheme[];
   schemaVersion: number; profileMode: string; gameProcesses: string[]; profileDelaySeconds: number;
   discordMode: string; discordBaseUrl: string; trackedMemberId: string; displayPort: string; backgroundPath: string; accentColor: string;
 }

@@ -6,6 +6,31 @@ using Xunit;
 
 public class RendererTests
 {
+    [Fact]
+    public void SpotifyLyricsAreIsolatedAndDiscordHeaderDisappearsOutsideRoster()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Synthetic track", "Synthetic artist", "Spotify.exe", 3, 180, "connected");
+        var lyrics = new LyricsSnapshot("synced", SpotifyLyrics.Key(media), [new(1,"Invented opening line"), new(4,"Invented second line")]);
+        var config = new DeckConfig { Layout = "weather", TrackedMemberId = "me" };
+        var state = State with { Profile = "music", Media = media };
+        var baseline = renderer.Render(state, config);
+        var withLyrics = renderer.Render(state with { Lyrics = lyrics }, config);
+        Assert.NotEqual(baseline.Pixels, withLyrics.Pixels);
+        Assert.Equal(renderer.Render(state, config with { SpotifyLyrics = false }).Pixels,
+            renderer.Render(state with { Lyrics = lyrics }, config with { SpotifyLyrics = false }).Pixels);
+        var other = state with { Media = media with { App = "chrome.exe" } };
+        Assert.Equal(renderer.Render(other, config).Pixels, renderer.Render(other with { Lyrics = lyrics }, config).Pixels);
+        var stale = state with { Media = media with { Title = "Another track" } };
+        Assert.Equal(renderer.Render(stale, config).Pixels, renderer.Render(stale with { Lyrics = lyrics }, config).Pixels);
+        var inside = state with { Discord = new([new("me","Tester",false,false)],null,"connected") };
+        var on = renderer.Render(inside, config);
+        Assert.NotEqual(baseline.Pixels, on.Pixels);
+        var outside = renderer.Render(state with { Discord = new([],new("me","Stale",false,false),"connected") }, config);
+        for (var y = 10; y < 56; y++) Assert.True(baseline.Pixels.AsSpan((y*1920+1180)*4,340*4).SequenceEqual(outside.Pixels.AsSpan((y*1920+1180)*4,340*4)));
+        var advanced = renderer.Render(state with { Lyrics = lyrics, Media = media with { PositionSeconds = 5 } }, config);
+        Assert.NotEqual(withLyrics.Pixels, advanced.Pixels);
+    }
     [Theory]
     [InlineData("weather")]
     [InlineData("compact")]

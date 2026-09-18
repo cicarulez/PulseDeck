@@ -137,6 +137,8 @@ public sealed class DeckRenderer : IDisposable
             Text(available ? state.Media.Playing ? "IN RIPRODUZIONE" : "IN PAUSA" : "INATTIVO", textX, y + 115, 13, state.Media.Playing ? accent : muted, maxWidth: textWidth);
             string Time(double seconds) => TimeSpan.FromSeconds(Math.Clamp(double.IsFinite(seconds) ? seconds : 0, 0, 359999)).ToString(seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
             Text(available && state.Media.DurationSeconds > 0 ? $"{Time(state.Media.PositionSeconds)} / {Time(state.Media.DurationSeconds)}" : "— / —", textX, y + 144, 20, maxWidth: textWidth);
+            if (config.SpotifyLyrics && state.Profile == "music" && SpotifyLyrics.IsSpotify(state.Media))
+                Text(state.Lyrics.Status switch { "loading" => "Ricerca testo…", "instrumental" => "Brano strumentale", "not-found" => "Testo non trovato", _ => "Testo non disponibile" }, x, y + 185, 12, muted, maxWidth: width);
             canvas.DrawLine(x, y + 166, x + width, y + 166, line);
             if (available && state.Media.DurationSeconds > 0)
                 canvas.DrawRect(x, y + 164, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * width, 4, accentPaint);
@@ -325,9 +327,57 @@ public sealed class DeckRenderer : IDisposable
             Text(state.Hardware.Status == "connected" ? "SENSORI LIVE" : "SENSORI NON DISPONIBILI", 920, 469, 13, muted, maxWidth: 400);
 
         }
+        void SpotifyPanel()
+        {
+            Cover(64, 90, 240);
+            Text(state.Media.Title, 48, 367, 25, heavy: true, maxWidth: 290, minimumSize: 19);
+            Text(state.Media.Artist, 48, 400, 20, muted, maxWidth: 290);
+            Text(state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", 48, 430, 12, accent, maxWidth: 290);
+            canvas.DrawLine(354, 90, 354, 435, line);
+            canvas.DrawLine(1340, 90, 1340, 435, line);
+            for (var i = 0; i < 6; i++) WidgetCard(i, 1364 + i % 2 * 268, 100 + i / 2 * 106, 256);
+            const float x = 388, width = 920;
+            List<string> Wrap(string value, float size)
+            {
+                using var font = new SKFont(bold, size);
+                var rows = new List<string>(); var row = "";
+                foreach (var word in value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var next = row.Length == 0 ? word : row + " " + word;
+                    if (row.Length > 0 && font.MeasureText(next) > width) { rows.Add(row); row = word; }
+                    else row = next;
+                }
+                if (row.Length > 0) rows.Add(row);
+                return rows;
+            }
+            if (state.Lyrics.Status == "synced" && state.Lyrics.Lines is { } lines)
+            {
+                Text("TESTO SINCRONIZZATO", x, 115, 15, accent, true);
+                var index = state.Lyrics.CurrentLine(state.Media.PositionSeconds);
+                if (index > 0) Text(lines[index - 1].Text, x, 174, 23, muted, maxWidth: width);
+                var current = index >= 0 ? lines[index].Text : "";
+                var wrapped = Wrap(current.Length == 0 ? "♪" : current, 38);
+                for (var i = 0; i < Math.Min(2, wrapped.Count); i++) Text(wrapped[i] + (i == 1 && wrapped.Count > 2 ? " …" : ""), x, 247 + i * 48, 38, accent, true, width);
+                if (index + 1 < lines.Length) Text(lines[index + 1].Text, x, 353, 23, muted, maxWidth: width);
+            }
+            else
+            {
+                var rows = (state.Lyrics.PlainText ?? "").Split('\n').SelectMany(row => Wrap(row.Trim(), 26)).ToArray();
+                var pages = Math.Max(1, (rows.Length + 5) / 6);
+                var page = (int)(state.Timestamp.ToUnixTimeSeconds() / 15 % pages);
+                Text($"TESTO NON SINCRONIZZATO · {page + 1}/{pages}", x, 115, 15, muted);
+                for (var i = 0; i < 6 && page * 6 + i < rows.Length; i++) Text(rows[page * 6 + i], x, 163 + i * 36, 26, maxWidth: width);
+            }
+            canvas.DrawLine(x, 401, x + width, 401, line);
+            canvas.DrawRect(x, 399, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * width, 4, accentPaint);
+            Text(TimeSpan.FromSeconds(Math.Clamp(state.Media.PositionSeconds, 0, 3600)).ToString(@"m\:ss") + " / "
+                + TimeSpan.FromSeconds(state.Media.DurationSeconds).ToString(@"m\:ss"), x, 430, 18, muted);
+            Text("Testi: LRCLIB", x + width - 140, 430, 15, muted, maxWidth: 140);
+        }
         void VoiceHeader()
         {
             var voice = TrackedVoiceHeader.Resolve(state.Discord, config.TrackedMemberId);
+            if (voice.Muted is null) return;
             var color = voice.Muted is null ? muted : voice.Muted == true || voice.Deaf ? new SKColor(255, 146, 131) : accent;
             using var panel = new SKPaint { Color = new SKColor(12, 24, 28, 220), IsAntialias = true };
             canvas.DrawRoundRect(SKRect.Create(1180, 10, 340, 46), 7, 7, panel);
@@ -346,7 +396,8 @@ public sealed class DeckRenderer : IDisposable
             1550, 41, 21, volume.Muted ? new SKColor(255, 146, 131) : muted, maxWidth: 180);
         canvas.DrawLine(32, 66, 1888, 66, line);
         var gaming = config.GamingLayout && state.Profile == "gaming";
-        if (gaming || config.Layout is "compact" or "weather") Compact(gaming);
+        if (SpotifyLyrics.Show(state, config)) SpotifyPanel();
+        else if (gaming || config.Layout is "compact" or "weather") Compact(gaming);
         else
         {
         canvas.DrawLine(310, 90, 310, 446, line);
