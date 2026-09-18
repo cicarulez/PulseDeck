@@ -11,7 +11,7 @@ public sealed class DeckHub : Hub;
 
 public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, MediaProvider media,
     DiscordProvider discord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, LyricsProvider lyrics, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
-    ILogger<DeckRuntime> logger) : BackgroundService
+    CalendarFeed calendar, CalendarCredentials calendarCredentials, ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly ProfileSelector selector = new();
     private readonly GameSceneSelector gameSelector = new();
@@ -48,6 +48,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                             Lyrics = lyrics.Read(mediaTask.Result, profile, settings.SpotifyLyrics, stoppingToken),
                             SpotifyTransition = selector.SpotifyTransition,
                             News = news.Read(settings.News, stoppingToken),
+                            Calendar = calendar.Read(settings.Calendar, calendarCredentials.Read(), stoppingToken),
                             Weather = weather.Read(settings.WeatherLocation, settings.Layout == "weather", stoppingToken) };
                     var rendered = renderer.Render(next, settings, media.Artwork, foreground.Icon);
                     Preview = rendered.Png;

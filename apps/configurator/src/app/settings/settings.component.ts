@@ -1,14 +1,17 @@
 import { Component, effect, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DeckConfig, NewsSnapshot } from '../models';
+import { DeckConfig, NewsSnapshot, CalendarSnapshot } from '../models';
 import { NewsSettingsComponent } from './news-settings.component';
 import { WeatherSettingsComponent } from './weather-settings.component';
 import { GameDiscoveryComponent } from './game-discovery.component';
 import { SteamGridComponent } from './steam-grid.component';
+import { CalendarSettingsComponent } from './calendar-settings.component';
+import { DiscordSettingsComponent } from './discord-settings.component';
 import { GameThemesComponent } from './game-themes.component';
 
-@Component({ selector: 'pd-settings', standalone: true, imports: [FormsModule, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
+@Component({ selector: 'pd-settings', standalone: true, imports: [FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
 export class SettingsComponent {
+  calendarState = input<CalendarSnapshot | null>(null);
   newsState = input<NewsSnapshot | null>(null);
   config = input.required<DeckConfig>(); busy = input(false); save = output<DeckConfig>();
   draft!: DeckConfig; processes = ''; discoveredProcesses: string[] = [];

@@ -10,6 +10,49 @@ public class RendererTests
     [InlineData("compact")]
     [InlineData("weather")]
     [InlineData("classic")]
+    public void CalendarUsesOnlyEmptyDesktopMediaAndHonorsTitlePrivacy(string layout)
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig { Layout = layout, TrackedMemberId = "me" };
+        var state = State with { Media = new(false,"","","",0,0,"idle"),
+            Calendar = new("connected", [new("Synthetic appointment", State.Timestamp.AddMinutes(5), State.Timestamp.AddHours(1), false)], State.Timestamp) };
+        var calendar = renderer.Render(state, config);
+        var altered = state with { Calendar = state.Calendar with { Events = [state.Calendar.Events![0] with { Title = "Different appointment" }] } };
+        Assert.NotEqual(calendar.Pixels, renderer.Render(altered, config).Pixels);
+        var hidden = config with { Calendar = new() { HideTitles = true } };
+        Assert.Equal(renderer.Render(state, hidden).Pixels, renderer.Render(altered, hidden).Pixels);
+        var disabled = config with { Calendar = new() { Enabled = false } };
+        Assert.Equal(renderer.Render(state, disabled).Pixels, renderer.Render(altered, disabled).Pixels);
+        foreach (var profile in new[] { "gaming", "music" })
+            Assert.Equal(renderer.Render(state with { Profile = profile }, config).Pixels, renderer.Render(altered with { Profile = profile }, config).Pixels);
+        var paused = State.Media with { Playing = false };
+        Assert.Equal(renderer.Render(state with { Media = paused }, config).Pixels, renderer.Render(altered with { Media = paused }, config).Pixels);
+        var unavailable = state with { Calendar = state.Calendar with { Status = "unavailable" } };
+        Assert.Equal(renderer.Render(unavailable, config).Pixels, renderer.Render(unavailable with { Calendar = new("unavailable") }, config).Pixels);
+        var inVoice = new DiscordSnapshot([new("me","Test user",false,false)], null,"connected");
+        Assert.Equal(renderer.Render(state with { Discord = inVoice }, config).Pixels, renderer.Render(altered with { Discord = inVoice }, config).Pixels);
+    }
+
+    [Fact]
+    public void DiscordServerAndChannelOnlyChangeTheRosterHeader()
+    {
+        using var renderer = new DeckRenderer();
+        var state = State with { Discord = State.Discord with { ServerName = "Synthetic server", ChannelName = "Lobby" } };
+        var config = new DeckConfig { Layout = "weather" };
+        var before = renderer.Render(state, config);
+        var after = renderer.Render(state with { Discord = state.Discord with { ServerName = "Another server", ChannelName = "Another channel" } }, config);
+        Assert.NotEqual(before.Pixels, after.Pixels);
+        for (var y = 0; y < 480; y++)
+        {
+            if (y < 296 || y > 330) Assert.True(before.Pixels.AsSpan(y * 1920 * 4, 1920 * 4).SequenceEqual(after.Pixels.AsSpan(y * 1920 * 4, 1920 * 4)));
+            Assert.True(before.Pixels.AsSpan(y * 1920 * 4, 1352 * 4).SequenceEqual(after.Pixels.AsSpan(y * 1920 * 4, 1352 * 4)));
+        }
+    }
+
+    [Theory]
+    [InlineData("compact")]
+    [InlineData("weather")]
+    [InlineData("classic")]
     public void LeavingDiscordRestoresEmptyMediaEvenWhenOthersRemain(string layout)
     {
         using var renderer = new DeckRenderer();

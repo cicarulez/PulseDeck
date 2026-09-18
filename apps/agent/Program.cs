@@ -17,7 +17,7 @@ builder.Services.AddHttpClient("youtube-artwork", client =>
     { client.Timeout = TimeSpan.FromSeconds(1); client.MaxResponseContentBufferSize = MediaArtwork.MaximumBytes; })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 builder.Services.AddSingleton<MediaProvider>();
-builder.Services.AddHttpClient("lyrics", client => { client.Timeout = TimeSpan.FromSeconds(8); client.MaxResponseContentBufferSize = 256 * 1024; client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.7.10"); })
+builder.Services.AddHttpClient("lyrics", client => { client.Timeout = TimeSpan.FromSeconds(8); client.MaxResponseContentBufferSize = 256 * 1024; client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.8.0"); })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 builder.Services.AddSingleton(p => new LyricsProvider(p.GetRequiredService<IHttpClientFactory>().CreateClient("lyrics"), p.GetRequiredService<ConfigStore>()));
 builder.Services.AddSingleton<InstalledGameCatalog>();
@@ -36,9 +36,14 @@ builder.Services.AddHttpClient("game-artwork", client => { client.Timeout = Time
 builder.Services.AddSingleton(provider => new GameArtworkProvider(provider.GetRequiredService<IHttpClientFactory>().CreateClient("game-artwork"), provider.GetRequiredService<ConfigStore>(), provider.GetRequiredService<SteamGridArtwork>()));
 builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });
 builder.Services.AddSingleton(provider => new WeatherFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("weather")));
-builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.7.10"); })
+builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.8.0"); })
     .ConfigurePrimaryHttpMessageHandler(NewsHttp.CreateHandler);
 builder.Services.AddSingleton(provider => new NewsFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("news")));
+builder.Services.AddSingleton<CalendarCredentials>();
+builder.Services.AddHttpClient("calendar", client => client.Timeout = TimeSpan.FromSeconds(15))
+    .RemoveAllLoggers() // The Google iCal URL contains a private access token.
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+builder.Services.AddSingleton(provider => new CalendarFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("calendar")));
 builder.Services.AddSingleton<EmbeddedDiscordService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<EmbeddedDiscordService>());
 builder.Services.AddHttpClient<DiscordProvider>(client => client.Timeout = TimeSpan.FromMilliseconds(1200));
@@ -88,6 +93,25 @@ app.MapPost("/api/browser-media", (BrowserMediaUpdate update, BrowserMediaStore 
 app.MapPost("/api/browser-tab", (BrowserTabUpdate update, BrowserTabStore store) =>
     store.Update(update.Tab) ? Results.Ok(new { connected = true }) : Results.BadRequest());
 app.MapGet("/api/state", (DeckRuntime runtime) => runtime.State);
+app.MapGet("/api/discord/options", (EmbeddedDiscordService discord) => discord.Options());
+app.MapGet("/api/calendar", (CalendarCredentials credentials) => new { configured = credentials.Configured });
+app.MapPost("/api/calendar", async (CalendarLinkRequest request, CalendarCredentials credentials, IHttpClientFactory clients, CancellationToken token) =>
+{
+    var url = request.Url?.Trim();
+    if (!GoogleCalendarUrl.IsValid(url)) return Results.BadRequest(new { error = "Incolla l’indirizzo segreto in formato iCal di Google Calendar." });
+    using var client = clients.CreateClient("calendar");
+    using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+    timeout.CancelAfter(TimeSpan.FromSeconds(15));
+    var result = await Task.Run(() => CalendarFeed.Fetch(client, url!, DateTimeOffset.UtcNow, timeout.Token), token);
+    if (result.Status == "unavailable") return Results.BadRequest(new { error = "Calendario non leggibile. Verifica il link iCal e riprova." });
+    try { credentials.Save(url!); return Results.Ok(new { configured = true }); }
+    catch { return Results.Problem("Impossibile salvare il collegamento al calendario."); }
+});
+app.MapDelete("/api/calendar", (CalendarCredentials credentials) =>
+{
+    try { credentials.Clear(); return Results.Ok(new { configured = false }); }
+    catch { return Results.Problem("Impossibile rimuovere il collegamento al calendario."); }
+});
 app.MapGet("/api/widget-slots", () => new { slots = WidgetCatalog.Slots, defaults = WidgetCatalog.Defaults() });
 app.MapGet("/api/sensors", (DeckRuntime runtime) => runtime.State.Hardware);
 app.MapGet("/api/weather/locations", async (string? query, IHttpClientFactory clients, CancellationToken token) =>

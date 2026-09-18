@@ -4,6 +4,8 @@ PulseDeck is an early-stage project built around one verified Windows/TURZX setu
 
 ## Available now
 
+- Google Calendar appointments in the empty Desktop media panel; Discord server labels and configurable channel/user selection.
+
 - Configurable sensor values, bars and rings; combined network widget and power/temperature trends.
 - Desktop/weather, Gaming and Spotify lyrics compositions, including Music's nine-widget grid.
 - Foreground-based automatic profiles, persistent game session timer and PresentMon application FPS.

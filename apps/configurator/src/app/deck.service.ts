@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { GameLibraryStatus, DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
+import { DiscordOptions, GameLibraryStatus, DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class DeckService {
@@ -42,6 +42,10 @@ export class DeckService {
     }
     return response.json() as Promise<T>;
   }
+  discordOptions() { return this.request<DiscordOptions>('/api/discord/options'); }
+  calendarStatus() { return this.request<{configured: boolean}>('/api/calendar'); }
+  connectCalendar(url: string) { return this.request<{configured: boolean}>('/api/calendar', 'POST', {url}); }
+  disconnectCalendar() { return this.request<{configured: boolean}>('/api/calendar', 'DELETE'); }
   gameLibraries() { return this.request<GameLibraryStatus>('/api/games'); }
   scanGames() { return this.request<{ requested: boolean }>('/api/games/scan', 'POST'); }
   steamGridStatus() { return this.request<{ configured: boolean }>('/api/steamgriddb'); }

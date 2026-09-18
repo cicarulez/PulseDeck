@@ -50,7 +50,8 @@ Spotify gets cover art, track progress and optional synchronized lyrics from LRC
 | --- | --- |
 | Hardware | LibreHardwareMonitor sensors, configurable values/bars/rings, temperature and power trends |
 | Games | Steam/EA discovery, manual exceptions, per-game artwork, persistent session timer, application FPS |
-| Voice | Discord roster, mute/deaf, speaking highlights and screen-sharing indicators; expanded Desktop roster when media is absent |
+| Calendar | [Google Calendar](docs/calendar.md) appointments and countdown in the empty Desktop media area |
+| Voice | Discord server/channel labels, configurable voice channel and tracked user, mute/deaf, speaking highlights and screen-sharing indicators; expanded Desktop roster when media is absent |
 | Media | Windows media sessions; optional Chrome extension prioritizes the main YouTube player |
 | Active app | Chrome/Terminal tab titles, Explorer folder names, registered Windows app names/logos and optional Chrome favicons |
 | Spotify | Dedicated lyrics layout; other media sources keep the regular media panel |

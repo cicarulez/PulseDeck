@@ -1,0 +1,11 @@
+<p>Il prossimo appuntamento di Google Calendar, con orario e conto alla rovescia. Compare in Desktop quando non ci sono sessioni media e Discord non occupa il riquadro intero.</p>
+<div class="fields">
+  <label>Calendario sul display<select name="calendarEnabled" [ngModel]="options().enabled" (ngModelChange)="update({enabled: $event})"><option [ngValue]="true">Mostra nello spazio libero</option><option [ngValue]="false">Mantieni Media Session vuota</option></select></label>
+  <label>Titolo degli appuntamenti<select name="calendarHideTitles" [ngModel]="options().hideTitles" (ngModelChange)="update({hideTitles: $event})"><option [ngValue]="false">Mostra il titolo</option><option [ngValue]="true">Mostra solo “Impegno”</option></select></label>
+  <label class="wide">Indirizzo segreto in formato iCal<input type="password" autocomplete="new-password" maxlength="2048" [ngModelOptions]="{standalone: true}" [(ngModel)]="url" [disabled]="busy() || connecting()" placeholder="Incolla il link di Google Calendar"><small>In Google Calendar: Impostazioni → scegli il calendario → Integra calendario → Indirizzo segreto in formato iCal. Il link consente di leggere gli eventi: incollalo qui, non in chat. Viene salvato cifrato sul PC e non viene mostrato di nuovo.</small></label>
+  <button class="button" type="button" [disabled]="busy() || connecting() || !url.trim()" (click)="connect()">{{ connecting() ? 'Attendi…' : 'Collega Google Calendar' }}</button>
+  @if (configured()) { <button class="button" type="button" [disabled]="busy() || connecting()" (click)="disconnect()">Rimuovi collegamento</button> }
+</div>
+<p><a href="https://calendar.google.com/calendar/u/0/r/settings" target="_blank" rel="noopener noreferrer">Apri le impostazioni di Google Calendar</a> · <a href="https://support.google.com/calendar/answer/37648?hl=it" target="_blank" rel="noopener noreferrer">Guida Google</a></p>
+<p>Accesso in sola lettura. Collega/Rimuovi si applicano subito; salva la configurazione per applicare le opzioni del display. Aggiornamento ogni 5 minuti, con possibili ritardi del feed Google. Eventi e ricorrenze dei prossimi 7 giorni restano solo in memoria.</p>
+<p role="status">{{ message() || status() }}</p>

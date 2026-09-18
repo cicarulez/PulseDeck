@@ -1,0 +1,24 @@
+<div class="fields">
+  <label>Collegamento Discord<select name="discordMode" [ngModel]="config().discordMode" (ngModelChange)="update({discordMode: $event})"><option value="embedded">Integrato in PulseDeck</option><option value="external">Backend esterno</option></select></label>
+  @if (config().discordMode === 'external') { <label>Indirizzo del backend<input name="backend" type="url" [ngModel]="config().discordBaseUrl" (ngModelChange)="update({discordBaseUrl: $event})" required></label> }
+  @if (config().discordMode === 'embedded') {
+    <label>Canale vocale · {{ choices()?.serverName || 'Server non disponibile' }}<select name="voiceChannel" [ngModel]="config().discordVoiceChannelId" (ngModelChange)="update({discordVoiceChannelId: $event})">
+      <option value="">Canale importato inizialmente</option>
+      @if (config().discordVoiceChannelId && !knownChannel()) { <option [value]="config().discordVoiceChannelId">Canale salvato · non disponibile nell’elenco</option> }
+      @for (channel of choices()?.channels ?? []; track channel.id) { <option [value]="channel.id">{{ channel.name }}</option> }
+    </select><small>Canali del server già collegato. Il cambio si applica dopo il salvataggio, senza riavvio.</small></label>
+    <label>Utente principale<select name="trackedMember" [ngModel]="config().trackedMemberId" (ngModelChange)="update({trackedMemberId: $event})">
+      <option value="">Nessun utente principale</option>
+      @if (config().trackedMemberId && !knownMember()) { <option [value]="config().trackedMemberId">Utente salvato · non disponibile nell’elenco</option> }
+      @for (member of choices()?.members ?? []; track member.id) { <option [value]="member.id">{{ member.name }}</option> }
+    </select><small>Utenti conosciuti dal bot. Se manca qualcuno, fallo entrare in un canale vocale e aggiorna l’elenco. La selezione usa l’ID, anche se il nickname cambia.</small></label>
+    <button class="button" type="button" [disabled]="busy() || loading()" (click)="refresh()">{{ loading() ? 'Aggiornamento…' : 'Aggiorna canali e utenti' }}</button>
+  }
+  <label>Chi sta parlando<select name="gamingVoiceActivity" [ngModel]="config().gamingVoiceActivity" (ngModelChange)="update({gamingVoiceActivity: $event})"><option [ngValue]="true">Evidenzia chi parla</option><option [ngValue]="false">Solo partecipanti e mute/deaf</option></select><small>Il bot entra quando l’utente principale è nel canale scelto e resta anche con Alt-Tab. Senza un utente principale, entra quando è presente almeno una persona. Non trasmette né registra audio.</small></label>
+</div>
+<details><summary>Configurazione tramite ID</summary><div class="fields">
+  @if (config().discordMode === 'embedded') { <label>ID del canale vocale<input name="voiceChannelId" maxlength="20" pattern="[0-9]*" [ngModel]="config().discordVoiceChannelId" (ngModelChange)="update({discordVoiceChannelId: $event})" placeholder="Vuoto: usa il canale importato"></label> }
+  <label>ID dell’utente principale<input name="tracked" maxlength="100" [ngModel]="config().trackedMemberId" (ngModelChange)="update({trackedMemberId: $event})" placeholder="Facoltativo"></label>
+</div></details>
+<p>Nell’header compaiono nickname e stato VOCE, MIC ATTIVO, MUTE o DEAF dell’utente principale. Fuori dal canale l’header scompare e Discord torna piccolo. Un’icona viola indica chi condivide lo schermo.</p>
+@if (message()) { <p role="status">{{ message() }}</p> }

@@ -65,6 +65,19 @@ The script writes DPAPI-encrypted `discord.credentials` to the runtime directory
 
 The bot needs access to the target server/channel; voice activity requires channel connection permission and a working voice connection. Follow the [Discord developer documentation](https://discord.com/developers/docs/intro) to create and authorize a bot. Enable speaking activity in the configurator and set your tracked user ID: the bot joins the configured channel when you enter and leaves when you exit, regardless of profile. Without a tracked ID, it joins while any human participant is present. A muted/deafened flag is not evidence that someone is speaking.
 
+The Discord settings now list voice channels in the imported server and known
+non-bot members by display name. Select a channel and primary user, then save;
+changes apply without restarting or reimporting credentials. Use **Aggiorna canali
+e utenti** after someone joins voice. If they are not in the bot's cache, retain
+or enter their ID under **Configurazione tramite ID**. Clearing the channel override
+returns to the initially imported channel. The bot remains connected to the server
+Gateway while outside voice and receives membership changes as events.
+
+## Google Calendar
+
+Connect the private iCal subscription link under **Configurazione → Calendario**.
+See the [calendar guide](calendar.md) for setup, display priority and refresh limits.
+
 ## Automatic startup and stopping
 
 From the permanent published folder, run `Install-PulseDeckStartup.ps1` in an elevated PowerShell window. Its parameters identify the legacy TURZX startup task to back up and disable. It creates an **interactive-user scheduled task**, starts hidden at sign-in and connects the configured display without opening the browser. Do not replace it with a LocalSystem service.

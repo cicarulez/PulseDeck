@@ -1862,3 +1862,65 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   follow-up state showed Desktop, tracked user absent, voice inactive and media
   idle (the split-panel condition), with 13 acknowledged frames and FPS ready.
   The physical panel's final appearance still awaits user confirmation.
+
+## Google Calendar and Discord channel controls — 2026-09-19 (0.8.0)
+
+- Added a read-only Google iCalendar provider for the next seven days. Fetch and
+  Ical.Net 5.2.3 recurrence evaluation run outside the render loop, with one pending
+  task, source-change cancellation, a 15-second request budget, 4 MiB/3,000-event
+  input limits and bounded occurrence evaluation. Five-minute refreshes retry
+  failures after two minutes. Failed reads do not display stale event contents.
+- Supports ordinary recurrences, exclusions, moved/cancelled instances, floating
+  times, timezone/DST changes and date-only events. Second/minute recurrence rules
+  are explicitly unavailable. Descriptions, meeting URLs, attachments and attendees
+  are not exposed or fetched. Parsed upcoming titles/times stay in memory only.
+- The private URL is restricted to Google's HTTPS iCalendar path, saved in
+  `calendar.credentials` with DPAPI CurrentUser, and never returned by the API.
+  Calendar HTTP request logging is disabled. Linking verifies the feed before
+  replacing the credential; removal clears it. Optional title privacy redacts
+  both rendered titles and the API snapshot.
+- Desktop's empty media half now shows the calendar or an explicit setup/status
+  message. Connected/paused media and the expanded Discord roster retain priority;
+  Gaming and Spotify lyrics layouts are unchanged. Disabling Calendar restores the
+  empty Media Session panel.
+- Discord rosters show explicit server/channel names. The configurator lists the
+  imported server's voice channels and cached non-bot members by nickname, with ID
+  fallback and manual refresh. Saved channel overrides take effect without agent
+  restart and can be cleared to restore the imported channel. Switching channels
+  tears down the previous voice connection; speech is never applied across channel
+  IDs. No extra Gateway intent or credential import is needed.
+- 175 Core tests and 41 renderer/provider tests passed. Coverage includes recurrence
+  exceptions/cancellations, simultaneous events, DST, all-day dates, private-title
+  redaction, failure backoff, source changes during a blocked fetch, configuration
+  channel validation/defaults, panel priority and server-header isolation.
+  Angular production build and self-contained Windows publish passed.
+- A real isolated Chromium test, using synthetic fixtures and intercepted APIs,
+  passed channel/nickname selection and save, calendar link/remove, clearing the
+  password input, keeping the URL out of configuration, privacy preference save,
+  and mobile overflow checks, with no Angular page errors. Synthetic panel and
+  configurator screenshots were visually reviewed; no user calendar data or
+  Discord identifiers were used in fixtures.
+- A standalone Windows probe used the production credential class with a synthetic
+  link in a temporary data directory. DPAPI encryption, reload and deletion passed;
+  serialized configuration excluded the link. Parsing a Europe/Rome appointment
+  also verified IANA timezone conversion on Windows. The probe did not access the
+  network or display. Ical.Net and NodaTime license texts accompany the Windows publish.
+- Initial deployment stopped the old agent/task, but copying the app encountered
+  a locked PresentMon executable: an old collector remained after its owner agent
+  exited. Its PID/parent were matched to the previous startup record. A one-time
+  maintenance step through the existing elevated interactive-user task verified
+  the executable path, stopped only that orphan, completed the staged copy and
+  preserved runtime hashes. No scheduled-task definition was changed. The normal
+  launcher was restored byte-for-byte before normal operation resumed.
+  Backup: `%LOCALAPPDATA%\PulseDeck\before-calendar-080-20260919-000737`.
+  The 0.8.0 agent resumed COM5 acknowledgements and reported FPS ready.
+- Live API checks returned the configured server/channel labels and its available
+  voice channel. The non-bot cache was empty while users were outside voice; the
+  existing tracked ID was preserved rather than replaced. Nickname selection is
+  available after a member joins and the list is refreshed. No real channel/user
+  switch was forced during validation.
+- Calendar status exposes only `configured`; missing client headers and foreign
+  origins returned 403, and a non-Google URL returned 400 without being fetched.
+  A roughly 70-second live observation received 65 further frame acknowledgements
+  with connected display status and FPS ready. Calendar remained `not-configured`:
+  the user's private Google link and live appointment verification are pending.

@@ -1,3 +1,6 @@
+export interface CalendarOptions { enabled: boolean; hideTitles: boolean; }
+export interface CalendarSnapshot { status: string; events: { title: string; start: string; end: string; allDay: boolean }[] | null; fetchedAt: string | null; }
+export interface DiscordOptions { status: string; serverName: string | null; channelId: string; channels: {id: string; name: string}[]; members: {id: string; name: string}[]; }
 export interface GameDiscoveryOptions { enabled: boolean; folders: string[]; confirmedExecutables: string[]; ignoredExecutables: string[]; }
 export interface DiscoveredGame { thumbnailId: string; name: string; executable: string; installDirectory: string; source: string; steamAppId: string | null; automatic: boolean; status: 'recognized' | 'review' | 'ignored'; }
 export interface GameLibraryStatus { enabled: boolean; scanning: boolean; scannedAt: string | null; libraries: { path: string; source: string }[]; games: DiscoveredGame[]; warnings: string[]; }
@@ -12,6 +15,7 @@ export interface WidgetSlot { id: string; name: string; isBar: boolean; }
 export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; }
 export interface GameTheme { processName: string; backgroundPath: string; }
 export interface DeckConfig {
+  calendar: CalendarOptions; discordVoiceChannelId: string;
   gameDiscovery: GameDiscoveryOptions;
   widgets: WidgetConfig[];
   layout: 'classic' | 'compact' | 'weather';
@@ -35,10 +39,10 @@ export interface DeckState {
   fps: { status: string; framesPerSecond: number | null; frameTimeMs: number | null; detail: string | null };
   gameSession: { processId: number; startedAt: string; elapsedSeconds: number } | null;
   gameArtwork: { status: string; source: string | null };
-  news: NewsSnapshot;
+  news: NewsSnapshot; calendar: CalendarSnapshot;
   timestamp: string; profile: string; foregroundApp: string;
   hardware: HardwareState;
   media: { playing: boolean; title: string; artist: string; app: string; positionSeconds: number; durationSeconds: number; status: string; artworkId: string | null };
-  discord: { speakingStatus: string; members: VoiceMember[]; tracked: VoiceMember | null; status: string; detail: string | null };
+  discord: { serverName?: string | null; channelName?: string | null; speakingStatus: string; members: VoiceMember[]; tracked: VoiceMember | null; status: string; detail: string | null };
   display: DisplayState; fpsStatus: string; foreground: ForegroundState; game: ForegroundState | null;
 }

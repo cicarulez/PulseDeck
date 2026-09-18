@@ -19,19 +19,16 @@
     <pd-game-themes [themes]="draft.gameThemes" [processes]="themeProcesses()" [busy]="busy()" (themesChange)="draft.gameThemes = $event" />
   </section>
   <section class="panel"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>
-    <div class="fields">
-      <label>Collegamento Discord<select name="discordMode" [(ngModel)]="draft.discordMode"><option value="embedded">Integrato in PulseDeck</option><option value="external">Backend esterno</option></select></label>
-      @if (draft.discordMode === 'external') { <label>Indirizzo del backend<input name="backend" type="url" [(ngModel)]="draft.discordBaseUrl" required></label> }
-      <label>Chi sta parlando<select name="gamingVoiceActivity" [(ngModel)]="draft.gamingVoiceActivity"><option [ngValue]="true">Evidenzia chi parla</option><option [ngValue]="false">Solo partecipanti e mute/deaf</option></select><small>Il bot entra nel canale vocale configurato quando è presente l’utente indicato sotto e resta collegato anche cambiando profilo o con Alt-Tab. Senza un ID utente, entra quando è presente almeno una persona. Non trasmette né registra audio. Richiede il permesso di connessione al canale.</small></label>
-      <label>ID dell’utente da evidenziare<input name="tracked" [(ngModel)]="draft.trackedMemberId" placeholder="Facoltativo"><small>Determina quando il bot entra ed esce dal canale. Nell’header, accanto all’ora, mostra nickname e stato VOCE, MIC ATTIVO, MUTE o DEAF di questo utente. Fuori dal canale o senza collegamento, nickname e stato non vengono mostrati nell’header. MIC ATTIVO non significa che stia parlando.</small></label>
-    </div>
-    <p class="note">In modalità integrata basta avviare PulseDeck. Il bot legge partecipanti e mute/deaf dal canale configurato; la connessione Voice permette di evidenziare chi parla in ogni riquadro Discord e un’icona indica chi condivide lo schermo. Se non disponibile viene indicato sul display. Le credenziali importate restano protette sul PC.</p>
+    <pd-discord-settings [config]="draft" [busy]="busy()" (configChange)="draft = $event" />
   </section>
   <section class="panel"><div class="section-title"><span>04 / METEO</span><h2>Il tempo nella tua città.</h2></div>
     <pd-weather-settings [location]="draft.weatherLocation" [busy]="busy()" (locationChange)="draft.weatherLocation = $event" />
   </section>
   <section class="panel"><div class="section-title"><span>05 / NEWS</span><h2>Le tue fonti, nel footer.</h2></div>
     <pd-news-settings [options]="draft.news" [state]="newsState()" [busy]="busy()" (optionsChange)="draft.news = $event" />
+  </section>
+  <section class="panel"><div class="section-title"><span>06 / CALENDARIO</span><h2>Il prossimo impegno.</h2></div>
+    <pd-calendar-settings [options]="draft.calendar" [state]="calendarState()" [busy]="busy()" (optionsChange)="draft.calendar = $event" />
   </section>
   <div class="save-row"><span>Le modifiche vengono applicate dopo il salvataggio.</span><button class="button button--primary" type="submit" [disabled]="busy()">{{ busy() ? 'Salvataggio…' : 'Salva configurazione' }}</button></div>
 </form>

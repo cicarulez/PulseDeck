@@ -3,6 +3,17 @@ using Xunit;
 
 public class DiscordVoicePolicyTests
 {
+    [Fact]
+    public void ChannelSelectionPreservesImportedDefaultAndRejectsInvalidIds()
+    {
+        var config = new DeckConfig();
+        Assert.Equal(123UL, DiscordVoicePolicy.SelectedChannel(config, 123));
+        Assert.Equal(456UL, DiscordVoicePolicy.SelectedChannel(config with { DiscordVoiceChannelId = "456" }, 123));
+        Assert.Null((config with { DiscordVoiceChannelId = "456" }).Validate());
+        Assert.NotNull((config with { DiscordVoiceChannelId = "0" }).Validate());
+        Assert.NotNull((config with { DiscordVoiceChannelId = "-1" }).Validate());
+        Assert.NotNull((config with { DiscordVoiceChannelId = " 456" }).Validate());
+    }
     [Theory]
     [InlineData("desktop")]
     [InlineData("gaming")]

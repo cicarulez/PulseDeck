@@ -18,6 +18,7 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
     private string detail = "Connessione a Discord in preparazione.";
     private string status = "starting";
     private IAudioClient? voice;
+    private ulong voiceChannelId;
     private CancellationTokenSource? voiceLifetime;
     private readonly VoiceActivity speaking = new();
     private volatile bool encryptionReady;
@@ -41,9 +42,26 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
         channel is not null && DiscordVoicePolicy.ShouldConnect(settings,
             channel.ConnectedUsers.Where(user => !user.IsBot).Select(user => user.Id.ToString()));
 
+    private ulong SelectedChannel(DeckConfig settings) => DiscordVoicePolicy.SelectedChannel(settings, channelId);
+
+    public DiscordOptions Options()
+    {
+        var guild = ready ? client?.GetGuild(guildId) : null;
+        if (guild is null) return new("unavailable", null, SelectedChannel(config.Current).ToString(), [], []);
+        var channels = guild.VoiceChannels.OrderBy(c => c.Position).Select(c => new DiscordChoice(c.Id.ToString(), c.Name)).Take(200).ToArray();
+        var members = guild.Users.Where(u => !u.IsBot).OrderBy(u => u.DisplayName)
+            .Select(u => new DiscordChoice(u.Id.ToString(), u.DisplayName == u.Username ? u.DisplayName : $"{u.DisplayName} · {u.Username}")).Take(500).ToArray();
+        return new("connected", guild.Name, SelectedChannel(config.Current).ToString(), channels, members);
+    }
+
     private async Task UpdateVoice(CancellationToken token)
     {
-        var channel = client?.GetGuild(guildId)?.GetVoiceChannel(channelId);
+        var selected = SelectedChannel(config.Current);
+        var channel = client?.GetGuild(guildId)?.GetVoiceChannel(selected);
+        if (voice is not null && voiceChannelId != selected)
+        {
+            await StopVoice(); voiceRetryAt = DateTimeOffset.MinValue;
+        }
         if (!ready || !WantsVoice(config.Current, channel))
         {
             await StopVoice(); speakingStatus = "inactive"; voiceRetryAt = DateTimeOffset.MinValue; voiceDetail = null; return;
@@ -67,6 +85,7 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
         {
             // StopAsync in the catch also cancels an incomplete voice handshake.
             voice = await channel.ConnectAsync(selfDeaf: false, selfMute: true).WaitAsync(TimeSpan.FromSeconds(15), token);
+            voiceChannelId = selected;
             voiceConnectedAt = DateTimeOffset.UtcNow;
             voiceLifetime = CancellationTokenSource.CreateLinkedTokenSource(token);
             var drainToken = voiceLifetime.Token;
@@ -108,18 +127,20 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
         var guild = socket.GetGuild(guildId);
         if (guild is null || !((IGuild)guild).Available)
             return new([], null, "unavailable", "Il server configurato non è disponibile per il bot.");
-        var channel = guild.GetVoiceChannel(channelId);
+        var selected = SelectedChannel(settings);
+        var channel = guild.GetVoiceChannel(selected);
         if (channel is null)
             return new([], null, "unavailable", "Il canale vocale configurato non è disponibile per il bot.");
         var wanted = WantsVoice(settings, channel);
-        var voiceAvailable = wanted && encryptionReady && voiceFault is null && voice?.ConnectionState == ConnectionState.Connected;
+        var voiceAvailable = wanted && voiceChannelId == selected && encryptionReady && voiceFault is null && voice?.ConnectionState == ConnectionState.Connected;
         var members = channel.ConnectedUsers.Where(u => u.Id != socket.CurrentUser.Id).Select(u => new VoiceMember(u.Id.ToString(), u.DisplayName,
             u.IsMuted || u.IsSelfMuted, u.IsDeafened || u.IsSelfDeafened)
             { Speaking = voiceAvailable ? speaking.IsSpeaking(u.Id, DateTimeOffset.UtcNow) : null, Streaming = u.IsStreaming })
             .OrderBy(u => u.Name, StringComparer.OrdinalIgnoreCase).ToArray();
         return new(members, members.FirstOrDefault(m => m.Id == settings.TrackedMemberId), "connected",
             $"{guild.Name} / {channel.Name} · Discord integrato" + (voiceAvailable ? " · bot nel canale vocale" : ""))
-            { SpeakingStatus = !wanted ? "inactive" : voiceAvailable ? "connected"
+            { ServerName = guild.Name, ChannelName = channel.Name,
+                SpeakingStatus = !wanted ? "inactive" : voiceAvailable ? "connected"
                 : voice?.ConnectionState == ConnectionState.Connected && voiceFault is null ? "connecting" : speakingStatus,
                 SpeakingDetail = voiceDetail };
     }
@@ -212,3 +233,6 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
         }
     }
 }
+
+public sealed record DiscordChoice(string Id, string Name);
+public sealed record DiscordOptions(string Status, string? ServerName, string ChannelId, DiscordChoice[] Channels, DiscordChoice[] Members);

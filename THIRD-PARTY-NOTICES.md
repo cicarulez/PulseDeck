@@ -26,6 +26,8 @@ Other dependencies retain their own licenses:
 | SkiaSharp | MIT; bundled Skia has its own notices | https://github.com/mono/SkiaSharp |
 | LibreHardwareMonitor | MPL-2.0 and component-specific notices | https://github.com/LibreHardwareMonitor/LibreHardwareMonitor |
 | Discord.Net | MIT | https://github.com/discord-net/Discord.Net |
+| Ical.Net 5.2.3 | MIT; [license](docs/licenses/ical-net.txt) | https://github.com/ical-org/ical.net |
+| NodaTime 3.2.2 | Apache-2.0; [license](docs/licenses/nodatime.txt) | https://nodatime.org/ |
 | xUnit.net | Apache-2.0 | https://github.com/xunit/xunit |
 
 Dependency license files included by their packages must accompany redistribution.

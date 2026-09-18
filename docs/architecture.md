@@ -49,6 +49,8 @@ Speaking is an explicit voice event, not the inverse of mute/deaf. Every Discord
 
 PresentMon collection is prepared before protected games launch. Discovery changes should not restart a healthy collector while a game is running. Metrics are application-presented FPS/frame times; status distinguishes unavailable or unprepared collection.
 
+Google Calendar reads a DPAPI-protected iCal URL using an HTTP client with request logging disabled. Its fetch and Ical.Net recurrence evaluation run outside the render loop with one pending task, bounded feed/occurrence sizes and source-change cancellation. A pending response cannot overwrite a different calendar selection. URLs never enter API snapshots; only bounded appointment titles/times do.
+
 Weather, news, lyrics and artwork use bounded asynchronous requests, cancellation and cache policies. They must not substitute unrelated stale content. More data-flow details are in [privacy](privacy.md).
 
 ## Rendering

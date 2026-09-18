@@ -10,6 +10,8 @@ Runtime state belongs under **`%LOCALAPPDATA%\PulseDeck`**, or the directory exp
 | --- | --- |
 | Configuration | `config.json`: widget bindings, preferences, selected paths and integration settings |
 | Discord bot credentials | `discord.credentials`: encrypted with DPAPI CurrentUser |
+| Google Calendar subscription | `calendar.credentials`: private iCal URL encrypted with DPAPI CurrentUser; never returned by the API |
+| Calendar events | Upcoming event titles/times in memory only; title privacy also redacts current API snapshots |
 | SteamGridDB API key | `steamgriddb.credentials`: encrypted with DPAPI CurrentUser |
 | Discovered games | `game-library.json`: local paths, names and discovery metadata |
 | Game artwork | `game-artwork`: downloaded covers/backgrounds, with a 30-day cache policy |
@@ -19,7 +21,7 @@ Runtime state belongs under **`%LOCALAPPDATA%\PulseDeck`**, or the directory exp
 
 A cache TTL controls reuse, not a guaranteed deletion schedule. Existing cache files can remain on disk until replaced or manually removed. The historical telemetry database discussed in the roadmap is not implemented.
 
-DPAPI protects credentials for the Windows user; it is not a reason to share credential files or full runtime backups. The local configuration API never returns the Discord token or SteamGridDB key. Export only the diagnostics needed for a report, and inspect them first.
+DPAPI protects credentials for the Windows user; it is not a reason to share credential files or full runtime backups. The local configuration API never returns the Discord token, SteamGridDB key or private calendar URL. Export only the diagnostics needed for a report, and inspect them first.
 
 ## What optional services receive
 
@@ -29,6 +31,7 @@ DPAPI protects credentials for the Windows user; it is not a reason to share cre
 | RSS/Atom | Requests to the feeds you enable; no full article scraping |
 | Steam artwork lookup | Game-title searches and image requests |
 | SteamGridDB | Game-title searches authenticated with your optional API key; image requests to its CDN |
+| Google Calendar | Read-only requests to the configured Google iCalendar subscription URL every five minutes; no event writes or Google login |
 | LRCLIB | Song title, artist, duration and album when available; no audio or Spotify credentials |
 | Discord | Bot authentication, channel roster/screen-sharing flags and optional voice connection for speaking events while the tracked user is present (or any human if no user is configured), across profiles. Received audio is discarded, never recorded or played. |
 | Chrome extension | YouTube main-player metadata is posted locally. Optional `tabs`/`favicon` permissions add the focused tab title and a bounded PNG from Chrome’s local favicon endpoint; no page URL is sent to the agent and no arbitrary icon URL is fetched. See the [extension guide](../apps/youtube-extension/README.md). |

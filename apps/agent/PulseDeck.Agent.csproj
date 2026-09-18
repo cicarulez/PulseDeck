@@ -3,9 +3,11 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <AssemblyName>PulseDeck.Agent</AssemblyName>
-    <Version>0.7.10</Version>
+    <Version>0.8.0</Version>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="../../docs/licenses/ical-net.txt" Link="licenses/ical-net.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../docs/licenses/nodatime.txt" Link="licenses/nodatime.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <ProjectReference Include="../../src/PulseDeck.Core/PulseDeck.Core.csproj" />
     <ProjectReference Include="../../src/PulseDeck.Discord/PulseDeck.Discord.csproj" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />

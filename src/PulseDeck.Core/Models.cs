@@ -10,12 +10,14 @@ public sealed record DeckConfig
     public string DiscordMode { get; init; } = "embedded";
     public string DiscordBaseUrl { get; init; } = "http://127.0.0.1:5090";
     public string TrackedMemberId { get; init; } = "";
+    public string DiscordVoiceChannelId { get; init; } = "";
     public string DisplayPort { get; init; } = "COM5";
     public string BackgroundPath { get; init; } = "";
     public string AccentColor { get; init; } = "#a9ff69";
     public string Layout { get; init; } = "compact";
     public WeatherLocation? WeatherLocation { get; init; }
     public NewsOptions News { get; init; } = new();
+    public CalendarOptions Calendar { get; init; } = new();
     public bool SpotifyLyrics { get; init; } = true;
     public bool GamingLayout { get; init; } = true;
     public bool GamingVoiceActivity { get; init; } = true;
@@ -25,6 +27,10 @@ public sealed record DeckConfig
 
     public string? Validate()
     {
+        if (Calendar is null) return "Invalid calendar settings.";
+        if (DiscordVoiceChannelId is null || DiscordVoiceChannelId.Length > 0
+            && (!ulong.TryParse(DiscordVoiceChannelId, out var channel) || channel == 0 || DiscordVoiceChannelId.Any(c => !char.IsAsciiDigit(c))))
+            return "Invalid Discord voice channel ID.";
         if (GameDiscovery is null) return "Invalid game discovery settings.";
         if (GameDiscovery.Validate() is { } discoveryError) return discoveryError;
         if (News is null) return "Invalid news settings.";
@@ -72,6 +78,8 @@ public sealed record VoiceMember(string Id, string Name, bool Mute, bool Deaf)
 }
 public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMember? Tracked, string Status, string? Detail = null)
 {
+    public string? ServerName { get; init; }
+    public string? ChannelName { get; init; }
     public string SpeakingStatus { get; init; } = "unavailable";
     public string? SpeakingDetail { get; init; }
 }
@@ -101,6 +109,7 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
     public VolumeSnapshot Volume { get; init; } = new();
     public WeatherSnapshot Weather { get; init; } = new();
     public NewsSnapshot News { get; init; } = new();
+    public CalendarSnapshot Calendar { get; init; } = new();
     public LyricsSnapshot Lyrics { get; init; } = new();
     public bool SpotifyTransition { get; init; }
 }

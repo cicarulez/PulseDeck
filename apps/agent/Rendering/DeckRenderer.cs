@@ -126,6 +126,11 @@ public sealed class DeckRenderer : IDisposable
         }
         void Media(float x, float y, float width)
         {
+            if (state.Profile == "desktop" && state.Media.Status != "connected" && config.Calendar.Enabled)
+            {
+                CalendarPanel.Draw(canvas, state.Calendar, config.Calendar, state.Timestamp, x, y, width, accent, typeface, bold);
+                return;
+            }
             const float size = 132;
             var available = state.Media.Status == "connected";
             Text(state.Media.App.Contains("Spotify", StringComparison.OrdinalIgnoreCase) ? "SPOTIFY" : "MEDIA SESSION", x, y, 15, accent, true);
@@ -239,6 +244,8 @@ public sealed class DeckRenderer : IDisposable
         void Discord(float x, float y, float width, int capacity = 3, bool expanded = false)
         {
             Text("DISCORD", x, y, expanded ? 18 : 15, accent, true);
+            if (state.Discord.Status == "connected" && state.Discord.ServerName is { Length: > 0 } server)
+                Text(expanded ? server : server + " / " + state.Discord.ChannelName, x + 100, y, 13, muted, maxWidth: width - 100);
             if (state.Discord.Status != "connected") { Text("Discord non collegato", x, y + 34, 18, muted, maxWidth: width); return; }
             var members = state.Discord.Members.OrderByDescending(IsSpeaking)
                 .ThenByDescending(m => m.Id == config.TrackedMemberId).ThenBy(m => m.Name).ToArray();
@@ -246,7 +253,8 @@ public sealed class DeckRenderer : IDisposable
             var page = expanded ? (int)(state.Timestamp.ToUnixTimeSeconds() / 8 % pages) : 0;
             if (expanded)
             {
-                Text($"{members.Length} partecipanti", x, y + 26, 16, muted);
+                Text((state.Discord.ChannelName is { Length: > 0 } channel ? channel + " · " : "") + $"{members.Length} partecipanti",
+                    x, y + 26, 16, muted, maxWidth: width - 55);
                 if (pages > 1) Text($"{page + 1}/{pages}", x + width - 50, y + 26, 14, muted, maxWidth: 50);
             }
             var firstRow = y + (expanded ? 58 : 29);
