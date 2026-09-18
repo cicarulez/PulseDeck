@@ -25,6 +25,22 @@ public class LyricsTests
         Assert.Equal(0, state.CurrentLine(2));
     }
     [Fact]
+    public void AdvancesDisplayBy350MillisecondsWithoutChangingSourceTimestamps()
+    {
+        var lines = SpotifyLyrics.ParseLrc("[offset:1000]\n[00:02]Invented first line\n[00:05]\n[00:07]Invented last line", 180);
+        var state = new LyricsSnapshot("synced", "test", lines);
+        Assert.Equal(-1, state.CurrentLine(0.649));
+        Assert.Equal(0, state.CurrentLine(0.650));
+        Assert.Equal(0, state.CurrentLine(3.649));
+        Assert.Equal(1, state.CurrentLine(3.650)); // Instrumental gaps follow the same advance.
+        Assert.Equal(2, state.CurrentLine(5.650));
+        Assert.Equal(0, state.CurrentLine(2)); // Seeking backwards selects the earlier line.
+        Assert.Equal(0, state.CurrentLine(2)); // A paused position remains stable.
+        Assert.Equal(new double[] { 1, 4, 6 }, lines.Select(line => line.Seconds));
+        Assert.Equal(-1, state.CurrentLine(double.NaN));
+        Assert.Equal(-1, state.CurrentLine(double.PositiveInfinity));
+    }
+    [Fact]
     public void ValidatesTrackIdentityDurationAndInstrumentals()
     {
         using var json = JsonDocument.Parse("""{"trackName":"Synthetic track","artistName":"Synthetic artist","duration":180,"syncedLyrics":"[00:01]Words invented for this test"}""");

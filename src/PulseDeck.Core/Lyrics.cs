@@ -7,9 +7,13 @@ namespace PulseDeck.Core;
 public sealed record LyricLine(double Seconds, string Text);
 public sealed record LyricsSnapshot(string Status = "idle", string TrackKey = "", LyricLine[]? Lines = null, string? PlainText = null)
 {
+    // Advance only the displayed lyrics, keeping media position and cached LRC timestamps intact.
+    public const double DisplayAdvanceSeconds = 0.350;
+
     public int CurrentLine(double seconds)
     {
         if (!double.IsFinite(seconds) || Lines is null) return -1;
+        seconds += DisplayAdvanceSeconds;
         for (var i = Lines.Length - 1; i >= 0; i--) if (Lines[i].Seconds <= seconds) return i;
         return -1;
     }

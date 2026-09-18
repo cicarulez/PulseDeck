@@ -1769,9 +1769,30 @@ References: [Chrome tabs API](https://developer.chrome.com/docs/extensions/refer
 
 - The post-deployment monitor continued receiving frame acknowledgements with
   FPS ready. Neither Explorer nor WhatsApp was foreground during that observation,
-  so live folder-tab switching and final widget appearance still await the user’s
-  visual check; the standalone package probe does not substitute for that check.
+  so that monitor did not verify either widget. The user subsequently confirmed
+  that both Explorer folder titles and WhatsApp name/logo work on the display.
 
 References: [process application identity](https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getapplicationusermodelid),
 [registered app metadata](https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.appinfo.getfromappusermodelid),
 [local app logo](https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.appdisplayinfo.getlogo).
+
+## Earlier synchronized lyrics — 2026-09-18 (0.7.8)
+
+- Following the user's report of late lyrics, synchronized line selection now
+  looks 350 ms ahead of the media position. The shared preview/display renderer
+  uses that selection. Media progress, source LRC timestamps, cached lyrics and
+  unsynchronized text pagination remain unchanged. LRC offsets still apply once.
+- 155 Core tests and 27 rendering/provider tests passed. The new regression
+  covers the exact early-switch boundary, instrumental blanks, backward seeks,
+  repeated paused positions, invalid positions and preservation of LRC timestamps.
+  Angular production build and self-contained Windows publish passed.
+- Deployed after the old agent/task exited, with backup
+  `%LOCALAPPDATA%\PulseDeck\before-lyrics-078-20260918-155501`.
+  Configuration and Discord/SteamGridDB credential hashes were preserved.
+  The 0.7.8 agent identified COM5 and acknowledged the initial full frame. A
+  subsequent 12-second observation received 12 further acknowledgements, with no
+  display errors and FPS collection ready. Media was inactive during this check.
+- The existing one-second update cadence and serial transfer latency still limit
+  visible timing precision; the 350 ms adjustment is a selection offset, not a
+  guarantee that each physical line appears exactly 350 ms earlier. Per-track
+  source timing may also vary. Listening confirmation remains pending.
