@@ -1924,3 +1924,8 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   A roughly 70-second live observation received 65 further frame acknowledgements
   with connected display status and FPS ready. Calendar remained `not-configured`:
   the user's private Google link and live appointment verification are pending.
+- After the user connected Google Calendar, the local API reported `configured:
+  true`, calendar status `connected` and one appointment. The display remained
+  connected with recent frame acknowledgements. No private link or appointment
+  details were included in validation output. Physical calendar appearance has
+  not yet been confirmed by the user.
