@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PulseDeck · Prova notifica Gmail</title>
+<style>
+  :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #091018; color: #ecf3f6; }
+  body { margin: 0 auto; max-width: 1600px; padding: 40px 24px; }
+  .eyebrow { color: #a9ff69; font-size: 13px; letter-spacing: .14em; }
+  h1 { font-size: clamp(26px, 4vw, 42px); margin: 16px 0; }
+  p { color: #a2b4c1; line-height: 1.6; max-width: 850px; }
+  canvas { display: block; width: 100%; height: auto; border-radius: 12px; background: #0b1820; }
+  .panel { margin: 30px 0 22px; border: 1px solid #30424c; border-radius: 13px; overflow: hidden; }
+  .controls { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+  button, select { font: inherit; border-radius: 8px; border: 1px solid #40545e; padding: 10px 14px; background: #182731; color: #ecf3f6; }
+  button:first-child { background: #a9ff69; color: #142010; border-color: #a9ff69; font-weight: 650; }
+  button:disabled { opacity: .45; }
+  input { accent-color: #a9ff69; width: min(420px, 100%); }
+  #status { font-variant-numeric: tabular-nums; }
+  .note { font-size: 14px; }
+  a { color: #a9ff69; }
+</style>
+<main>
+  <div class="eyebrow">PULSEDECK / LAB</div>
+  <h1>Una nuova email, un piccolo movimento.</h1>
+  <p>La bustina compare, ruota e raggiunge l’orologio. Il badge rimane visibile con tre email non lette simulate.</p>
+  <div class="panel"><canvas width="1920" height="480" aria-label="Anteprima animata del display PulseDeck con notifica Gmail simulata"></canvas></div>
+  <div class="controls">
+    <button id="replay" disabled>Ripeti animazione</button>
+    <button id="pause" disabled>Pausa</button>
+    <label>Riproduzione <select id="rate"><option value="30">30 fps · effetto desiderato</option><option value="1">1 fps · confronto con il ciclo attuale</option></select></label>
+    <input id="position" type="range" min="0" max="120" value="0" aria-label="Posizione animazione" disabled>
+    <output id="status" aria-live="polite">Caricamento…</output>
+  </div>
+  <p class="note">Prova visiva con immagini generate da SkiaSharp sul layout reale di PulseDeck. Nessun account Gmail collegato, nessuna email letta e nessuna modifica al display fisico. I sensori sono volutamente senza letture.</p>
+  <p class="note">Il confronto a 1 fps illustra la frequenza del ciclo attuale: non misura i tempi USB. La fluidità a 30 fps nel browser non garantisce la stessa velocità sul pannello.</p>
+</main>
+<script type="module">
+  const canvas = document.querySelector('canvas'), ctx = canvas.getContext('2d');
+  const replay = document.querySelector('#replay'), pause = document.querySelector('#pause');
+  const rate = document.querySelector('#rate'), position = document.querySelector('#position'), status = document.querySelector('#status');
+  let base, frames, elapsed = 0, playing = false, last = 0, displayed = -1;
+  const load = src => new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = src; });
+  function draw() {
+    const step = Number(rate.value) === 1 ? 30 : 1;
+    const index = Math.max(0, Math.min(120, Math.floor(elapsed * 30 / step) * step));
+    position.value = Math.min(120, Math.round(elapsed * 30));
+    if (index === displayed) return;
+    displayed = index; ctx.drawImage(base, 0, 0); ctx.drawImage(frames[index], 0, 0);
+    status.textContent = index < 51 ? 'Comparsa e rotazione' : index < 83 ? 'Verso l’orologio' : 'Badge · 3 non lette (demo)';
+  }
+  function tick(time) {
+    if (playing) { elapsed = Math.min(4, elapsed + Math.max(0, time - last) / 1000); if (elapsed === 4) { playing = false; pause.textContent = 'Riprendi'; } draw(); }
+    last = time; requestAnimationFrame(tick);
+  }
+  replay.onclick = () => { elapsed = 0; playing = true; last = performance.now(); pause.textContent = 'Pausa'; draw(); };
+  pause.onclick = () => { playing = !playing; last = performance.now(); pause.textContent = playing ? 'Pausa' : 'Riprendi'; };
+  position.oninput = () => { elapsed = Number(position.value) / 30; playing = false; pause.textContent = 'Riprendi'; draw(); };
+  rate.onchange = () => { displayed = -1; draw(); };
+  try {
+    base = await load('base.png'); ctx.drawImage(base, 0, 0);
+    frames = await Promise.all(Array.from({length: 121}, (_, i) => load(`frame-${String(i).padStart(3, '0')}.png`)));
+    replay.disabled = pause.disabled = position.disabled = false;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { elapsed = 4; pause.textContent = 'Riprendi'; } else playing = true;
+    last = performance.now(); draw(); requestAnimationFrame(tick);
+  } catch { status.textContent = 'Impossibile caricare i fotogrammi. Ricarica la pagina.'; }
+</script>
+</html>

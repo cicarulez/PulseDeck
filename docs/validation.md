@@ -1929,3 +1929,21 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   connected with recent frame acknowledgements. No private link or appointment
   details were included in validation output. Physical calendar appearance has
   not yet been confirmed by the user.
+
+### Notification animation experiment (2026-09-19)
+
+- Added `tools/notification-preview`, an isolated visual experiment using the
+  production SkiaSharp panel renderer and a preview-only mail animation. It has
+  no providers, credential access, agent API calls or serial writes. The fixed
+  unread count is explicitly synthetic; hardware readings remain unavailable.
+- Generated 121 transparent animation frames on Linux and Windows, including
+  Windows Segoe UI panel typography. Visually reviewed arrival, travel and the
+  final badge between volume and clock. No running agent binary was replaced.
+- Browser checks passed for loading, replay at 1 fps, pause, timeline scrubbing,
+  final badge, mobile width and reduced-motion handling, with no page errors.
+  A replay timing edge case was corrected: a queued animation-frame timestamp
+  can precede the click timestamp, so elapsed increments and indices are clamped.
+- The isolated preview is served from the local app's `notification-preview/`
+  static directory. The production loop remains approximately one update per
+  second. Smooth browser playback is not evidence of physical USB/display
+  animation throughput; that hardware experiment remains separate.
