@@ -205,53 +205,61 @@ public sealed class DeckRenderer : IDisposable
                     canvas.DrawRect(x + 16, y + 70, (float)fraction * (cellWidth - 32), 3, accentPaint);
             }
         }
-        void Discord(float x, float y, float width)
+        bool IsSpeaking(VoiceMember member) => state.Discord.SpeakingStatus == "connected"
+            && member.Speaking == true && !member.Mute && !member.Deaf;
+        void DiscordRow(VoiceMember member, float x, float y, float width, float size = 18)
         {
-            Text("DISCORD", x, y, 15, accent, true);
-            if (state.Discord.Status != "connected") Text("Discord non collegato", x, y + 34, 18, muted, maxWidth: width);
-            else if (state.Discord.Members.Count == 0) Text("Nessun partecipante", x, y + 34, 18, muted, maxWidth: width);
-            else
+            var speaking = IsSpeaking(member);
+            if (speaking)
             {
-                var members = state.Discord.Members.OrderByDescending(m => m.Id == config.TrackedMemberId).Take(3).ToArray();
-                for (int i = 0; i < members.Length; i++)
-                {
-                    Text(members[i].Name, x, y + 29 + i * 29, 18, maxWidth: width - 85);
-                    Text(members[i].Deaf ? "DEAF" : members[i].Mute ? "MUTE" : "ON", x + width - 70, y + 29 + i * 29, 14,
-                        members[i].Deaf || members[i].Mute ? new SKColor(255, 146, 131) : accent);
-                }
-                if (state.Discord.Members.Count > 3) Text($"+{state.Discord.Members.Count - 3} partecipanti", x, y + 114, 13, muted);
+                using var highlight = new SKPaint { Color = accent.WithAlpha(40), IsAntialias = true };
+                canvas.DrawRoundRect(SKRect.Create(x - 6, y - 22, width + 12, 28), 5, 5, highlight);
+                canvas.DrawCircle(x + 3, y - 7, 4, accentPaint);
             }
+            var streaming = member.Streaming == true;
+            Text(member.Name, x + 14, y, size, speaking ? accent : SKColors.White, speaking,
+                maxWidth: width - (streaming ? 116 : 85));
+            if (streaming)
+            {
+                // Draw a screen with a play triangle; independent from mute and speaking state.
+                var left = x + width - 94;
+                using var monitor = new SKPaint { Color = new SKColor(190, 150, 255), IsAntialias = true,
+                    Style = SKPaintStyle.Stroke, StrokeWidth = 1.8f };
+                canvas.DrawRoundRect(SKRect.Create(left, y - 17, 22, 15), 2, 2, monitor);
+                canvas.DrawLine(left + 11, y - 2, left + 11, y + 2, monitor);
+                canvas.DrawLine(left + 5, y + 2, left + 17, y + 2, monitor);
+                monitor.Style = SKPaintStyle.Fill;
+                using var play = new SKPath();
+                play.MoveTo(left + 8, y - 14); play.LineTo(left + 8, y - 5); play.LineTo(left + 15, y - 9.5f); play.Close();
+                canvas.DrawPath(play, monitor);
+            }
+            Text(member.Deaf ? "DEAF" : member.Mute ? "MUTO" : speaking ? "VOCE" : "ON",
+                x + width - 62, y, 13, member.Deaf || member.Mute ? new SKColor(255, 146, 131) : speaking ? accent : muted, maxWidth: 62);
         }
-        void GamingDiscord()
+        void Discord(float x, float y, float width, int capacity = 3, bool expanded = false)
         {
-            Text("DISCORD", 48, 113, 18, accent, true);
-            var online = state.Discord.Status == "connected";
-            if (!online) { Text("Discord non collegato", 48, 166, 21, muted, maxWidth: 300); return; }
-            var members = state.Discord.Members.OrderByDescending(m => state.Discord.SpeakingStatus == "connected" && m.Speaking == true)
+            Text("DISCORD", x, y, expanded ? 18 : 15, accent, true);
+            if (state.Discord.Status != "connected") { Text("Discord non collegato", x, y + 34, 18, muted, maxWidth: width); return; }
+            var members = state.Discord.Members.OrderByDescending(IsSpeaking)
                 .ThenByDescending(m => m.Id == config.TrackedMemberId).ThenBy(m => m.Name).ToArray();
-            Text($"{members.Length} partecipanti", 48, 139, 16, muted);
-            const int capacity = 8;
             var pages = Math.Max(1, (members.Length + capacity - 1) / capacity);
-            var page = (int)(state.Timestamp.ToUnixTimeSeconds() / 8 % pages);
-            var visible = members.Skip(page * capacity).Take(capacity).ToArray();
-            if (members.Length == 0) Text("Nessun partecipante", 48, 183, 20, muted, maxWidth: 300);
-            for (var i = 0; i < visible.Length; i++)
+            var page = expanded ? (int)(state.Timestamp.ToUnixTimeSeconds() / 8 % pages) : 0;
+            if (expanded)
             {
-                var member = visible[i]; var y = 171 + i * 30;
-                var speaking = state.Discord.SpeakingStatus == "connected" && member.Speaking == true && !member.Mute && !member.Deaf;
-                if (speaking)
-                {
-                    using var highlight = new SKPaint { Color = accent.WithAlpha(40), IsAntialias = true };
-                    canvas.DrawRoundRect(SKRect.Create(42, y - 22, 312, 28), 5, 5, highlight);
-                    canvas.DrawCircle(51, y - 7, 4, accentPaint);
-                }
-                Text(member.Name, 62, y, 20, speaking ? accent : SKColors.White, speaking, maxWidth: 205);
-                Text(member.Deaf ? "DEAF" : member.Mute ? "MUTO" : speaking ? "VOCE" : "", 277, y, 13, speaking ? accent : muted, maxWidth: 70);
+                Text($"{members.Length} partecipanti", x, y + 26, 16, muted);
+                if (pages > 1) Text($"{page + 1}/{pages}", x + width - 50, y + 26, 14, muted, maxWidth: 50);
             }
-            Text(state.Discord.SpeakingStatus == "connected" ? "Attività vocale collegata"
-                : state.Discord.SpeakingStatus == "connecting" ? "Collegamento voce…" : "Attività vocale non disponibile", 48, 422, 14, muted, maxWidth: 300);
-            if (pages > 1) Text($"{page + 1}/{pages}", 296, 139, 14, muted, maxWidth: 50);
+            var firstRow = y + (expanded ? 58 : 29);
+            if (members.Length == 0) Text("Nessun partecipante", x, firstRow, 18, muted, maxWidth: width);
+            var visible = members.Skip(page * capacity).Take(capacity).ToArray();
+            for (var i = 0; i < visible.Length; i++) DiscordRow(visible[i], x, firstRow + i * 30, width, expanded ? 20 : 18);
+            if (expanded)
+                Text(state.Discord.SpeakingStatus switch { "connected" => "Attività vocale collegata", "connecting" => "Collegamento voce…",
+                    "inactive" => "Attività vocale inattiva", _ => "Attività vocale non disponibile" },
+                    x, firstRow + capacity * 30 + 11, 14, muted, maxWidth: width);
+            else if (members.Length > capacity) Text($"+{members.Length - capacity} partecipanti", x, y + 114, 13, muted);
         }
+        void GamingDiscord() => Discord(48, 113, 300, 8, expanded: true);
         void GamePanel(float x, float width)
         {
             var game = state.Game;
@@ -306,6 +314,7 @@ public sealed class DeckRenderer : IDisposable
                 Text("Vento " + Number(weather.WindSpeed, " km/h"), 48, 397, 20, maxWidth: 300);
             }
         }
+        var expandDesktopDiscord = state.Profile == "desktop" && state.Media.Status != "connected";
         void Compact(bool gaming)
         {
             var weatherLayout = config.Layout == "weather";
@@ -322,6 +331,8 @@ public sealed class DeckRenderer : IDisposable
             for (int i = 0; i < (weatherLayout ? 12 : WidgetCatalog.Slots.Count); i++)
                 WidgetCard(i, startX + i % columns * (cellWidth + 12), 86 + i / columns * 92, cellWidth);
             if (gaming) GamePanel(mediaX, mediaWidth);
+            else if (expandDesktopDiscord)
+                Discord(mediaX + 12, 108, mediaWidth - 24, 8, expanded: true);
             else
             {
                 Media(mediaX + 12, 108, mediaWidth - 24);
@@ -392,10 +403,11 @@ public sealed class DeckRenderer : IDisposable
             var voice = TrackedVoiceHeader.Resolve(state.Discord, config.TrackedMemberId);
             if (voice.Muted is null) return;
             var color = voice.Muted is null ? muted : voice.Muted == true || voice.Deaf ? new SKColor(255, 146, 131) : accent;
-            using var panel = new SKPaint { Color = new SKColor(12, 24, 28, 220), IsAntialias = true };
+            var speaking = state.Discord.Members.FirstOrDefault(m => m.Id == config.TrackedMemberId) is { } member && IsSpeaking(member);
+            using var panel = new SKPaint { Color = speaking ? accent.WithAlpha(40) : new SKColor(12, 24, 28, 220), IsAntialias = true };
             canvas.DrawRoundRect(SKRect.Create(1180, 10, 340, 46), 7, 7, panel);
             Text(voice.Name, 1194, 40, 20, heavy: true, maxWidth: 194);
-            Text(voice.Status, 1400, 40, 14, color, true, maxWidth: 108);
+            Text(speaking ? "VOCE" : voice.Status, 1400, 40, 14, color, true, maxWidth: 108);
         }
         Text("PULSEDECK", 32, 42, 23, accent, true);
         Text("RECON / " + state.Profile.ToUpperInvariant(), 320, 42, 18, muted);
@@ -417,19 +429,16 @@ public sealed class DeckRenderer : IDisposable
         canvas.DrawLine(1370, 90, 1370, 446, line);
         Bar("bar1", 113); Bar("bar2", 171); Bar("bar3", 229);
         canvas.DrawLine(32, 273, 282, 273, line);
-        Text("VOICE / DISCORD", 32, 307, 16, accent, true);
-        if (state.Discord.Status != "connected") Text("Discord non collegato", 32, 344, 19, muted);
-        else if (state.Discord.Members.Count == 0) Text("Nessun partecipante", 32, 344, 18, muted);
+        if (!expandDesktopDiscord) Discord(32, 307, 250);
         else
         {
-            var members = state.Discord.Members.OrderByDescending(m => m.Id == config.TrackedMemberId).Take(3).ToArray();
-            for (int i = 0; i < members.Length; i++)
+            var extra = widgets["side"];
+            if (!extra.Hidden)
             {
-                var member = members[i];
-                Text(member.Name, 32, 340 + i * 30, 18, maxWidth: 172);
-                Text(member.Deaf ? "DEAF" : member.Mute ? "MUTE" : "ON", 216, 340 + i * 30, 15, member.Mute || member.Deaf ? new SKColor(255, 146, 131) : accent);
+                Text(extra.Label, 32, 307, 15, muted, maxWidth: 250);
+                ValueText(extra, 32, 351, 30, 250);
             }
-            if (state.Discord.Members.Count > 3) Text($"+{state.Discord.Members.Count - 3} partecipanti", 32, 436, 15, muted);
+            Text(state.Hardware.Status == "connected" ? "LIVE SENSOR DATA" : "SENSORS UNAVAILABLE", 32, 432, 14, muted, maxWidth: 250);
         }
 
         Text(state.Profile == "gaming" ? "GAME TELEMETRY" : state.Profile == "music" ? "NOW PLAYING" : "SYSTEM OVERVIEW", 350, 119, 16, accent, true);
@@ -453,6 +462,9 @@ public sealed class DeckRenderer : IDisposable
         }
         Text(BackgroundStatus == "unavailable" ? "Sfondo non disponibile" : "ACTIVE / " + (state.ForegroundApp.Length > 0 ? state.ForegroundApp : "Desktop"), 350, 432, 18, muted, maxWidth: 970);
 
+        if (expandDesktopDiscord) Discord(1410, 113, 465, 8, expanded: true);
+        else
+        {
         Media(1410, 113, 465);
         var side = widgets["side"];
         if (!side.Hidden)
@@ -461,6 +473,7 @@ public sealed class DeckRenderer : IDisposable
             ValueText(side, 1410, 379, 30, 465);
         }
         Text(state.Hardware.Status == "connected" ? "LIVE SENSOR DATA" : "SENSORS UNAVAILABLE", 1410, 432, 16, muted);
+        }
         }
         if (config.News.Enabled)
         {

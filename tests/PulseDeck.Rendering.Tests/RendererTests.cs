@@ -6,6 +6,47 @@ using Xunit;
 
 public class RendererTests
 {
+    [Theory]
+    [InlineData("compact")]
+    [InlineData("weather")]
+    [InlineData("classic")]
+    public void DesktopUsesMediaSpaceForEightDiscordMembersAndRestoresPausedMedia(string layout)
+    {
+        using var renderer = new DeckRenderer();
+        var members = Enumerable.Range(0, 8).Select(i => new VoiceMember(i.ToString(), "Player " + i, false, false)).ToArray();
+        var config = new DeckConfig { Layout = layout };
+        var empty = State with { Media = new(false, "", "", "", 0, 0, "idle"), Discord = new(members, null, "connected") };
+        var expanded = renderer.Render(empty, config);
+        members[7] = members[7] with { Streaming = true };
+        var streaming = renderer.Render(empty, config);
+        Assert.NotEqual(expanded.Pixels, streaming.Pixels); // Eighth participant is visible.
+        for (var y = 0; y < 480; y++)
+            Assert.True(expanded.Pixels.AsSpan(y * 1920 * 4, 1352 * 4).SequenceEqual(streaming.Pixels.AsSpan(y * 1920 * 4, 1352 * 4)));
+        var paused = empty with { Media = State.Media with { Playing = false } };
+        var pausedFrame = renderer.Render(paused, config);
+        members[7] = members[7] with { Streaming = false };
+        Assert.Equal(pausedFrame.Pixels, renderer.Render(paused, config).Pixels); // Small roster is restored.
+        Assert.NotEqual(expanded.Pixels, renderer.Render(paused, config).Pixels);
+        Assert.Equal(expanded.Pixels, renderer.Render(empty, config).Pixels);
+    }
+
+    [Theory]
+    [InlineData("desktop", "compact")]
+    [InlineData("desktop", "classic")]
+    [InlineData("gaming", "weather")]
+    [InlineData("music", "compact")]
+    public void StreamingIndicatorIsIndependentOfVoiceAvailabilityAndMute(string profile, string layout)
+    {
+        using var renderer = new DeckRenderer();
+        var member = new VoiceMember("member", "Synthetic participant with a long name", true, false);
+        var state = State with { Profile = profile, Discord = new([member], null, "connected") { SpeakingStatus = "unavailable" } };
+        var config = new DeckConfig { Layout = layout };
+        var baseline = renderer.Render(state, config);
+        var streaming = renderer.Render(state with { Discord = state.Discord with { Members = [member with { Streaming = true }] } }, config);
+        Assert.NotEqual(baseline.Pixels, streaming.Pixels);
+        Assert.Equal(baseline.Pixels, renderer.Render(state with { Discord = state.Discord with { Members = [member with { Streaming = false }] } }, config).Pixels);
+    }
+
     [Fact]
     public void MusicPlaybackStatusChangesLyricsHeaderWithoutChangingCoverColumn()
     {
@@ -152,7 +193,7 @@ public class RendererTests
         for (var y = 86; y < 442; y++) Assert.True(live.Pixels.AsSpan(y * 1920 * 4, 1920 * 4).SequenceEqual(fixedLayout.Pixels.AsSpan(y * 1920 * 4, 1920 * 4)));
     }
     [Fact]
-    public void SpeakingOnlyChangesGamingRosterAndUnavailableClearsHighlight()
+    public void SpeakingChangesDesktopAndGamingRostersAndUnavailableClearsHighlight()
     {
         using var renderer = new DeckRenderer();
         var members = Enumerable.Range(0, 8).Select(i => new VoiceMember(i.ToString(), "Player " + i, false, false)).ToArray();
@@ -161,7 +202,7 @@ public class RendererTests
         var desktop = renderer.Render(state, config);
         var gaming = renderer.Render(state with { Profile = "gaming" }, config);
         members[7] = members[7] with { Speaking = true };
-        Assert.Equal(desktop.Pixels, renderer.Render(state, config).Pixels);
+        Assert.NotEqual(desktop.Pixels, renderer.Render(state, config).Pixels);
         var speaking = renderer.Render(state with { Profile = "gaming" }, config);
         Assert.NotEqual(gaming.Pixels, speaking.Pixels);
         for (var y = 86; y < 442; y++) Assert.True(gaming.Pixels.AsSpan((y * 1920 + 380) * 4, 1520 * 4).SequenceEqual(speaking.Pixels.AsSpan((y * 1920 + 380) * 4, 1520 * 4)));

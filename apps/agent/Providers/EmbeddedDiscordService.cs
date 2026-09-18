@@ -8,7 +8,7 @@ using PulseDeck.Core;
 
 namespace PulseDeck.Agent.Providers;
 
-// Owns Gateway and an optional Gaming-only voice connection. Never sends or records audio/messages.
+// Owns Gateway and an optional presence-driven voice connection. Never sends or records audio/messages.
 public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedDiscordService> logger) : BackgroundService
 {
     private DiscordSocketClient? client;
@@ -17,7 +17,6 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
     private volatile bool ready;
     private string detail = "Connessione a Discord in preparazione.";
     private string status = "starting";
-    private volatile bool gaming;
     private IAudioClient? voice;
     private CancellationTokenSource? voiceLifetime;
     private readonly VoiceActivity speaking = new();
@@ -37,11 +36,15 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
     }
     private string speakingStatus = "inactive";
     private DateTimeOffset voiceRetryAt;
-    public void SetGaming(bool value) => gaming = value;
+
+    private static bool WantsVoice(DeckConfig settings, SocketVoiceChannel? channel) =>
+        channel is not null && DiscordVoicePolicy.ShouldConnect(settings,
+            channel.ConnectedUsers.Where(user => !user.IsBot).Select(user => user.Id.ToString()));
 
     private async Task UpdateVoice(CancellationToken token)
     {
-        if (!gaming || !config.Current.GamingVoiceActivity || !ready)
+        var channel = client?.GetGuild(guildId)?.GetVoiceChannel(channelId);
+        if (!ready || !WantsVoice(config.Current, channel))
         {
             await StopVoice(); speakingStatus = "inactive"; voiceRetryAt = DateTimeOffset.MinValue; voiceDetail = null; return;
         }
@@ -58,9 +61,7 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
         if (DateTimeOffset.UtcNow < voiceRetryAt) return;
         await StopVoice();
         voiceRetryAt = DateTimeOffset.UtcNow.AddSeconds(30);
-        var channel = client?.GetGuild(guildId)?.GetVoiceChannel(channelId);
         if (channel is null) { speakingStatus = "unavailable"; return; }
-        if (!channel.ConnectedUsers.Any(user => !user.IsBot)) { speakingStatus = "inactive"; return; }
         speakingStatus = "connecting"; voiceDetail = null; encryptionReady = false; voiceFault = null;
         try
         {
@@ -110,14 +111,15 @@ public sealed class EmbeddedDiscordService(ConfigStore config, ILogger<EmbeddedD
         var channel = guild.GetVoiceChannel(channelId);
         if (channel is null)
             return new([], null, "unavailable", "Il canale vocale configurato non è disponibile per il bot.");
-        var voiceAvailable = gaming && settings.GamingVoiceActivity && encryptionReady && voiceFault is null && voice?.ConnectionState == ConnectionState.Connected;
+        var wanted = WantsVoice(settings, channel);
+        var voiceAvailable = wanted && encryptionReady && voiceFault is null && voice?.ConnectionState == ConnectionState.Connected;
         var members = channel.ConnectedUsers.Where(u => u.Id != socket.CurrentUser.Id).Select(u => new VoiceMember(u.Id.ToString(), u.DisplayName,
             u.IsMuted || u.IsSelfMuted, u.IsDeafened || u.IsSelfDeafened)
-            { Speaking = voiceAvailable ? speaking.IsSpeaking(u.Id, DateTimeOffset.UtcNow) : null })
+            { Speaking = voiceAvailable ? speaking.IsSpeaking(u.Id, DateTimeOffset.UtcNow) : null, Streaming = u.IsStreaming })
             .OrderBy(u => u.Name, StringComparer.OrdinalIgnoreCase).ToArray();
         return new(members, members.FirstOrDefault(m => m.Id == settings.TrackedMemberId), "connected",
             $"{guild.Name} / {channel.Name} · Discord integrato" + (voiceAvailable ? " · bot nel canale vocale" : ""))
-            { SpeakingStatus = !gaming || !settings.GamingVoiceActivity ? "inactive" : voiceAvailable ? "connected"
+            { SpeakingStatus = !wanted ? "inactive" : voiceAvailable ? "connected"
                 : voice?.ConnectionState == ConnectionState.Connected && voiceFault is null ? "connecting" : speakingStatus,
                 SpeakingDetail = voiceDetail };
     }

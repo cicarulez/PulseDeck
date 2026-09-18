@@ -68,6 +68,7 @@ public sealed record ForegroundSnapshot(int ProcessId, string ProcessName, strin
 public sealed record VoiceMember(string Id, string Name, bool Mute, bool Deaf)
 {
     public bool? Speaking { get; init; }
+    public bool? Streaming { get; init; }
 }
 public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMember? Tracked, string Status, string? Detail = null)
 {

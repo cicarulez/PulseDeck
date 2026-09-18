@@ -34,7 +34,7 @@ CPU, GPU and RAM rings. Temperatures, power, clocks, fans and combined download/
 
 ![Gaming layout: voice participants, hardware readings, game artwork, session timer and FPS](docs/images/gaming.png)
 
-Discover games in Steam and EA libraries, show artwork, keep the session timer through Alt-Tab, and display application FPS from PresentMon. Discord speaking activity highlights the current speaker in the Gaming layout.
+Discover games in Steam and EA libraries, show artwork, keep the session timer through Alt-Tab, and display application FPS from PresentMon. Discord speaking activity highlights the current speaker, and the voice connection stays active through Alt-Tab while you remain in the configured channel.
 
 ### Music · Give Spotify its own space
 
@@ -50,7 +50,7 @@ Spotify gets cover art, track progress and optional synchronized lyrics from LRC
 | --- | --- |
 | Hardware | LibreHardwareMonitor sensors, configurable values/bars/rings, temperature and power trends |
 | Games | Steam/EA discovery, manual exceptions, per-game artwork, persistent session timer, application FPS |
-| Voice | Discord channel roster, mute/deaf state and optional speaking activity |
+| Voice | Discord roster, mute/deaf, speaking highlights and screen-sharing indicators; expanded Desktop roster when media is absent |
 | Media | Windows media sessions; optional Chrome extension prioritizes the main YouTube player |
 | Active app | Chrome/Terminal tab titles, Explorer folder names, registered Windows app names/logos and optional Chrome favicons |
 | Spotify | Dedicated lyrics layout; other media sources keep the regular media panel |

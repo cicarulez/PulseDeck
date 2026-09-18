@@ -63,7 +63,7 @@ Run the packaged script from the same Windows account that will run PulseDeck:
 
 The script writes DPAPI-encrypted `discord.credentials` to the runtime directory. Remove the plaintext import file after successful import. Never commit or share it. Restart the agent if needed, choose embedded Discord mode and select the tracked participant in the configurator. Use a bot token, never a personal user token.
 
-The bot needs access to the target server/channel; voice activity requires channel connection permission and a working voice connection. Follow the [Discord developer documentation](https://discord.com/developers/docs/intro) to create and authorize a bot. A muted/deafened flag is not evidence that someone is speaking.
+The bot needs access to the target server/channel; voice activity requires channel connection permission and a working voice connection. Follow the [Discord developer documentation](https://discord.com/developers/docs/intro) to create and authorize a bot. Enable speaking activity in the configurator and set your tracked user ID: the bot joins the configured channel when you enter and leaves when you exit, regardless of profile. Without a tracked ID, it joins while any human participant is present. A muted/deafened flag is not evidence that someone is speaking.
 
 ## Automatic startup and stopping
 

@@ -30,7 +30,7 @@ DPAPI protects credentials for the Windows user; it is not a reason to share cre
 | Steam artwork lookup | Game-title searches and image requests |
 | SteamGridDB | Game-title searches authenticated with your optional API key; image requests to its CDN |
 | LRCLIB | Song title, artist, duration and album when available; no audio or Spotify credentials |
-| Discord | Bot authentication, server/channel access and optional voice connection for speaking events |
+| Discord | Bot authentication, channel roster/screen-sharing flags and optional voice connection for speaking events while the tracked user is present (or any human if no user is configured), across profiles. Received audio is discarded, never recorded or played. |
 | Chrome extension | YouTube main-player metadata is posted locally. Optional `tabs`/`favicon` permissions add the focused tab title and a bounded PNG from Chrome’s local favicon endpoint; no page URL is sent to the agent and no arbitrary icon URL is fetched. See the [extension guide](../apps/youtube-extension/README.md). |
 
 These providers see normal network request information, including your IP address. Their services and policies are independent of PulseDeck. Disable an integration if you do not want its requests.

@@ -1795,4 +1795,46 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
 - The existing one-second update cadence and serial transfer latency still limit
   visible timing precision; the 350 ms adjustment is a selection offset, not a
   guarantee that each physical line appears exactly 350 ms earlier. Per-track
-  source timing may also vary. Listening confirmation remains pending.
+  source timing may also vary. The user subsequently confirmed that synchronization
+  was substantially better; the 350 ms default was retained.
+
+## Discord follows channel presence — 2026-09-18 (0.7.9)
+
+- Removed foreground/profile gating from the embedded voice connection. With the
+  existing voice-activity switch enabled, the bot joins while the tracked human
+  user is in the configured voice channel and leaves when they leave. Without a
+  tracked ID, any human participant keeps it active. Empty channels, disabled
+  activity and external-backend mode do not request voice. The original
+  `gamingVoiceActivity` configuration key is retained for saved-setting compatibility.
+  Alt-Tab no longer triggers voice teardown through the renderer/runtime.
+- Speaking highlights now apply to every rendered Discord roster; the tracked
+  member's header also shows actual speech, including in the Spotify lyrics layout.
+  Existing encrypted-voice readiness checks, bounded reconnects and immediate
+  unavailable-state clearing remain. Input audio is drained without playback or
+  recording, and no audio transmission was added.
+- Embedded roster entries expose the Gateway `IsStreaming` flag. A purple screen
+  icon appears independently of mute/deaf/speaking. External backends can supply
+  an optional boolean `streaming`; absence remains unknown. The bot does not join
+  or view the shared stream.
+- In Desktop, no connected media session expands Discord to eight rows with
+  eight-second pagination across all three layouts. Paused sessions retain media.
+  Compact/weather sensor positions remain fixed; Classic moves the side metric
+  into the former small roster space. Media reappearance restores the small roster.
+- 159 Core tests and 34 renderer/provider tests passed, including presence across
+  profiles, departure/re-entry, disabled/external modes, larger roster visibility,
+  paused-media restoration and streaming independent of voice availability/mute.
+  Angular production build and self-contained Windows publish passed. Synthetic
+  previews were visually reviewed for large/small rosters, long names, streaming,
+  speaking and pagination; Linux fallback typography differs from Windows.
+- Deployed after the old agent and task exited, with backup
+  `%LOCALAPPDATA%\PulseDeck\before-discord-079-20260918-232339`.
+  Configuration and Discord/SteamGridDB credential hashes were preserved. The
+  0.7.9 agent identified COM5 and acknowledged its initial full frame.
+- Live observation collected 40 samples over about 80 seconds: Desktop throughout,
+  voice connected in every sample, 17 sampled speaking-state transitions and one
+  reported screen-sharing participant. The media session changed from connected
+  to idle, selecting the expanded roster. Display acknowledgements advanced from
+  31 to 105 with connected status throughout, and FPS collection remained ready.
+  No member IDs, names, audio or shared-screen content were included in the monitor.
+  Live game-to-desktop switching, channel departure/re-entry and the user's final
+  visual confirmation were not observed during this interval.

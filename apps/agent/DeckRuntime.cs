@@ -10,7 +10,7 @@ namespace PulseDeck.Agent;
 public sealed class DeckHub : Hub;
 
 public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, MediaProvider media,
-    DiscordProvider discord, EmbeddedDiscordService embeddedDiscord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, LyricsProvider lyrics, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
+    DiscordProvider discord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, LyricsProvider lyrics, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
     ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly ProfileSelector selector = new();
@@ -40,7 +40,6 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     var game = gameSelector.Select(settings, profile, active, now);
                     var session = sessions.Read(game, now);
                     if (game is not null && session is null && active.ProcessId != game.ProcessId) game = null;
-                    embeddedDiscord.SetGaming(settings.GamingLayout && profile == "gaming");
                     var frameRate = fps.Read(profile == "gaming" ? session : null, settings, now);
                     var next = new DeckState(now, profile, active.ProcessName,
                         hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status, frameRate.Status)
@@ -61,6 +60,6 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
             } while (await timer.WaitForNextTickAsync(stoppingToken));
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
-        finally { embeddedDiscord.SetGaming(false); fps.Dispose(); display.Shutdown(); }
+        finally { fps.Dispose(); display.Shutdown(); }
     }
 }

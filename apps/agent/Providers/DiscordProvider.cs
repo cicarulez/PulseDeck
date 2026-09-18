@@ -19,7 +19,8 @@ public sealed class DiscordProvider(HttpClient client, EmbeddedDiscordService em
             static bool Flag(JsonElement m, string name) => m.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;
             var members = data.GetProperty("members").EnumerateArray().Select(m => new VoiceMember(
                 m.GetProperty("id").GetString() ?? "", m.GetProperty("name").GetString() ?? "Unknown",
-                Flag(m, "mute") || Flag(m, "muted"), Flag(m, "deaf"))).ToArray();
+                Flag(m, "mute") || Flag(m, "muted"), Flag(m, "deaf"))
+                { Streaming = m.TryGetProperty("streaming", out var stream) && stream.ValueKind is JsonValueKind.True or JsonValueKind.False ? stream.GetBoolean() : null }).ToArray();
             var tracked = members.FirstOrDefault(m => m.Id == config.TrackedMemberId);
             return new(members, tracked, "connected", "Backend reachable. Voice login readiness and speaking activity are not exposed by this backend.");
         }
