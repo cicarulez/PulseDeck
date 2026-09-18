@@ -6,6 +6,10 @@ PulseDeck è un progetto open source per trasformare il display USB **TURZX 8,8�
 
 Il configuratore e il display usano lo stesso renderer. L’agent gira sul PC; non serve un account PulseDeck. Le integrazioni opzionali interrogano i rispettivi servizi esterni. L’interfaccia è attualmente in italiano; la documentazione principale è in inglese per facilitare i contributi internazionali.
 
+## Da dove nasce
+
+L’idea è partita da [Discord Overlay](https://github.com/cicarulez/discord-overlay), per vedere i partecipanti al canale vocale durante il gioco. I limiti incontrati con gli overlay, comprese le restrizioni degli anti-cheat, hanno portato a spostare queste informazioni su un display esterno. Da questa esigenza è nato PulseDeck, aggiungendo sensori hardware, sessioni di gioco, immagini e musica.
+
 ## Cosa puoi fare
 
 - **Desktop:** CPU/GPU/RAM, temperature, watt, ventole, frequenze, rete, meteo e news.

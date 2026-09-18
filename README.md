@@ -18,6 +18,10 @@ The browser configurator and physical panel share the **same renderer**. What yo
 
 **Early development, tested on one display revision.** The verified device is `chs_88inch.dev1_rom1.90`, USB `0525:A4A7`. Other sizes and revisions are not yet supported. The configurator and display labels are currently in Italian; localization is a welcome contribution.
 
+## Where it started
+
+The idea began with [Discord Overlay](https://github.com/cicarulez/discord-overlay): keeping Discord voice participants visible while gaming. Overlay restrictions encountered in games, including anti-cheat limitations, inspired a move to a dedicated external display. PulseDeck grew from that need, adding hardware telemetry, game sessions, artwork and music to the original voice-information concept.
+
 ## Three ways to use the same screen
 
 ### Desktop · Keep the essentials in view
