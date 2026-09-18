@@ -12,6 +12,22 @@ Check **Sensori** for available readings and the administrator/PawnIO diagnostic
 
 Close the vendor application completely, verify the actual COM port and check [hardware compatibility](hardware.md). An unknown identity is deliberately rejected. After recovery is exhausted, reconnect explicitly. Keep error text and device identity for a sanitized report; do not try firmware flashing as a troubleshooting step.
 
+## The preview moves but the physical panel freezes
+
+A fresh preview with a display transport error points to the USB/display path.
+Starting with 0.7.5, a panel rejection of a partial frame (`needReSend:1`)
+selects full-frame updates for the remainder of that connection. This avoids
+repeatedly returning to the rejected partial-update path. It uses more USB
+bandwidth; unchanged images are still skipped. A manual connection or app restart
+starts with partial updates again. Recovery still has a bounded retry budget.
+
+The local `/api/display` response includes `fullFrameFallback`, the last frame
+region, attempted transfer bytes and elapsed milliseconds (including encoding,
+acknowledgements and any reopen). Transport logs record these on recovery/state
+changes. These diagnostics contain no screen pixels. Preserve sanitized details
+when reporting a recurrence; fallback is a mitigation, not proof of the original
+firmware/transport cause.
+
 ## FPS are unavailable
 
 Wait for collector readiness before launching the game. A newly installed/discovered game can require a fresh collection filter; close it normally, let PulseDeck prepare, then reopen it. Some anti-cheat protected games prevent attaching after launch. Check that the foreground process is recognized and that the full package includes PresentMon under `tools`.

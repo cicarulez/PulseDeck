@@ -19,6 +19,10 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
     public DateTimeOffset? LastAcknowledgedAt { get; private set; }
     public string? LastFrameKind { get; private set; }
     public uint? LastFrameCounter { get; private set; }
+    public bool FullFrameFallback { get; private set; }
+    public FrameRect? LastFrameRegion { get; private set; }
+    public int LastTransferBytes { get; private set; }
+    public double LastTransferMilliseconds { get; private set; }
     public string State => !active ? (failed ? "error" : "disconnected") : pending ? "recovering" : "connected";
 
     public void Start(int firmware)
@@ -32,6 +36,10 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
         LastError = null;
         LastFrameKind = null;
         LastFrameCounter = null;
+        FullFrameFallback = false;
+        LastFrameRegion = null;
+        LastTransferBytes = 0;
+        LastTransferMilliseconds = 0;
     }
 
     public void Cancel()
@@ -49,8 +57,19 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
         // Validate before performing any serial operation, including a recovery reopen.
         if (pixels.Length != TurzxProtocol.Width * TurzxProtocol.Height * 4)
             throw new ArgumentException("Expected a 1920x480 BGRA frame.", nameof(pixels));
+        var started = time.GetTimestamp();
+        var transferring = false;
         try
         {
+            // Even in fallback mode, unchanged frames do not use USB bandwidth.
+            var rect = previous is null ? null : TurzxProtocol.ChangedRegion(previous, pixels);
+            if (previous is not null && rect is null) return;
+            LastFrameKind = null;
+            LastFrameCounter = null;
+            LastFrameRegion = null;
+            LastTransferBytes = 0;
+            LastTransferMilliseconds = 0;
+            transferring = true;
             if (pending)
             {
                 Attempts++;
@@ -61,9 +80,10 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
                     counter = 0;
                 }
             }
-            if (previous is null)
+            if (previous is null || FullFrameFallback)
             {
                 LastFrameKind = "full";
+                LastFrameRegion = new(0, 0, TurzxProtocol.Width, TurzxProtocol.Height);
                 LastFrameCounter = null;
                 Write(TurzxProtocol.Packet(Convert.FromHexString("86EF6900000001")));
                 Write(TurzxProtocol.Packet([0x2c], 0x2c));
@@ -73,11 +93,12 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
                 if (!response.Contains("full_png_sucess", StringComparison.OrdinalIgnoreCase))
                     throw new IOException($"Frame was not acknowledged: {response}");
             }
-            else if (TurzxProtocol.ChangedRegion(previous, pixels) is { } rect)
+            else if (rect is { } changed)
             {
                 LastFrameKind = "partial";
+                LastFrameRegion = changed;
                 LastFrameCounter = counter;
-                var (header, payload) = TurzxProtocol.PartialFrame(pixels, rect, rom, counter++);
+                var (header, payload) = TurzxProtocol.PartialFrame(pixels, changed, rom, counter++);
                 Write(header);
                 Write(payload);
             }
@@ -106,11 +127,15 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
         catch (Exception e)
         {
             LastError = e.Message;
+            // On the tested ROM, a full resend succeeds but subsequent partials
+            // can immediately fail again. Keep full updates for this connection;
+            // reopening after a later transport error must not undo the fallback.
+            if (e is ResendRequestedException && LastFrameKind == "partial")
+                FullFrameFallback = true;
             previous = null; // Never diff against an unacknowledged frame.
             healthyFrames = 0;
-            // A full resend can be acknowledged while subsequent partial frames
-            // still fail. Escalate within the existing two-attempt budget to the
-            // same identity-checked reinitialization used after a transport error.
+            // A failed full resend still escalates within the existing two-attempt
+            // budget to the identity-checked transport reinitialization.
             mustReopen = e is not ResendRequestedException || Attempts > 0;
             if (mustReopen || Attempts >= 2 || cancelled()) close();
             active = !cancelled() && Attempts < 2;
@@ -118,13 +143,17 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
             failed = !active && !cancelled();
             failedAt = time.GetTimestamp();
         }
+        finally
+        {
+            if (transferring) LastTransferMilliseconds = time.GetElapsedTime(started).TotalMilliseconds;
+        }
     }
 
     private void CheckCancellation()
     {
         if (cancelled()) throw new OperationCanceledException();
     }
-    private void Write(byte[] packet) { CheckCancellation(); write(packet); }
+    private void Write(byte[] packet) { CheckCancellation(); LastTransferBytes += packet.Length; write(packet); }
     private string ReadStatus() { CheckCancellation(); return readStatus(); }
     private sealed class ResendRequestedException(string message) : IOException(message);
 }

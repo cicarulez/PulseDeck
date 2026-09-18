@@ -11,7 +11,7 @@ public class DisplayRecoveryTests
     }
 
     [Fact]
-    public void ResendUsesLatestFullFrameThenResumesPartialUpdates()
+    public void PartialRejectionUsesLatestFullFrameAndKeepsFullUpdates()
     {
         var rig = new Rig();
         rig.FullSuccess(Frame());
@@ -31,16 +31,21 @@ public class DisplayRecoveryTests
         Assert.Equal(1, rig.Delivery.Recoveries);
         Assert.Equal("connected", rig.Delivery.State);
         rig.Writes.Clear();
-        rig.Replies.Enqueue("needReSend:0");
+        rig.FullSuccess(Frame(4));
+        Assert.True(rig.Delivery.FullFrameFallback);
+        Assert.Equal(TurzxProtocol.FullFrameCommand(), rig.Writes[2]);
+        Assert.Equal(new FrameRect(0, 0, 1920, 480), rig.Delivery.LastFrameRegion);
+        Assert.Equal(rig.Writes.Sum(packet => packet.Length), rig.Delivery.LastTransferBytes);
+        rig.Writes.Clear();
         rig.Delivery.Send(Frame(4));
-        Assert.Equal(0xcc, rig.Writes[0][0]);
+        Assert.Empty(rig.Writes);
         Assert.Equal(3, rig.Delivery.AcknowledgedFrames);
         Assert.NotNull(rig.Delivery.LastAcknowledgedAt);
         Assert.Contains("needReSend:1", rig.Delivery.LastError);
     }
 
     [Fact]
-    public void RepeatedResendAfterSuccessfulFullFrameReinitializesBeforeSecondRetry()
+    public void FullRejectionInFallbackReinitializesWithinExistingBudgetAndKeepsFallback()
     {
         var rig = new Rig();
         rig.FullSuccess(Frame());
@@ -52,20 +57,21 @@ public class DisplayRecoveryTests
         Assert.Equal("full", rig.Delivery.LastFrameKind);
         Assert.Null(rig.Delivery.LastFrameCounter);
         Assert.Equal(0, rig.Reopens);
+        rig.Replies.Enqueue("full_png_sucess");
         rig.Replies.Enqueue("needReSend:1|renderCnt:0"); rig.Delivery.Send(Frame(4));
         Assert.Equal(1, rig.Closes);
-        Assert.Equal((uint)2, rig.Delivery.LastFrameCounter);
+        Assert.Null(rig.Delivery.LastFrameCounter);
         rig.Clock.Advance(4); rig.Delivery.Send(Frame(5)); Assert.Equal(0, rig.Reopens);
         rig.Clock.Advance(1); rig.FullSuccess(Frame(5));
         Assert.Equal(1, rig.Reopens);
         Assert.Equal(2, rig.Delivery.Attempts);
         Assert.Equal(2, rig.Delivery.Recoveries);
         rig.Writes.Clear();
-        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(6));
-        Assert.Equal(new byte[4], rig.Writes[0][10..14]);
-        Assert.Equal((uint)0, rig.Delivery.LastFrameCounter);
-        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(7));
-        Assert.Equal((uint)1, rig.Delivery.LastFrameCounter);
+        rig.FullSuccess(Frame(6));
+        Assert.Equal(TurzxProtocol.FullFrameCommand(), rig.Writes[2]);
+        Assert.True(rig.Delivery.FullFrameFallback);
+        rig.FullSuccess(Frame(7));
+        Assert.Null(rig.Delivery.LastFrameCounter);
         Assert.Equal("connected", rig.Delivery.State);
         Assert.Equal(2, rig.Delivery.Attempts); // a retry success does not renew the budget
     }
@@ -78,6 +84,7 @@ public class DisplayRecoveryTests
         var rig = new Rig(); rig.FullSuccess(Frame());
         rig.Replies.Enqueue("needReSend:1"); rig.Delivery.Send(Frame(1));
         rig.Clock.Advance(2); rig.FullSuccess(Frame(2));
+        rig.Replies.Enqueue("full_png_sucess");
         rig.Replies.Enqueue("needReSend:1"); rig.Delivery.Send(Frame(3));
         if (shutdown) rig.Cancelled = true; else rig.Delivery.Cancel();
         rig.Clock.Advance(5); rig.Writes.Clear(); rig.Delivery.Send(Frame(4));
@@ -189,6 +196,7 @@ public class DisplayRecoveryTests
         rig.FullSuccess(Frame());
         for (byte i = 1; i <= 3; i++)
         {
+            if (i > 1) rig.Replies.Enqueue("full_png_sucess");
             rig.Replies.Enqueue("needReSend:1");
             rig.Delivery.Send(Frame(i));
             if (i == 3) break;
@@ -215,6 +223,50 @@ public class DisplayRecoveryTests
             rig.Delivery.Send(Frame(i));
         }
         Assert.Equal(0, rig.Delivery.Attempts);
+    }
+
+    [Fact]
+    public void HealthyFullFramesRenewBudgetButOnlyExplicitStartClearsFallback()
+    {
+        var rig = new Rig(); rig.FullSuccess(Frame());
+        rig.Replies.Enqueue("needReSend:1"); rig.Delivery.Send(Frame(1));
+        Assert.Equal(new FrameRect(0, 0, 1, 1), rig.Delivery.LastFrameRegion);
+        Assert.Equal(750, rig.Delivery.LastTransferBytes);
+        rig.Clock.Advance(2);
+        for (byte i = 1; i <= 60; i++)
+        {
+            rig.Writes.Clear();
+            rig.FullSuccess(Frame(i));
+            Assert.Equal("full", rig.Delivery.LastFrameKind);
+        }
+        Assert.Equal(0, rig.Delivery.Attempts);
+        Assert.True(rig.Delivery.FullFrameFallback);
+        rig.Delivery.Start(90);
+        Assert.False(rig.Delivery.FullFrameFallback);
+        rig.FullSuccess(Frame());
+        rig.Writes.Clear();
+        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(1));
+        Assert.Equal(0xcc, rig.Writes[0][0]);
+        Assert.Equal((uint)0, rig.Delivery.LastFrameCounter);
+    }
+
+    [Fact]
+    public void TransportTimeoutDuringFallbackPreservesFullUpdatesAndMeasuresDuration()
+    {
+        var rig = new Rig(); rig.FullSuccess(Frame());
+        rig.Replies.Enqueue("needReSend:1"); rig.Delivery.Send(Frame(1));
+        rig.Clock.Advance(2); rig.FullSuccess(Frame(2));
+        rig.Replies.Enqueue(new TimeoutException()); rig.Delivery.Send(Frame(3));
+        rig.Clock.Advance(5);
+        rig.Writes.Clear();
+        rig.OnWrite = () => rig.Clock.Advance(1);
+        rig.FullSuccess(Frame(4));
+        Assert.Equal(1, rig.Reopens);
+        Assert.True(rig.Delivery.FullFrameFallback);
+        Assert.Equal(5000, rig.Delivery.LastTransferMilliseconds);
+        rig.Writes.Clear();
+        rig.FullSuccess(Frame(5));
+        Assert.Equal(TurzxProtocol.FullFrameCommand(), rig.Writes[2]);
     }
 
     [Theory]

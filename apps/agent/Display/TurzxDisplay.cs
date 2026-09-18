@@ -157,12 +157,15 @@ public sealed class TurzxDisplay : IDisposable
                 RecoveryAttempts = delivery.Attempts, Recoveries = delivery.Recoveries,
                 AcknowledgedFrames = delivery.AcknowledgedFrames,
                 LastTransportError = delivery.LastError, LastAcknowledgedAt = delivery.LastAcknowledgedAt,
-                LastFrameKind = delivery.LastFrameKind, LastFrameCounter = delivery.LastFrameCounter
+                LastFrameKind = delivery.LastFrameKind, LastFrameCounter = delivery.LastFrameCounter,
+                FullFrameFallback = delivery.FullFrameFallback, LastFrameRegion = delivery.LastFrameRegion,
+                LastTransferBytes = delivery.LastTransferBytes, LastTransferMilliseconds = delivery.LastTransferMilliseconds
             };
             if (next.Status != status.Status || attempts != delivery.Attempts || recoveries != delivery.Recoveries)
-                logger.LogInformation("TURZX {Port}: {State}; recovery attempts {Attempts}/2, recoveries {Recoveries}, acknowledged frames {Frames}; frame {Kind}, counter {Counter}; last error: {Error}",
+                logger.LogInformation("TURZX {Port}: {State}; recovery attempts {Attempts}/2, recoveries {Recoveries}, acknowledged frames {Frames}; frame {Kind}, counter {Counter}; region {Region}, bytes {Bytes}, duration {Milliseconds} ms, full fallback {Fallback}; last error: {Error}",
                     next.Port, next.Status, next.RecoveryAttempts, next.Recoveries, next.AcknowledgedFrames,
-                    next.LastFrameKind, next.LastFrameCounter, next.LastTransportError);
+                    next.LastFrameKind, next.LastFrameCounter, next.LastFrameRegion, next.LastTransferBytes,
+                    next.LastTransferMilliseconds, next.FullFrameFallback, next.LastTransportError);
             status = next;
         }
     }

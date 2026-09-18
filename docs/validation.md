@@ -1601,3 +1601,43 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   rejection. The underlying cause is not established. No firmware, verified
   full-frame command, retry budget, user configuration or credentials were changed.
   Longer physical stability and root-cause isolation remain open.
+
+## Persistent full-frame recovery — 2026-09-18 (0.7.5)
+
+- The display froze again after the preceding manual reconnect: 169 acknowledged
+  frames, four recoveries, two attempts exhausted, last accepted frame at
+  10:55:16 UTC. Agent state remained fresh and hardware/media/Discord/FPS stayed
+  available. The user reports that this was previously much rarer. USB encoding
+  and delivery had not changed in the recent Music layout releases; the reason
+  for increased incidence is not established.
+- After a partial-frame resend request, delivery now retains full-frame mode for
+  that connection, including after a transport reopen or budget renewal. Unchanged
+  images are skipped. An explicit new connection starts with partial updates.
+  Retry limits, identity checks, cancellation and the verified full-frame command
+  remain in place. This mitigates the observed return to rejected partial frames;
+  it does not establish the initial rejection's root cause.
+- Added local display diagnostics for fallback mode, frame region, attempted bytes
+  and elapsed transfer time, including encoding/status reads/reopen. Transition
+  logs contain these values without image content. The protocol encoder itself
+  is unchanged. Full mode transfers approximately 3.7 MB per changed image.
+- All 124 Core and 23 rendering tests passed; Angular production build and
+  self-contained Windows publish passed. Recovery tests cover sustained full
+  updates, unchanged-frame skipping, transport reopen, renewed retry budgets,
+  exhaustion, explicit restart and cancellation.
+- Deployed only after the prior agent and scheduled task exited; backup:
+  `%LOCALAPPDATA%\PulseDeck\before-display-075-20260918-130210`.
+  Configuration and Discord/SteamGridDB credential hashes remained unchanged.
+  The new agent verified COM5 identity and resumed automatic Music selection,
+  hardware/media/Discord acquisition and FPS collector readiness.
+- At 11:10:03 UTC, the panel had accepted 432 frames since startup at
+  11:02:54 UTC, with zero resend requests/recoveries. The seven-minute observation
+  covered Music and its later return to Desktop; Spotify was observed paused at
+  11:06:54 UTC. All 42 sampled states had connected hardware/media/Discord and
+  FPS ready; state age remained at or below 1.21 seconds. Sampled Music partials
+  were commonly 2.3 MB (about 140 ms); an early 3.1 MB transfer took 186 ms.
+- No natural rejection occurred in this observation, so physical fallback entry
+  and sustained full-frame rendering were **not** exercised by the live run.
+  Recovery behavior is covered by automated tests, while visual smoothness in
+  fallback, an active track-change recurrence and longer-term stability remain
+  unverified. Successful post-restart partials alone do not prove this mitigation
+  fixed the original fault. Minimal monitoring JSON remains outside the repository.

@@ -26,7 +26,7 @@ PulseDeck is an early-stage project built around one verified Windows/TURZX setu
 ## Next priorities
 
 1. **Onboarding and distribution.** Reliable first-run guidance, simpler Discord credential setup, reproducible packages and usable release notes.
-2. **Windows and USB reliability.** More physical unplug/replug, sleep/wake and long-running sessions. CI cannot replace these checks.
+2. **Windows and USB reliability.** More physical unplug/replug, sleep/wake and long-running sessions. Investigate why partial-frame rejections became more frequent with recent Music use; 0.7.5 keeps full updates after rejection as a mitigation, with transfer diagnostics for comparison. CI cannot replace these checks.
 3. **Layout flexibility and accessibility.** Per-profile composition controls, localization and readable text at physical size.
 4. **Broader game/media validation.** Library formats, ambiguous executables, FPS collector readiness, voice reconnects and source arbitration.
 

@@ -84,6 +84,10 @@ public sealed record DisplaySnapshot(bool Connected, string Port, string? Device
     public bool UserDisconnected { get; init; }
     public string? LastFrameKind { get; init; }
     public uint? LastFrameCounter { get; init; }
+    public bool FullFrameFallback { get; init; }
+    public FrameRect? LastFrameRegion { get; init; }
+    public int LastTransferBytes { get; init; }
+    public double LastTransferMilliseconds { get; init; }
 }
 public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string ForegroundApp, HardwareSnapshot Hardware,
     MediaSnapshot Media, DiscordSnapshot Discord, DisplaySnapshot Display, string FpsStatus = "not-configured")
