@@ -25,8 +25,10 @@ estensione. Se manca il titolo torna al nome dell’applicazione. Per la favicon
 
 1. Dopo l’aggiornamento premi **Ricarica** in `chrome://extensions` sulla stessa
    estensione, ora chiamata **PulseDeck · Chrome**. La cartella e l’ID non cambiano.
-2. Apri il popup e premi **Abilita icone delle schede**; accetta la richiesta di
-   Chrome per i permessi opzionali `tabs` e `favicon`.
+2. Nella barra di Chrome premi l’icona **Estensioni** (il puzzle), poi
+   **PulseDeck · Chrome**: si apre il popup dell’estensione. Qui premi
+   **Abilita icone delle schede** e accetta la richiesta di Chrome per i permessi
+   opzionali `tabs` e `favicon`. Ricaricare l’estensione da solo non abilita le icone.
 3. Passa tra schede di siti diversi. Titolo e icona seguono la scheda selezionata
    nella finestra Chrome in primo piano, indipendentemente dal video YouTube che
    continua a suonare in background.

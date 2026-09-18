@@ -1725,8 +1725,10 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
 - The user confirmed native titles changed, but initially still saw Chrome’s icon.
   The installed extension files matched the new build and the registered path was
   correct; persisted Chrome permissions listed only `alarms`, without `tabs` or
-  `favicon`. Live optional-permission activation and favicon confirmation remain
-  pending; no permission was granted by editing the user’s browser profile.
+  `favicon`. The user then enabled the feature from the extension popup and
+  confirmed that it worked. No permission was granted by editing the browser
+  profile; the user accepted Chrome’s normal flow. Clarified the guide to locate
+  the popup through Chrome’s Extensions/puzzle button.
 
 References: [Chrome tabs API](https://developer.chrome.com/docs/extensions/reference/api/tabs),
 [Chrome favicon cache](https://developer.chrome.com/docs/extensions/how-to/ui/favicons).
