@@ -35,7 +35,7 @@ DPAPI protects credentials for the Windows user; it is not a reason to share cre
 
 These providers see normal network request information, including your IP address. Their services and policies are independent of PulseDeck. Disable an integration if you do not want its requests.
 
-Chrome and Windows Terminal window titles are read natively for the active-app widget, even without the extension. This can include private/incognito window titles. Optional Chrome favicons use only the focused non-incognito HTTP/HTTPS tab and expire after six seconds; metadata and icon caches stay in memory.
+Chrome, Windows Terminal and Explorer folder-window titles are read natively for the active-app widget, even without the extension. Explorer full-path titles are reduced to the folder label. Packaged Windows apps use their locally registered display names and logos; PulseDeck does not query the Store or persist these icons. This can include private/incognito window titles. Optional Chrome favicons use only the focused non-incognito HTTP/HTTPS tab and expire after six seconds; metadata and icon caches stay in memory.
 
 ## Before sharing screenshots or logs
 

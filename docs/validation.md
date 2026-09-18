@@ -1732,3 +1732,46 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
 
 References: [Chrome tabs API](https://developer.chrome.com/docs/extensions/reference/api/tabs),
 [Chrome favicon cache](https://developer.chrome.com/docs/extensions/how-to/ui/favicons).
+
+## Explorer folders and registered app identity — 2026-09-18 (0.7.7)
+
+- Explorer foreground folder windows (`CabinetWClass`/`ExploreWClass`) now use
+  their current native title, refreshed each tick. When Explorer exposes a full
+  path, only the folder label is shown; drive roots retain their root label.
+  Desktop/taskbar windows are excluded. Chrome/Terminal title handling is retained
+  in a shared foreground-title helper; browser favicon matching is unchanged.
+- The observed WhatsApp executable reports `WhatsApp.Root` as its file description
+  and lacks the desired executable icon. Its process AUMID resolves through
+  Windows `AppInfo` to the registered name `WhatsApp` and a local logo. Packaged
+  apps now prefer this metadata over executable defaults, while game catalog
+  names, native tab titles, Chrome favicons and Terminal's WSL icon keep priority.
+- Metadata/logo lookup runs off the render loop, with at most one pending lookup,
+  a two-second cancellation budget for async reads and a 32-entry memory cache.
+  Missing logos retain the registered name and retry after ten seconds; successful
+  entries refresh after sixty seconds. No Store requests or persisted icon cache
+  were added. A slow synchronous Windows metadata call cannot queue further work
+  or block foreground rendering; executable fallbacks remain available.
+- 154 Core tests and 27 rendering/provider tests passed, including Explorer folder,
+  UNC/root and desktop exclusions, slow lookup isolation, identity-specific cache
+  reuse and missing-logo retry. Angular production build and Windows publish passed.
+- A standalone Windows probe linked the production provider and read the running
+  WhatsApp identity/logo without touching the agent or display. The first six-second
+  observation did not obtain a logo; a subsequent fresh probe succeeded with name
+  `WhatsApp` and a 150×150 PNG (2,677 normalized bytes). The image was visually
+  checked as the WhatsApp mark and kept only in the private runtime directory.
+  An unpackaged probe process correctly returned no packaged metadata.
+- Deployed after the old agent/task exited; backup:
+  `%LOCALAPPDATA%\PulseDeck\before-apps-077-20260918-140104`.
+  Configuration and Discord/SteamGridDB credential hashes remained unchanged.
+  The 0.7.7 agent resumed Music, verified COM5 and acknowledged full/partial frames;
+  the FPS collector reported ready. Chrome extension version/permissions were
+  not changed by this release.
+
+- The post-deployment monitor continued receiving frame acknowledgements with
+  FPS ready. Neither Explorer nor WhatsApp was foreground during that observation,
+  so live folder-tab switching and final widget appearance still await the user’s
+  visual check; the standalone package probe does not substitute for that check.
+
+References: [process application identity](https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getapplicationusermodelid),
+[registered app metadata](https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.appinfo.getfromappusermodelid),
+[local app logo](https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.appdisplayinfo.getlogo).

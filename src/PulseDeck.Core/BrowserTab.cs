@@ -2,28 +2,6 @@ using System.Buffers.Binary;
 
 namespace PulseDeck.Core;
 
-public static class ForegroundTitles
-{
-    public static bool IsChrome(string process) => process.Equals("chrome", StringComparison.OrdinalIgnoreCase);
-    public static bool IsTerminal(string process) => process.Equals("WindowsTerminal", StringComparison.OrdinalIgnoreCase)
-        || process.Equals("WindowsTerminalHost", StringComparison.OrdinalIgnoreCase);
-    public static string Clean(string value) => new string(value.Where(c => !char.IsControl(c)).ToArray()).Trim();
-
-    public static string? FromWindow(string process, string? title)
-    {
-        if (title is null || !IsChrome(process) && !IsTerminal(process)) return null;
-        var clean = Clean(title);
-        if (IsChrome(process))
-        {
-            foreach (var suffix in new[] { " - Google Chrome", " – Google Chrome", " — Google Chrome" })
-                if (clean.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-                { clean = clean[..^suffix.Length].TrimEnd(); break; }
-            if (clean.Equals("Google Chrome", StringComparison.OrdinalIgnoreCase)) return null;
-        }
-        return clean.Length == 0 ? null : clean;
-    }
-}
-
 public sealed record BrowserTab(string Title, string? FaviconPng);
 public sealed record BrowserTabUpdate(BrowserTab? Tab);
 

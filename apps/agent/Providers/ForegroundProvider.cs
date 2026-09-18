@@ -13,11 +13,13 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
     private sealed record Entry(string Name, ApplicationIcon? Icon, DateTimeOffset Expires);
     private readonly Dictionary<string, Entry> cache = new(StringComparer.OrdinalIgnoreCase);
     private readonly TerminalIcon terminalIcon = new();
+    private readonly PackagedApplicationProvider packagedApps = new();
     private readonly BrowserTabIcon browserTabIcon = new(browserTabs);
     public ApplicationIcon? Icon { get; private set; }
 
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(nint window, StringBuilder text, int maximum);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(nint window, StringBuilder text, int maximum);
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(nint window, out uint processId);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern SafeProcessHandle OpenProcess(uint access, bool inheritHandle, int processId);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] private static extern bool QueryFullProcessImageName(SafeProcessHandle process, uint flags, StringBuilder name, ref uint size);
@@ -44,19 +46,22 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
             if (id == 0) return ForegroundSnapshot.Empty;
             using var process = Process.GetProcessById((int)id);
             var name = process.ProcessName;
+            var windowClass = new StringBuilder(256);
+            GetClassName(window, windowClass, windowClass.Capacity);
+            var packaged = packagedApps.Read((int)id);
             // Read active tab titles every tick, outside the executable metadata cache.
             string? tabTitle = null;
-            if (ForegroundTitles.IsTerminal(name) || ForegroundTitles.IsChrome(name))
+            if (ForegroundTitles.IsTerminal(name) || ForegroundTitles.IsChrome(name) || ForegroundTitles.IsExplorer(name, windowClass.ToString()))
             {
                 var title = new StringBuilder(2048);
                 if (GetWindowText(window, title, title.Capacity) > 0)
-                    tabTitle = ForegroundTitles.FromWindow(name, title.ToString());
+                    tabTitle = ForegroundTitles.FromWindow(name, title.ToString(), windowClass.ToString());
             }
             var chromeIcon = ForegroundTitles.IsChrome(name) ? browserTabIcon.Read(tabTitle) : null;
             var terminalTitle = ForegroundTitles.IsTerminal(name) ? tabTitle : null;
             var displayTitle = tabTitle is null ? null : new string(tabTitle.Take(120).ToArray());
-            Icon = chromeIcon;
-            var snapshot = new ForegroundSnapshot((int)id, name, displayTitle ?? name, ProfileSelector.IsGame(config, name),
+            Icon = chromeIcon ?? packaged?.Icon;
+            var snapshot = new ForegroundSnapshot((int)id, name, displayTitle ?? packaged?.Name ?? name, ProfileSelector.IsGame(config, name),
                 Icon?.Id, Icon is null ? "unavailable" : "available");
             try
             {
@@ -72,8 +77,8 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
                     if (!cache.ContainsKey(path) && cache.Count >= 32) cache.Remove(cache.Keys.First());
                     cache[path] = entry;
                 }
-                Icon = chromeIcon ?? (terminalTitle is null ? entry.Icon : terminalIcon.Read(path, terminalTitle) ?? entry.Icon);
-                return snapshot with { DisplayName = displayTitle ?? discovered?.Name ?? installed?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
+                Icon = chromeIcon ?? (terminalTitle is null ? null : terminalIcon.Read(path, terminalTitle)) ?? packaged?.Icon ?? entry.Icon;
+                return snapshot with { DisplayName = displayTitle ?? discovered?.Name ?? installed?.Name ?? packaged?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
             }
             catch { return snapshot; } // Restricted processes still keep their actual process name.
         }
