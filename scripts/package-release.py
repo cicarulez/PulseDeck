@@ -10,7 +10,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--tag', required=True, help='Version label, e.g. v0.7.3')
+parser.add_argument('--tag', required=True, help='Version label, e.g. v0.7.4')
 args = parser.parse_args()
 version = ET.parse(root / 'apps/agent/PulseDeck.Agent.csproj').findtext('.//Version')
 if not re.fullmatch(r'v\d+\.\d+\.\d+', args.tag) or args.tag != 'v' + version:

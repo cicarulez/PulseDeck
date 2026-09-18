@@ -1555,3 +1555,30 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   configuring repository metadata/social preview and publishing a release require
   the repository owner's authenticated GitHub settings. No visibility change or
   public release is claimed by this preparation.
+
+## Music cover and playback heading — 2026-09-18 (0.7.4)
+
+- Moved Spotify playback/paused/track-transition status above the central lyrics.
+  The cover grows from 240×240 to 288×288, with title and artist below it.
+  Synchronized/plain lyrics status and plain-text page numbers now sit beside
+  `Testi: LRCLIB` in the footer, preserving source attribution and timing clarity.
+- All 23 renderer/provider tests passed. The new region regression verifies that
+  play/pause changes the lyrics heading without changing the cover/title column.
+  Existing track-loading geometry, stale-lyrics, nine-widget and RAM checks passed.
+  Angular production build and self-contained Windows publish passed.
+- Regenerated the public Music screenshot and README cover with the production
+  renderer on Windows and original documentation fixtures; visually inspected the
+  larger artwork, text spacing and footer. Recaptured the actual configurator with
+  the updated version. Local documentation links and actionlint checks passed.
+- Initial public-presentation sources were pushed to the existing GitHub remote
+  at commit `6237019`. Its local v0.7.3 Windows/source archives passed ZIP integrity
+  and SHA-256 verification. The launch notes/examples now target v0.7.4 to include
+  the layout refinement. Repository visibility/release publication remains separate
+  from authenticated Git transport; no public release has been created.
+- Deployed 0.7.4 after the old agent/task exited; backup
+  `%LOCALAPPDATA%\PulseDeck\before-music-074-20260918-123132`.
+  Configuration and Discord/SteamGridDB credentials preserved. Live state returned
+  Music with synchronized Spotify lyrics, verified COM5 identity and acknowledged
+  full/partial frames without transport errors. The private live preview confirmed
+  the larger cover and moved playback/lyrics-status labels. That preview remains
+  outside source control; only synthetic images are used for public documentation.

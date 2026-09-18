@@ -20,7 +20,7 @@ Voice activity, sensors, original sample game artwork, elapsed session time and 
 
 ![Music documentation fixture](images/music.png)
 
-Spotify-style track state, original sample lyric lines and nine sensors. The RAM ring shows only the percentage in this composition.
+Spotify-style track state, original sample lyric lines and nine sensors. The larger cover sits beside the lyrics, with playback status above them and synchronization details beside the attribution. The RAM ring shows only the percentage in this composition.
 
 ## Configurator
 

@@ -334,14 +334,16 @@ public sealed class DeckRenderer : IDisposable
         }
         void SpotifyPanel()
         {
-            Cover(64, 90, 240);
-            Text(state.Media.Title.Length > 0 ? state.Media.Title : "Spotify", 48, 367, 25, heavy: true, maxWidth: 290, minimumSize: 19);
-            Text(state.Media.Artist, 48, 400, 20, muted, maxWidth: 290);
-            Text(state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", 48, 430, 12, accent, maxWidth: 290);
+            Cover(48, 90, 288);
+            Text(state.Media.Title.Length > 0 ? state.Media.Title : "Spotify", 48, 407, 25, heavy: true, maxWidth: 290, minimumSize: 19);
+            Text(state.Media.Artist, 48, 435, 20, muted, maxWidth: 290);
             canvas.DrawLine(354, 90, 354, 435, line);
             canvas.DrawLine(1340, 90, 1340, 435, line);
             for (var i = 0; i < 9; i++) WidgetCard(i, 1364 + i % 3 * 178, 100 + i / 3 * 106, 168);
             const float x = 388, width = 920;
+            Text(state.SpotifyTransition ? "SPOTIFY / CAMBIO BRANO"
+                : state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", x, 115, 15, accent, true, width);
+            var lyricsCredit = "Testi: LRCLIB";
             List<string> Wrap(string value, float size)
             {
                 using var font = new SKFont(bold, size);
@@ -357,12 +359,11 @@ public sealed class DeckRenderer : IDisposable
             }
             if (state.SpotifyTransition || state.Lyrics.Status == "loading")
             {
-                Text("SPOTIFY", x, 115, 15, accent, true);
                 Text(state.SpotifyTransition ? "Cambio brano…" : "Caricamento del testo…", x, 247, 32, muted, maxWidth: width);
             }
             else if (state.Lyrics.Status == "synced" && state.Lyrics.Lines is { } lines)
             {
-                Text("TESTO SINCRONIZZATO", x, 115, 15, accent, true);
+                lyricsCredit += " · Sincronizzato";
                 var index = state.Lyrics.CurrentLine(state.Media.PositionSeconds);
                 if (index > 0) Text(lines[index - 1].Text, x, 174, 23, muted, maxWidth: width);
                 var current = index >= 0 ? lines[index].Text : "";
@@ -375,7 +376,7 @@ public sealed class DeckRenderer : IDisposable
                 var rows = (state.Lyrics.PlainText ?? "").Split('\n').SelectMany(row => Wrap(row.Trim(), 26)).ToArray();
                 var pages = Math.Max(1, (rows.Length + 5) / 6);
                 var page = (int)(state.Timestamp.ToUnixTimeSeconds() / 15 % pages);
-                Text($"TESTO NON SINCRONIZZATO · {page + 1}/{pages}", x, 115, 15, muted);
+                lyricsCredit += $" · Non sincronizzato · {page + 1}/{pages}";
                 for (var i = 0; i < 6 && page * 6 + i < rows.Length; i++) Text(rows[page * 6 + i], x, 163 + i * 36, 26, maxWidth: width);
             }
             canvas.DrawLine(x, 401, x + width, 401, line);
@@ -384,7 +385,7 @@ public sealed class DeckRenderer : IDisposable
             if (duration > 0) canvas.DrawRect(x, 399, (float)(position / duration) * width, 4, accentPaint);
             Text(duration > 0 ? TimeSpan.FromSeconds(position).ToString(@"m\:ss") + " / "
                 + TimeSpan.FromSeconds(duration).ToString(@"m\:ss") : "— / —", x, 430, 18, muted);
-            Text("Testi: LRCLIB", x + width - 140, 430, 15, muted, maxWidth: 140);
+            Text(lyricsCredit, x + width - 400, 430, 15, muted, maxWidth: 400);
         }
         void VoiceHeader()
         {

@@ -31,7 +31,7 @@ The first public introduction should link to the README, gallery, setup guide an
 3. Commit the exact source being packaged. For a local review archive:
 
    ```sh
-   python3 scripts/package-release.py --tag v0.7.3
+   python3 scripts/package-release.py --tag v0.7.4
    ```
 
    This creates a Windows ZIP, a corresponding-source ZIP and `SHA256SUMS` under ignored `artifacts/release`. It does not create a tag or upload anything. The output directory must be empty so files from different versions cannot be mixed. Version metadata is checked; a fresh build remains necessary to establish same-version source parity.
@@ -39,8 +39,8 @@ The first public introduction should link to the README, gallery, setup guide an
 4. Once the commit is ready, create and push the matching tag:
 
    ```sh
-   git tag -a v0.7.3 -m "PulseDeck 0.7.3 public preview"
-   git push origin v0.7.3
+   git tag -a v0.7.4 -m "PulseDeck 0.7.4 public preview"
+   git push origin v0.7.4
    ```
 
 5. In GitHub Actions, run **Prepare draft release** with that existing tag. The workflow validates the version, rebuilds/tests the tag and creates a **draft prerelease** with archives, source, checksums and the version's release notes.

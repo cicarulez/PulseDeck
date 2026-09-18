@@ -7,6 +7,19 @@ using Xunit;
 public class RendererTests
 {
     [Fact]
+    public void MusicPlaybackStatusChangesLyricsHeaderWithoutChangingCoverColumn()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Synthetic track", "Artist", "Spotify.exe", 2, 180, "connected");
+        var state = State with { Profile = "music", Media = media, Lyrics = new("synced", SpotifyLyrics.Key(media), [new(0, "Original fixture line")]) };
+        var playing = renderer.Render(state, new());
+        var paused = renderer.Render(state with { Media = media with { Playing = false } }, new());
+        for (var y = 90; y < 440; y++)
+            Assert.True(playing.Pixels.AsSpan((y * 1920 + 32) * 4, 322 * 4).SequenceEqual(paused.Pixels.AsSpan((y * 1920 + 32) * 4, 322 * 4)));
+        Assert.Contains(Enumerable.Range(90, 30), y =>
+            !playing.Pixels.AsSpan((y * 1920 + 388) * 4, 920 * 4).SequenceEqual(paused.Pixels.AsSpan((y * 1920 + 388) * 4, 920 * 4)));
+    }
+    [Fact]
     public void MusicRamShowsOnlyPercentageWhileDesktopKeepsCapacity()
     {
         using var renderer = new DeckRenderer();
