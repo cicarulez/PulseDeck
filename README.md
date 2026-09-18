@@ -507,3 +507,11 @@ scheda madre: massimo tre tentativi, con attese di 60 e 120 secondi. Zero RPM è
 valido e non causa recupero. Dopo un minuto di letture sane il limite si ripristina.
 Non modifica curve delle ventole o impostazioni RGB; il dettaglio hardware segnala
 le letture mancanti e l'esaurimento dei tentativi.
+
+Dalla 0.7.1, il caricamento del testo di una nuova traccia mantiene la disposizione
+Spotify con un messaggio di attesa. Brevi interruzioni della sessione non fanno
+uscire subito da Musica: il ritorno automatico a Desktop attende almeno otto
+secondi (o il ritardo configurato, se maggiore). Vale anche per una pausa effettiva.
+La priorità automatica resta **Gaming → Musica → Desktop**: un gioco riconosciuto
+in primo piano entra in Gaming dopo il normale ritardo configurato, senza questa
+attesa aggiuntiva. Un profilo scelto manualmente prevale sull'automatismo.

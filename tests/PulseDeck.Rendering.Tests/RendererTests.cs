@@ -7,6 +7,20 @@ using Xunit;
 public class RendererTests
 {
     [Fact]
+    public void TrackLoadingKeepsMusicGeometryAndGapNeverDisplaysOldLyrics()
+    {
+        using var r = new DeckRenderer(); var c = new DeckConfig {Layout="weather"};
+        var media = new MediaSnapshot(true,"Synthetic track","Artist","Spotify.exe",2,180,"connected");
+        var synced = State with {Profile="music", Media=media, Lyrics=new("synced",SpotifyLyrics.Key(media),[new(0,"Original synthetic line")])};
+        var a=r.Render(synced,c); var b=r.Render(synced with {Lyrics=new("loading",SpotifyLyrics.Key(media))},c);
+        for(var y=86;y<440;y++) {
+            Assert.True(a.Pixels.AsSpan((y*1920+32)*4,320*4).SequenceEqual(b.Pixels.AsSpan((y*1920+32)*4,320*4)));
+            Assert.True(a.Pixels.AsSpan((y*1920+1364)*4,524*4).SequenceEqual(b.Pixels.AsSpan((y*1920+1364)*4,524*4)));
+        }
+        var gap=synced with {SpotifyTransition=true,Media=new(false,"","","",0,0,"idle")};
+        Assert.Equal(r.Render(gap,c).Pixels,r.Render(gap with {Lyrics=new()},c).Pixels);
+    }
+    [Fact]
     public void SpotifyLyricsAreIsolatedAndDiscordHeaderDisappearsOutsideRoster()
     {
         using var renderer = new DeckRenderer();

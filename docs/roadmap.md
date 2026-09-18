@@ -762,3 +762,13 @@ tutti i sensori della scheda madre, con PawnIO presente e agent amministratore.
 Aggiunto recupero limitato del gruppo scheda madre quando mancano sensori LPC
 configurati; la causa iniziale resta da accertare, senza attribuirla a una
 ventola fisicamente ferma. Dettagli delle verifiche in `docs/validation.md`.
+
+### Stabilità durante il cambio traccia (0.7.1)
+
+Corretto il ritorno temporaneo al layout normale durante il caricamento dei testi:
+la disposizione Spotify resta visibile, con testo di attesa e senza parole della
+traccia precedente. In automatico, una breve interruzione/assenza della sessione
+Spotify mantiene Musica per almeno otto secondi prima di tornare a Desktop.
+Questo ritardo riguarda solo Musica → Desktop: Gaming mantiene precedenza e
+ritardo configurato; le scelte manuali restano immediate. Gli altri player non
+ricevono la tolleranza Spotify. Prove e limiti in `docs/validation.md`.

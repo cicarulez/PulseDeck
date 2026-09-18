@@ -36,7 +36,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     var now = DateTimeOffset.UtcNow;
                     var active = foreground.Read(settings);
                     settings = discovery.EffectiveConfig(settings);
-                    var profile = selector.Select(settings, active.ProcessName, mediaTask.Result.Playing, now, active.IsGame);
+                    var profile = selector.Select(settings, active.ProcessName, mediaTask.Result.Playing, now, active.IsGame, mediaTask.Result);
                     var game = gameSelector.Select(settings, profile, active, now);
                     var session = sessions.Read(game, now);
                     if (game is not null && session is null && active.ProcessId != game.ProcessId) game = null;
@@ -47,6 +47,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                         { Foreground = active, Game = game, GameSession = session, Fps = frameRate, Volume = volume.Read(),
                             GameArtwork = gameArtwork.Read(game, stoppingToken),
                             Lyrics = lyrics.Read(mediaTask.Result, profile, settings.SpotifyLyrics, stoppingToken),
+                            SpotifyTransition = selector.SpotifyTransition,
                             News = news.Read(settings.News, stoppingToken),
                             Weather = weather.Read(settings.WeatherLocation, settings.Layout == "weather", stoppingToken) };
                     var rendered = renderer.Render(next, settings, media.Artwork, foreground.Icon);

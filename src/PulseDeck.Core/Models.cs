@@ -97,4 +97,5 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
     public WeatherSnapshot Weather { get; init; } = new();
     public NewsSnapshot News { get; init; } = new();
     public LyricsSnapshot Lyrics { get; init; } = new();
+    public bool SpotifyTransition { get; init; }
 }

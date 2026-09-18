@@ -330,7 +330,7 @@ public sealed class DeckRenderer : IDisposable
         void SpotifyPanel()
         {
             Cover(64, 90, 240);
-            Text(state.Media.Title, 48, 367, 25, heavy: true, maxWidth: 290, minimumSize: 19);
+            Text(state.Media.Title.Length > 0 ? state.Media.Title : "Spotify", 48, 367, 25, heavy: true, maxWidth: 290, minimumSize: 19);
             Text(state.Media.Artist, 48, 400, 20, muted, maxWidth: 290);
             Text(state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", 48, 430, 12, accent, maxWidth: 290);
             canvas.DrawLine(354, 90, 354, 435, line);
@@ -350,7 +350,12 @@ public sealed class DeckRenderer : IDisposable
                 if (row.Length > 0) rows.Add(row);
                 return rows;
             }
-            if (state.Lyrics.Status == "synced" && state.Lyrics.Lines is { } lines)
+            if (state.SpotifyTransition || state.Lyrics.Status == "loading")
+            {
+                Text("SPOTIFY", x, 115, 15, accent, true);
+                Text(state.SpotifyTransition ? "Cambio brano…" : "Caricamento del testo…", x, 247, 32, muted, maxWidth: width);
+            }
+            else if (state.Lyrics.Status == "synced" && state.Lyrics.Lines is { } lines)
             {
                 Text("TESTO SINCRONIZZATO", x, 115, 15, accent, true);
                 var index = state.Lyrics.CurrentLine(state.Media.PositionSeconds);
@@ -369,9 +374,11 @@ public sealed class DeckRenderer : IDisposable
                 for (var i = 0; i < 6 && page * 6 + i < rows.Length; i++) Text(rows[page * 6 + i], x, 163 + i * 36, 26, maxWidth: width);
             }
             canvas.DrawLine(x, 401, x + width, 401, line);
-            canvas.DrawRect(x, 399, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * width, 4, accentPaint);
-            Text(TimeSpan.FromSeconds(Math.Clamp(state.Media.PositionSeconds, 0, 3600)).ToString(@"m\:ss") + " / "
-                + TimeSpan.FromSeconds(state.Media.DurationSeconds).ToString(@"m\:ss"), x, 430, 18, muted);
+            var duration = double.IsFinite(state.Media.DurationSeconds) ? Math.Clamp(state.Media.DurationSeconds, 0, 3600) : 0;
+            var position = double.IsFinite(state.Media.PositionSeconds) ? Math.Clamp(state.Media.PositionSeconds, 0, duration) : 0;
+            if (duration > 0) canvas.DrawRect(x, 399, (float)(position / duration) * width, 4, accentPaint);
+            Text(duration > 0 ? TimeSpan.FromSeconds(position).ToString(@"m\:ss") + " / "
+                + TimeSpan.FromSeconds(duration).ToString(@"m\:ss") : "— / —", x, 430, 18, muted);
             Text("Testi: LRCLIB", x + width - 140, 430, 15, muted, maxWidth: 140);
         }
         void VoiceHeader()

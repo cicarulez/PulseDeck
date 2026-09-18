@@ -1429,3 +1429,37 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   RPM); no display errors. No audio was captured; perceptual lyric alignment,
   live pause/seek behavior and a natural recurrence of the sensor loss still
   require observation. Automated tests cover pause/seek selection and retry policy.
+
+## Spotify track-transition stability — 2026-09-18 (0.7.1)
+
+- User reported a profile/layout switch between songs. Inspection identified an
+  unconditional fallback to the normal composition while the new lyrics request
+  was loading, independently of the profile selector. The selected Spotify Music
+  composition now stays visible while loading; a transient empty/end-of-track
+  session uses a waiting message and never renders prior-track lyrics.
+- Automatic Music → Desktop exit for the last playing Spotify session has an
+  eight-second minimum delay, covering brief stopped/idle/unavailable intervals.
+  A genuine pause/stop eventually exits; other connected media sources do not
+  receive this grace. Gaming entry keeps the configured debounce (three seconds
+  on this PC), and manual profile selection remains immediate.
+- 122 Core tests and 19 renderer tests passed. New regressions cover resumption
+  within the gap, eventual exit on real stop, Gaming priority during the grace,
+  manual selection, other players, stable cover/widget geometry while lyrics
+  load and suppression of stale lyrics during a missing-session interval.
+  Angular production build and Windows publish passed.
+- A pre-deployment read showed Music/Spotify, automatic mode with a three-second
+  delay, and synchronized lyrics. A short passive watch began after the natural
+  change from Indietro to Chiasso and did not capture the transition itself.
+  No playback controls were sent to Spotify. Actual visual confirmation at a
+  subsequent natural track boundary remains pending.
+- Deployed 0.7.1 after old agent/task exit, backup
+  `%LOCALAPPDATA%\PulseDeck\before-music-071-20260918-104759`.
+  Configuration and Discord/SteamGridDB credentials preserved, startup task reused.
+  Agent returned to Music; verified COM5 identity, acknowledged full frame and no
+  display errors. Deployment does not itself validate a natural track boundary.
+- Post-deployment passive observation captured Chiasso → DUELE EL CORAZON:
+  at 08:49:42 UTC the new track had lyrics `loading`; at 08:49:43 they were
+  `synced`. Profile stayed `music` throughout the sampled boundary (300 ms polling
+  against the approximately 1 Hz runtime). This directly verifies profile continuity
+  at that natural track change; fixed layout geometry during loading is covered by
+  renderer tests. No stopped/idle gap occurred in this observed transition.
