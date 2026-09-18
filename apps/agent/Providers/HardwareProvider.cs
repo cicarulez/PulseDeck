@@ -1,14 +1,16 @@
 using LibreHardwareMonitor.Hardware;
 using PulseDeck.Core;
+using PulseDeck.Agent.Configuration;
 using System.Security.Principal;
 
 namespace PulseDeck.Agent.Providers;
 
-public sealed class HardwareProvider : IDisposable
+public sealed class HardwareProvider(ConfigStore config, ILogger<HardwareProvider> logger) : IDisposable
 {
     private readonly Computer computer = new() { IsCpuEnabled = true, IsGpuEnabled = true, IsMemoryEnabled = true, IsMotherboardEnabled = true, IsStorageEnabled = true, IsNetworkEnabled = true, IsControllerEnabled = true, IsBatteryEnabled = true, IsPsuEnabled = true, IsPowerMonitorEnabled = true };
     private readonly bool admin = new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
     private bool opened;
+    private readonly SensorRecovery recovery = new();
 
     public HardwareSnapshot Read()
     {
@@ -51,6 +53,20 @@ public sealed class HardwareProvider : IDisposable
             metrics.AddRange(MemorySummary.Read(sensors));
             metrics.Add(new("system.processes", "Processi", CountProcesses(), ""));
             var pawn = LibreHardwareMonitor.PawnIo.PawnIo.IsInstalled;
+            var expected = config.Current.Widgets.Where(w => w.Source == "sensor" && w.SensorId.StartsWith("/lpc/", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var healthy = expected.All(w => sensors.Any(s => s.Id == w.SensorId && s.Name == w.SensorName && s.Value.HasValue));
+            var retry = recovery.Observe(expected.Length > 0, healthy, pawn && admin, DateTimeOffset.UtcNow);
+            if (!healthy)
+            {
+                errors.Add(recovery.Attempts >= 3 ? "Sensori della scheda madre non disponibili dopo tre tentativi di recupero."
+                    : "Sensori della scheda madre non disponibili; recupero automatico in attesa.");
+                if (retry)
+                {
+                    logger.LogWarning("Motherboard readings missing; reinitializing motherboard group (attempt {Attempt}/3).", recovery.Attempts);
+                    try { computer.IsMotherboardEnabled = false; computer.IsMotherboardEnabled = true; }
+                    catch { errors.Add("Reinizializzazione dei sensori della scheda madre non riuscita."); }
+                }
+            }
             if (!pawn) errors.Add("PawnIO non è installato: mancano le letture a basso livello di CPU, scheda madre e ventole. Installa il driver e riavvia PulseDeck come amministratore.");
             else if (!admin) errors.Add("Avvia PulseDeck come amministratore per accedere anche ai sensori di CPU, scheda madre e ventole.");
             return new(metrics, sensors.Any(s => s.Value.HasValue) ? "connected" : "unavailable",
