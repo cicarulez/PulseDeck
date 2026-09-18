@@ -57,7 +57,7 @@ BoringSSL/MLS++/nlohmann notices), and Discord.Net's Windows Opus and libsodium
 binaries (BSD/ISC). `scripts/gaming-dependencies.json` pins the upstream downloads
 and SHA-256 digests. Their license files accompany the binaries under `licenses/`.
 No PresentMon service or overlay is installed: PulseDeck runs the console collector
-only for the selected game process.
+with filters for configured/discovered game executables, preparing collection before game launch.
 
 Game covers can be fetched from Steam Store by exact title match. Artwork remains
 owned by its publisher, cached under the user's PulseDeck data directory, and is

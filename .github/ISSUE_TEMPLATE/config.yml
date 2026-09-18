@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Setup and troubleshooting
+    url: https://github.com/cicarulez/PulseDeck/blob/main/docs/getting-started.md
+    about: Read the setup guide before reporting an installation issue.
+  - name: Security reporting
+    url: https://github.com/cicarulez/PulseDeck/blob/main/SECURITY.md
+    about: Report vulnerabilities privately; do not put sensitive details in a public issue.

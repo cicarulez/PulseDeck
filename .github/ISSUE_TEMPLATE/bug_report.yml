@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a reproducible problem with PulseDeck.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Please remove credentials, account IDs, private names and paths from screenshots or diagnostics. For vulnerabilities, follow SECURITY.md instead."
+  - type: input
+    id: version
+    attributes:
+      label: PulseDeck version or commit
+      placeholder: "0.7.3 / commit hash"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Windows version, relevant hardware, panel identity if applicable, and whether the agent is elevated.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest sequence that demonstrates the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did you observe it?
+      options:
+        - Configurator / preview
+        - Physical display
+        - Both preview and physical display
+        - Background provider / startup
+        - Build / tests
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Relevant error, screenshot, or observations. Say which transitions you actually tested; do not attach full runtime backups.

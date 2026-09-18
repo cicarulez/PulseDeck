@@ -1,0 +1,30 @@
+name: Feature proposal
+description: Explain a use case or propose a bounded improvement.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the use case and current limitation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Include examples, constraints or a sketch if useful.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and validation
+      description: What alternatives have you considered, and how could we verify that the feature works?
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help with this?
+      options:
+        - label: I can contribute code or documentation.
+        - label: I can test on Windows or physical hardware.

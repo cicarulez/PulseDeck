@@ -1522,3 +1522,36 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   example tab title and RAM with only a percentage, aligned with CPU/GPU. No
   synthetic readings were sent to the display. Live Spotify/Terminal confirmation
   remains pending; no user windows or playback were manipulated.
+
+## Public documentation and release preparation — 2026-09-18
+
+- Replaced the outdated landing README with an English project introduction,
+  feature/status overview, real-renderer gallery and contributor entry points.
+  Added an Italian introduction, setup/troubleshooting/privacy/hardware guides,
+  contribution and security guidance, issue/PR templates and publishing notes.
+  Earlier roadmap investigations remain in `development-history.it.md`.
+- Generated three panel screenshots with the production renderer on Windows using
+  synthetic snapshots, original lyric lines and procedural artwork. The gallery
+  tool has no production providers, credential access or serial transport. Captured
+  the actual Angular configurator in an isolated Playwright browser with only
+  fixture API/SignalR responses; no application code was changed for screenshots.
+  Visually inspected the three layouts, configurator, README cover and 1280×640
+  social preview. No real account data, lyrics or game/album art was published.
+- Complete `scripts/build.sh` passed: Angular production build, 122 Core tests,
+  22 renderer/provider tests, five YouTube extension tests, self-contained Windows
+  publish and checksum-verified native dependency packaging. Two Electron policy
+  tests also passed. The standalone documentation renderer ran on Linux and Windows.
+- Added pinned-action GitHub CI and a manually dispatched draft-prerelease workflow.
+  `actionlint` 1.7.12 reported no workflow errors. Local Markdown/image targets passed
+  the documentation checker; external URLs and Markdown anchors are not checked by
+  that script. GitHub-hosted execution has not yet been observed.
+- Reviewed tracked paths and scanned 632 existing historical Git blobs for common
+  private-key, GitHub/Discord-token and AWS-key patterns: no matches. This targeted
+  scan cannot establish absence of all possible sensitive data. Runtime directories
+  and private screenshots were not imported into the repository.
+- Git transport authenticates successfully, but GitHub CLI/API account credentials
+  are not available in this environment. An unauthenticated lookup returns 404 for
+  the existing remote, consistent with private visibility. Changing visibility,
+  configuring repository metadata/social preview and publishing a release require
+  the repository owner's authenticated GitHub settings. No visibility change or
+  public release is claimed by this preparation.

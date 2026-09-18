@@ -14,3 +14,6 @@ local-assets/
 
 *.credentials
 *.credentials.bak
+.env.*
+!.env.example
+*.credentials.*

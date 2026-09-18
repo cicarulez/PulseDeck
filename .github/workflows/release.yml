@@ -1,0 +1,55 @@
+name: Prepare draft release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag, for example v0.7.3
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Validate tag format
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]'
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.15.0'
+      - name: Validate package version
+        run: |
+          python3 - <<'PY'
+          import os, xml.etree.ElementTree as ET
+          version = ET.parse('apps/agent/PulseDeck.Agent.csproj').findtext('.//Version')
+          assert os.environ['RELEASE_TAG'] == 'v' + version, 'Tag and agent version differ'
+          PY
+      - name: Build and test
+        run: ./scripts/build.sh
+      - name: Desktop policy and documentation checks
+        run: |
+          node --test apps/desktop/policy.test.cjs
+          python3 scripts/check-doc-links.py
+      - name: Create archives and checksums
+        run: python3 scripts/package-release.py --tag "$RELEASE_TAG"
+      - name: Create draft for maintainer review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_TAG" artifacts/release/* \
+            --verify-tag --draft --prerelease --title "PulseDeck $RELEASE_TAG" \
+            --notes-file "docs/releases/$RELEASE_TAG.md"
