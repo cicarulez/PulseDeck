@@ -15,6 +15,7 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
     public ApplicationIcon? Icon { get; private set; }
 
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(nint window, StringBuilder text, int maximum);
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(nint window, out uint processId);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern SafeProcessHandle OpenProcess(uint access, bool inheritHandle, int processId);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] private static extern bool QueryFullProcessImageName(SafeProcessHandle process, uint flags, StringBuilder name, ref uint size);
@@ -36,11 +37,25 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
         Icon = null;
         try
         {
-            GetWindowThreadProcessId(GetForegroundWindow(), out var id);
+            var window = GetForegroundWindow();
+            GetWindowThreadProcessId(window, out var id);
             if (id == 0) return ForegroundSnapshot.Empty;
             using var process = Process.GetProcessById((int)id);
             var name = process.ProcessName;
-            var snapshot = new ForegroundSnapshot((int)id, name, name, ProfileSelector.IsGame(config, name), null, "unavailable");
+            // Terminal publishes the active tab as its window title. Read it each tick,
+            // independently of the executable metadata/icon cache, including tab switches.
+            string? terminalTitle = null;
+            if (name.Equals("WindowsTerminal", StringComparison.OrdinalIgnoreCase)
+                || name.Equals("WindowsTerminalHost", StringComparison.OrdinalIgnoreCase))
+            {
+                var title = new StringBuilder(512);
+                if (GetWindowText(window, title, title.Capacity) > 0)
+                {
+                    var clean = new string(title.ToString().Where(c => !char.IsControl(c)).Take(120).ToArray()).Trim();
+                    if (clean.Length > 0) terminalTitle = clean;
+                }
+            }
+            var snapshot = new ForegroundSnapshot((int)id, name, terminalTitle ?? name, ProfileSelector.IsGame(config, name), null, "unavailable");
             try
             {
                 var path = ExecutablePath(process);
@@ -56,7 +71,7 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
                     cache[path] = entry;
                 }
                 Icon = entry.Icon;
-                return snapshot with { DisplayName = discovered?.Name ?? installed?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
+                return snapshot with { DisplayName = terminalTitle ?? discovered?.Name ?? installed?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
             }
             catch { return snapshot; } // Restricted processes still keep their actual process name.
         }

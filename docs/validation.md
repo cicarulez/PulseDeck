@@ -1463,3 +1463,32 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   against the approximately 1 Hz runtime). This directly verifies profile continuity
   at that natural track change; fixed layout geometry during loading is covered by
   renderer tests. No stopped/idle gap occurred in this observed transition.
+
+## Music sensor grid and Terminal tab title — 2026-09-18 (0.7.2)
+
+- Spotify's dedicated composition now shows the first nine configured sensor
+  slots in three columns and three rows. Cards are 168 px wide; compact rings,
+  RAM used/total text and network rates fit the reduced width. Lyrics and cover
+  retain their existing space. Wider cards in other layouts keep their geometry.
+- Windows Terminal's foreground window title is read on every provider tick,
+  outside the executable metadata cache. Empty/inaccessible titles fall back to
+  the existing application name; other applications keep their naming behavior.
+- A read-only Win32 probe in the signed-in Windows session returned process
+  `WindowsTerminal`, description `Windows Terminal Host`, and actual title
+  `WSL tmux - pulsedeck-codex`. The window icon exposed through WM_GETICON was
+  Terminal's icon, not the tab's penguin; the existing application icon is retained.
+- All 20 renderer tests passed, including a new per-card pixel comparison proving
+  that all nine slots appear inside their respective rectangles and slot ten is
+  hidden. Angular production build and self-contained Windows publish passed.
+- Deployed 0.7.2 after waiting for the old agent and scheduled task to exit;
+  backup `%LOCALAPPDATA%\PulseDeck\before-terminal-072-20260918-115205`.
+  Configuration and Discord/SteamGridDB credentials remained unchanged.
+  Existing interactive startup task reused; COM5 returned the verified device
+  identity, acknowledged a full frame and reported no transport errors.
+- Live Music preview with synchronized Spotify lyrics was visually inspected:
+  CPU/GPU/RAM rings in row one, temperatures/processes in row two, CPU/GPU power
+  and combined network rates in row three, with all values inside their cards.
+  Live foreground state and preview showed the actual Terminal tab title instead
+  of the executable description. Longer titles retain the header's ellipsis.
+  A controlled tab-switch sequence and physical readability feedback from the
+  user remain unverified; no foreground or playback controls were sent.

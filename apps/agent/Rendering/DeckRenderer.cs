@@ -148,6 +148,7 @@ public sealed class DeckRenderer : IDisposable
         void WidgetCard(int i, float x, float y, float cellWidth)
         {
             const float cellHeight = 80;
+            var compact = cellWidth < 200;
             using var card = new SKPaint { Color = new SKColor(12, 24, 28, 200), IsAntialias = true };
             using var track = new SKPaint { Color = new SKColor(43, 58, 57) };
             var widget = widgets[WidgetCatalog.Slots[i].Id];
@@ -161,13 +162,15 @@ public sealed class DeckRenderer : IDisposable
             if (widget.Upload is { } upload)
             {
                 Text(widget.Label, x + 16, y + 19, 13, muted, maxWidth: cellWidth - 32);
-                Text($"↓ {widget.DisplayValue} {widget.DisplayUnit}", x + 16, y + 44, 23, maxWidth: cellWidth - 32);
-                Text($"↑ {upload.DisplayValue} {upload.DisplayUnit}", x + 16, y + 69, 23, maxWidth: cellWidth - 32);
+                Text($"↓ {widget.DisplayValue} {widget.DisplayUnit}", x + 16, y + 44, 23, maxWidth: cellWidth - 32, minimumSize: compact ? 18 : 0);
+                Text($"↑ {upload.DisplayValue} {upload.DisplayUnit}", x + 16, y + 69, 23, maxWidth: cellWidth - 32, minimumSize: compact ? 18 : 0);
                 return;
             }
             if (style == "ring")
             {
-                var bounds = SKRect.Create(x + 16, y + 14, 52, 52);
+                var bounds = compact ? SKRect.Create(x + 12, y + 23, 36, 36) : SKRect.Create(x + 16, y + 14, 52, 52);
+                var textX = x + (compact ? 60 : 84);
+                var textWidth = cellWidth - (compact ? 70 : 100);
                 using var ring = new SKPaint { Color = track.Color, Style = SKPaintStyle.Stroke, StrokeWidth = 6, IsAntialias = true, StrokeCap = SKStrokeCap.Round };
                 canvas.DrawOval(bounds, ring);
                 if (widget.Fraction is { } fraction)
@@ -175,18 +178,18 @@ public sealed class DeckRenderer : IDisposable
                     ring.Color = accent;
                     using var arc = new SKPath(); arc.AddArc(bounds, -90, (float)fraction * 359.99f); canvas.DrawPath(arc, ring);
                 }
-                else Text("—", x + 31, y + 47, 18, muted);
-                Text(widget.Label, x + 84, y + 20, 13, muted, maxWidth: cellWidth - 100);
+                else Text("—", x + (compact ? 20 : 31), y + 47, 18, muted);
+                Text(widget.Label, textX, y + 20, 13, muted, maxWidth: textWidth);
                 if (widget.Unit == "%" && widget.Capacity is { } ramTotal && widget.Used is { } ramUsed)
                 {
-                    ValueText(widget, x + 84, y + 47, 26, cellWidth - 100);
-                    Text($"{ramUsed:0.#} / {ramTotal:0.#} GiB", x + 84, y + 68, 17, muted, maxWidth: cellWidth - 100);
+                    ValueText(widget, textX, y + 47, compact ? 24 : 26, textWidth);
+                    Text($"{ramUsed:0.#} / {ramTotal:0.#} GiB", compact ? x + 12 : textX, y + (compact ? 72 : 68), compact ? 14 : 17, muted, maxWidth: compact ? cellWidth - 24 : textWidth);
                 }
                 else if (widget.Capacity is { } capacity && widget.Value is not null)
                 {
-                    Text($"{widget.DisplayValue} / {capacity:0.#} {widget.DisplayUnit}", x + 84, y + 58, 26, maxWidth: cellWidth - 100, minimumSize: 22);
+                    Text($"{widget.DisplayValue} / {capacity:0.#} {widget.DisplayUnit}", textX, y + 58, compact ? 22 : 26, maxWidth: textWidth, minimumSize: compact ? 16 : 22);
                 }
-                else ValueText(widget, x + 84, y + 58, 29, cellWidth - 100);
+                else ValueText(widget, textX, y + 58, compact ? 26 : 29, textWidth);
             }
             else
             {
@@ -335,7 +338,7 @@ public sealed class DeckRenderer : IDisposable
             Text(state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", 48, 430, 12, accent, maxWidth: 290);
             canvas.DrawLine(354, 90, 354, 435, line);
             canvas.DrawLine(1340, 90, 1340, 435, line);
-            for (var i = 0; i < 6; i++) WidgetCard(i, 1364 + i % 2 * 268, 100 + i / 2 * 106, 256);
+            for (var i = 0; i < 9; i++) WidgetCard(i, 1364 + i % 3 * 178, 100 + i / 3 * 106, 168);
             const float x = 388, width = 920;
             List<string> Wrap(string value, float size)
             {

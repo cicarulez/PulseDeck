@@ -7,6 +7,39 @@ using Xunit;
 public class RendererTests
 {
     [Fact]
+    public void MusicUsesThreeRowsOfThreeSensorCards()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Synthetic track", "Artist", "Spotify.exe", 2, 180, "connected");
+        var state = State with { Profile = "music", Media = media, Lyrics = new("loading", SpotifyLyrics.Key(media)) };
+        var config = new DeckConfig();
+        for (var i = 0; i < 9; i++)
+            config.Widgets[i] = new(WidgetCatalog.Slots[i].Id, "metric", "cpu.load", "", "", "CPU", Style: i < 3 ? "ring" : "value");
+        var baseline = renderer.Render(state, config);
+        for (var i = 0; i < 9; i++)
+        {
+            var original = config.Widgets[i];
+            config.Widgets[i] = original with { Source = "none" };
+            var hidden = renderer.Render(state, config);
+            var x = 1364 + i % 3 * 178;
+            var y = 100 + i / 3 * 106;
+            Assert.NotEqual(baseline.Pixels, hidden.Pixels);
+            for (var row = 0; row < 480; row++)
+            {
+                if (row < y || row >= y + 80)
+                    Assert.True(baseline.Pixels.AsSpan(row * 1920 * 4, 1920 * 4).SequenceEqual(hidden.Pixels.AsSpan(row * 1920 * 4, 1920 * 4)));
+                else
+                {
+                    Assert.True(baseline.Pixels.AsSpan(row * 1920 * 4, x * 4).SequenceEqual(hidden.Pixels.AsSpan(row * 1920 * 4, x * 4)));
+                    Assert.True(baseline.Pixels.AsSpan((row * 1920 + x + 168) * 4, (1920 - x - 168) * 4).SequenceEqual(hidden.Pixels.AsSpan((row * 1920 + x + 168) * 4, (1920 - x - 168) * 4)));
+                }
+            }
+            config.Widgets[i] = original;
+        }
+        config.Widgets[9] = new(WidgetCatalog.Slots[9].Id, "metric", "cpu.load", "", "", "HIDDEN");
+        Assert.Equal(baseline.Pixels, renderer.Render(state, config).Pixels);
+    }
+    [Fact]
     public void TrackLoadingKeepsMusicGeometryAndGapNeverDisplaysOldLyrics()
     {
         using var r = new DeckRenderer(); var c = new DeckConfig {Layout="weather"};
