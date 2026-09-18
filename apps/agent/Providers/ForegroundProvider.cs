@@ -8,11 +8,12 @@ using PulseDeck.Core;
 
 namespace PulseDeck.Agent.Providers;
 
-public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscoveryService discovery)
+public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscoveryService discovery, BrowserTabStore browserTabs)
 {
     private sealed record Entry(string Name, ApplicationIcon? Icon, DateTimeOffset Expires);
     private readonly Dictionary<string, Entry> cache = new(StringComparer.OrdinalIgnoreCase);
     private readonly TerminalIcon terminalIcon = new();
+    private readonly BrowserTabIcon browserTabIcon = new(browserTabs);
     public ApplicationIcon? Icon { get; private set; }
 
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
@@ -43,20 +44,20 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
             if (id == 0) return ForegroundSnapshot.Empty;
             using var process = Process.GetProcessById((int)id);
             var name = process.ProcessName;
-            // Terminal publishes the active tab as its window title. Read it each tick,
-            // independently of the executable metadata/icon cache, including tab switches.
-            string? terminalTitle = null;
-            if (name.Equals("WindowsTerminal", StringComparison.OrdinalIgnoreCase)
-                || name.Equals("WindowsTerminalHost", StringComparison.OrdinalIgnoreCase))
+            // Read active tab titles every tick, outside the executable metadata cache.
+            string? tabTitle = null;
+            if (ForegroundTitles.IsTerminal(name) || ForegroundTitles.IsChrome(name))
             {
-                var title = new StringBuilder(512);
+                var title = new StringBuilder(2048);
                 if (GetWindowText(window, title, title.Capacity) > 0)
-                {
-                    var clean = new string(title.ToString().Where(c => !char.IsControl(c)).Take(120).ToArray()).Trim();
-                    if (clean.Length > 0) terminalTitle = clean;
-                }
+                    tabTitle = ForegroundTitles.FromWindow(name, title.ToString());
             }
-            var snapshot = new ForegroundSnapshot((int)id, name, terminalTitle ?? name, ProfileSelector.IsGame(config, name), null, "unavailable");
+            var chromeIcon = ForegroundTitles.IsChrome(name) ? browserTabIcon.Read(tabTitle) : null;
+            var terminalTitle = ForegroundTitles.IsTerminal(name) ? tabTitle : null;
+            var displayTitle = tabTitle is null ? null : new string(tabTitle.Take(120).ToArray());
+            Icon = chromeIcon;
+            var snapshot = new ForegroundSnapshot((int)id, name, displayTitle ?? name, ProfileSelector.IsGame(config, name),
+                Icon?.Id, Icon is null ? "unavailable" : "available");
             try
             {
                 var path = ExecutablePath(process);
@@ -71,8 +72,8 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
                     if (!cache.ContainsKey(path) && cache.Count >= 32) cache.Remove(cache.Keys.First());
                     cache[path] = entry;
                 }
-                Icon = terminalTitle is null ? entry.Icon : terminalIcon.Read(path, terminalTitle) ?? entry.Icon;
-                return snapshot with { DisplayName = terminalTitle ?? discovered?.Name ?? installed?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
+                Icon = chromeIcon ?? (terminalTitle is null ? entry.Icon : terminalIcon.Read(path, terminalTitle) ?? entry.Icon);
+                return snapshot with { DisplayName = displayTitle ?? discovered?.Name ?? installed?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
             }
             catch { return snapshot; } // Restricted processes still keep their actual process name.
         }

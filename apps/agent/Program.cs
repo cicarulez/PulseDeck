@@ -12,11 +12,12 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<ConfigStore>();
 builder.Services.AddSingleton<HardwareProvider>();
 builder.Services.AddSingleton<BrowserMediaStore>();
+builder.Services.AddSingleton<BrowserTabStore>();
 builder.Services.AddHttpClient("youtube-artwork", client =>
     { client.Timeout = TimeSpan.FromSeconds(1); client.MaxResponseContentBufferSize = MediaArtwork.MaximumBytes; })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 builder.Services.AddSingleton<MediaProvider>();
-builder.Services.AddHttpClient("lyrics", client => { client.Timeout = TimeSpan.FromSeconds(8); client.MaxResponseContentBufferSize = 256 * 1024; client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.7.5"); })
+builder.Services.AddHttpClient("lyrics", client => { client.Timeout = TimeSpan.FromSeconds(8); client.MaxResponseContentBufferSize = 256 * 1024; client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.7.6"); })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 builder.Services.AddSingleton(p => new LyricsProvider(p.GetRequiredService<IHttpClientFactory>().CreateClient("lyrics"), p.GetRequiredService<ConfigStore>()));
 builder.Services.AddSingleton<InstalledGameCatalog>();
@@ -35,7 +36,7 @@ builder.Services.AddHttpClient("game-artwork", client => { client.Timeout = Time
 builder.Services.AddSingleton(provider => new GameArtworkProvider(provider.GetRequiredService<IHttpClientFactory>().CreateClient("game-artwork"), provider.GetRequiredService<ConfigStore>(), provider.GetRequiredService<SteamGridArtwork>()));
 builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });
 builder.Services.AddSingleton(provider => new WeatherFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("weather")));
-builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.7.5"); })
+builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.7.6"); })
     .ConfigurePrimaryHttpMessageHandler(NewsHttp.CreateHandler);
 builder.Services.AddSingleton(provider => new NewsFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("news")));
 builder.Services.AddSingleton<EmbeddedDiscordService>();
@@ -51,8 +52,8 @@ var app = builder.Build();
 app.Use(async (context, next) =>
 {
     if (context.Request.Host.Host is not ("127.0.0.1" or "localhost" or "[::1]")) { context.Response.StatusCode = 403; return; }
-    // The extension may only write its media endpoint, never access configuration/control APIs.
-    if (context.Request.Path == "/api/browser-media")
+    // The extension may only write its two browser endpoints, never configuration/control APIs.
+    if (context.Request.Path == "/api/browser-media" || context.Request.Path == "/api/browser-tab")
     {
         if (context.Request.Headers.Origin != BrowserMediaStore.ExtensionOrigin)
         { context.Response.StatusCode = 403; return; }
@@ -67,7 +68,7 @@ app.Use(async (context, next) =>
         if (context.Request.Method != "POST" || context.Request.Headers["X-PulseDeck-Client"] != "youtube-extension")
         { context.Response.StatusCode = 403; return; }
         var size = context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
-        if (size is { IsReadOnly: false }) size.MaxRequestBodySize = 8192;
+        if (size is { IsReadOnly: false }) size.MaxRequestBodySize = context.Request.Path == "/api/browser-tab" ? 65536 : 8192;
         await next(); return;
     }
     if (context.Request.Headers.Origin.Count > 0 && (!Uri.TryCreate(context.Request.Headers.Origin, UriKind.Absolute, out var origin)
@@ -84,6 +85,8 @@ app.UseStaticFiles();
 app.MapGet("/api/health", () => new { ok = true, app = "PulseDeck", version = typeof(DeckRuntime).Assembly.GetName().Version?.ToString(3) });
 app.MapPost("/api/browser-media", (BrowserMediaUpdate update, BrowserMediaStore store) =>
     store.Update(update.Media) ? Results.Ok(new { connected = true }) : Results.BadRequest());
+app.MapPost("/api/browser-tab", (BrowserTabUpdate update, BrowserTabStore store) =>
+    store.Update(update.Tab) ? Results.Ok(new { connected = true }) : Results.BadRequest());
 app.MapGet("/api/state", (DeckRuntime runtime) => runtime.State);
 app.MapGet("/api/widget-slots", () => new { slots = WidgetCatalog.Slots, defaults = WidgetCatalog.Defaults() });
 app.MapGet("/api/sensors", (DeckRuntime runtime) => runtime.State.Hardware);

@@ -1680,3 +1680,53 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   The initial reason for partial rejection remains unresolved; this verifies
   mitigation of the observed recurrence, not indefinite stability or a firmware
   root cause. The running 0.7.5 agent was left connected in full-frame mode.
+
+## Chrome tab title and optional favicon — 2026-09-18 (0.7.6)
+
+- Chrome foreground titles now come from the native window on each render tick,
+  stripping the trailing browser name; executable metadata remains the fallback.
+  Terminal title/Tux behavior and game process recognition remain covered by tests.
+- Extended the existing extension (same ID/path, version 0.2.0, now named
+  `PulseDeck · Chrome`) with an opt-in focused-tab bridge. `tabs` and `favicon`
+  remain optional; the main YouTube player selection is independent. Only the
+  focused non-incognito HTTP/HTTPS tab is considered. Chrome's local favicon
+  endpoint supplies PNGs; the agent receives no page URL and performs no icon
+  network fetch. Fresh native-title matching and a six-second expiry prevent
+  ordinary stale-tab reuse; equal titles across windows remain ambiguous.
+- The separate browser-tab POST endpoint uses the existing extension-origin and
+  header restrictions, a 64 KiB body cap, bounded metadata and PNG dimensions,
+  and full image decoding before rendering. Runtime metadata is memory-only.
+- 141 Core tests, 25 renderer/provider tests and 12 extension tests passed.
+  Coverage includes tab switches, native-name fallback, expiry/clear, image bounds
+  and corruption, permission removal, and focus changes during favicon fetch.
+  Angular production build and self-contained Windows publish passed.
+- A real isolated headless Chromium profile passed favicon-cache PNG delivery,
+  switching/returning between two fixture tabs, dynamic title updates and clearing
+  metadata on an internal page. The temporary test copy redirected both bridge
+  endpoints to a random local fixture server, never the live agent. Headless
+  Chromium declined the native optional-permission prompt, so this integration
+  test used a temporary manifest granting the two permissions at install time.
+  The shipped manifest keeps them optional; live user consent is a separate check.
+- Deployed after the previous agent and scheduled task exited, with backup
+  `%LOCALAPPDATA%\PulseDeck\before-chrome-076-20260918-134639`.
+  Configuration and Discord/SteamGridDB credential hashes were preserved. The
+  0.7.6 agent identified COM5, resumed frame acknowledgements and reported FPS ready.
+- Live HTTP checks: wrong origin, missing client header, extension GET and an
+  attempted extension-origin configuration write returned 403; an oversized title
+  returned 400 and a body above 64 KiB returned 413. A title-only fixture with no
+  matching foreground window was accepted then immediately cleared; no synthetic
+  icon or name was shown on the physical display.
+
+- Live Windows foreground checks at 11:48:41–47 UTC observed two Chrome tab
+  titles (lengths 63 and 24), both matching the native window title after removing
+  the browser suffix. An icon was available and frame acknowledgements continued.
+  No browsing titles or URLs were printed into the validation output.
+
+- The user confirmed native titles changed, but initially still saw Chrome’s icon.
+  The installed extension files matched the new build and the registered path was
+  correct; persisted Chrome permissions listed only `alarms`, without `tabs` or
+  `favicon`. Live optional-permission activation and favicon confirmation remain
+  pending; no permission was granted by editing the user’s browser profile.
+
+References: [Chrome tabs API](https://developer.chrome.com/docs/extensions/reference/api/tabs),
+[Chrome favicon cache](https://developer.chrome.com/docs/extensions/how-to/ui/favicons).

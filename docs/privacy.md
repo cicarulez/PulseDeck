@@ -31,9 +31,11 @@ DPAPI protects credentials for the Windows user; it is not a reason to share cre
 | SteamGridDB | Game-title searches authenticated with your optional API key; image requests to its CDN |
 | LRCLIB | Song title, artist, duration and album when available; no audio or Spotify credentials |
 | Discord | Bot authentication, server/channel access and optional voice connection for speaking events |
-| YouTube extension | Main-player metadata is posted to the local agent; the extension's permissions are documented separately |
+| Chrome extension | YouTube main-player metadata is posted locally. Optional `tabs`/`favicon` permissions add the focused tab title and a bounded PNG from Chrome’s local favicon endpoint; no page URL is sent to the agent and no arbitrary icon URL is fetched. See the [extension guide](../apps/youtube-extension/README.md). |
 
 These providers see normal network request information, including your IP address. Their services and policies are independent of PulseDeck. Disable an integration if you do not want its requests.
+
+Chrome and Windows Terminal window titles are read natively for the active-app widget, even without the extension. This can include private/incognito window titles. Optional Chrome favicons use only the focused non-incognito HTTP/HTTPS tab and expire after six seconds; metadata and icon caches stay in memory.
 
 ## Before sharing screenshots or logs
 

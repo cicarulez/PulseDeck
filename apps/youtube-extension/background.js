@@ -1,4 +1,6 @@
 import { selectVideo } from './selection.mjs';
+import { createForegroundBridge } from './foreground.mjs';
+const foreground = createForegroundBridge(chrome);
 const endpoint = 'http://127.0.0.1:5178/api/browser-media';
 let busy = false;
 let previousTabId;
@@ -34,7 +36,8 @@ async function poll() {
   chrome.action.setBadgeText({ text: status.connected ? 'ON' : '' }).catch(() => {});
 }
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
-  if (!sender.tab && message?.type === 'status') respond(status);
+  if (!sender.tab && message?.type === 'status') respond({ ...status, tab: foreground.status });
+  if (!sender.tab && message?.type === 'refresh-tab') { void foreground.refresh(); respond({ ok: true }); }
 });
 chrome.alarms.onAlarm.addListener(() => { void poll(); });
 chrome.runtime.onInstalled.addListener(() => { void poll(); });
@@ -46,3 +49,15 @@ chrome.windows.onFocusChanged.addListener(() => { void poll(); });
 chrome.alarms.create('refresh', { periodInMinutes: 0.5 });
 setInterval(() => { void poll(); }, 2000);
 void poll();
+
+chrome.tabs.onActivated.addListener(() => { void foreground.refresh(); });
+chrome.tabs.onRemoved.addListener(() => { void foreground.refresh(); });
+chrome.tabs.onUpdated.addListener((_id, change, tab) => {
+  if (tab.active && ['title', 'url', 'favIconUrl', 'status'].some(key => key in change)) void foreground.refresh();
+});
+chrome.windows.onFocusChanged.addListener(() => { void foreground.refresh(); });
+chrome.permissions.onAdded.addListener(() => { void foreground.refresh(); });
+chrome.permissions.onRemoved.addListener(() => { void foreground.refresh(); });
+chrome.alarms.onAlarm.addListener(() => { void foreground.refresh(); });
+setInterval(() => { void foreground.refresh(); }, 2000);
+void foreground.refresh();

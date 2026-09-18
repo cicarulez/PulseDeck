@@ -28,7 +28,7 @@ flowchart TD
 - **`src/PulseDeck.Core`** contains portable contracts, validation, game/library parsing, profile selection, lyrics parsing, widget resolution and frame protocol/recovery rules.
 - **`apps/configurator`** edits configuration and shows state/preview. It does not reproduce the panel's rendering logic.
 - **`src/PulseDeck.Discord`** builds pinned upstream WebSocket source with a documented roster fix. See its [provenance](../src/PulseDeck.Discord/README.md).
-- **`apps/youtube-extension`** is an optional local main-player metadata source with Windows media fallback.
+- **`apps/youtube-extension`** is an optional local YouTube main-player source with Windows media fallback, plus opt-in focused Chrome tab favicons. Native foreground titles work independently; favicon metadata must be fresh and match the native tab title.
 - **`apps/desktop`** is an optional Electron wrapper around the same local configurator.
 
 ## Profiles and media identity

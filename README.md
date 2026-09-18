@@ -52,6 +52,7 @@ Spotify gets cover art, track progress and optional synchronized lyrics from LRC
 | Games | Steam/EA discovery, manual exceptions, per-game artwork, persistent session timer, application FPS |
 | Voice | Discord channel roster, mute/deaf state and optional speaking activity |
 | Media | Windows media sessions; optional Chrome extension prioritizes the main YouTube player |
+| Active app | Native Chrome/Terminal tab titles; optional Chrome tab favicons with application-icon fallback |
 | Spotify | Dedicated lyrics layout; other media sources keep the regular media panel |
 | Artwork | Optional SteamGridDB key, Steam fallback, local cache and manual backgrounds |
 | Daily controls | Volume, clock, foreground app or Terminal tab title, manual/automatic profiles |
