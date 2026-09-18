@@ -1947,3 +1947,23 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   static directory. The production loop remains approximately one update per
   second. Smooth browser playback is not evidence of physical USB/display
   animation throughput; that hardware experiment remains separate.
+
+### Physical notification animation trial (2026-09-19)
+
+- The user requested the actual panel trial. The Windows-only tool in
+  `tools/notification-display-probe` verified the connected USB device and exact
+  `chs_88inch.dev1_rom1.90` response, then temporarily took over the released port.
+  PulseDeck and its collectors kept running. The current preview stayed in memory
+  as a frozen background, with an explicit trial label and synthetic unread count.
+- Three four-second animations plus countdown and badge holds used only the
+  existing full-frame command. The panel acknowledged 57 animation frames;
+  mean transfer time was 216.8 ms, p95 223.1 ms (about 4.6 fps transfer-limited).
+  Missed frames were skipped according to wall time, never queued.
+- The user confirmed seeing the animation and judged the movement acceptable.
+  The display was reconnected automatically, the agent process stayed the same,
+  and 37 subsequent live frames were acknowledged with no recoveries.
+- Windows PowerShell initially reported a false supervisor failure because its
+  process ExitCode was null, despite successful child completion and restoration.
+  Retaining the child handle before waiting corrected this; a no-write Windows
+  dry run verified exit code zero. The probe has a bounded supervisor timeout
+  and reconnection cleanup. No runtime configuration or agent binaries changed.
