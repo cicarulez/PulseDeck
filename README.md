@@ -5,6 +5,7 @@
     <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-a9ff69?labelColor=111c22"></a>
     <img alt="Platform: Windows x64" src="https://img.shields.io/badge/platform-Windows_x64-9bc8f5?labelColor=111c22">
     <img alt="Status: early development" src="https://img.shields.io/badge/status-early_development-f5cb8b?labelColor=111c22">
+    <a href="https://buymeacoffee.com/cicarulez"><img alt="Support PulseDeck on Buy Me a Coffee" src="https://img.shields.io/badge/Support-Buy_Me_a_Coffee-a9ff69?logo=buymeacoffee&amp;logoColor=a9ff69&amp;labelColor=111c22"></a>
   </p>
   <p><a href="docs/getting-started.md">Get started</a> · <a href="docs/gallery.md">Gallery</a> · <a href="CONTRIBUTING.md">Contribute</a> · <a href="docs/roadmap.md">Roadmap</a> · <a href="docs/README.it.md">Italiano</a></p>
 </div>
@@ -75,6 +76,8 @@ Useful places to start:
 - **Documentation:** setup walkthroughs, troubleshooting and device reports with sensitive details removed.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md), pick a bounded item from the [roadmap](docs/roadmap.md), or [open an issue](https://github.com/cicarulez/PulseDeck/issues). Start a discussion in an issue before a large change so we can agree on scope.
+
+If you'd like to support development financially, you can [buy me a coffee](https://buymeacoffee.com/cicarulez). Code, testing, documentation and feedback are equally welcome.
 
 ## Under the hood
 

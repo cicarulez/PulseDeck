@@ -35,4 +35,6 @@ Sono utili contributi su interfaccia e traduzioni, test su altri PC, affidabilit
 - [Prove effettuate](validation.md)
 - [Apri una segnalazione](https://github.com/cicarulez/PulseDeck/issues)
 
+Se vuoi sostenere economicamente lo sviluppo, puoi [offrirmi un caffè](https://buymeacoffee.com/cicarulez). Sono altrettanto benvenuti codice, test, documentazione e suggerimenti.
+
 Licenza **GPL-3.0-or-later**. Vedi [LICENSE](../LICENSE) e [attribuzioni](../THIRD-PARTY-NOTICES.md).
