@@ -1641,3 +1641,42 @@ Sources: [LRCLIB API](https://lrclib.net/docs),
   fallback, an active track-change recurrence and longer-term stability remain
   unverified. Successful post-restart partials alone do not prove this mitigation
   fixed the original fault. Minimal monitoring JSON remains outside the repository.
+
+## Active Spotify follow-up — 2026-09-18 (0.7.5)
+
+- After the user resumed Spotify, sampled live state every two seconds while
+  leaving playback and display ownership unchanged. The monitor records track
+  sequence numbers and lyric line indices, never track names or lyric content;
+  its JSONL stays in the private runtime directory.
+- A partial transfer timed out during synchronized lyrics: rectangle
+  `(389,23,1451,407)`, counter 1170, 2,379,500 attempted bytes, 2,136 ms elapsed.
+  The last prior acknowledgement was at 11:22:22 UTC. Identity-checked automatic
+  reopen and a full frame recovered successfully in about 330 ms; acknowledgements
+  then resumed with partial updates. This was a timeout, not `needReSend:1`, so
+  the new persistent full-frame fallback was not selected. No manual reconnect
+  or process restart was performed during this follow-up.
+- A later natural track change appeared at 11:26:20 UTC, with lyrics changing
+  from loading to synchronized while the profile remained Music. Shortly after,
+  a partial frame was rejected with `needReSend:1|renderCnt:0`: rectangle
+  `(388,26,1464,404)`, counter 239, 2,383,250 bytes, 130 ms. The last accepted
+  partial was at 11:26:27 UTC. **Persistent full-frame fallback was exercised on
+  the physical device:** the recovery full frame was acknowledged in 218 ms,
+  then subsequent changed frames continued as full updates. No additional
+  reopen was needed for this resend request.
+- The first five-minute sampling run recorded 150 states, two tracks and 66
+  synchronized-line advances. Music remained selected throughout; maximum sampled
+  state age was 2.75 seconds during the timeout. The retry budget renewed after
+  60 accepted full frames without clearing fallback, as intended. These are device
+  acknowledgements and provider-state observations, not a visual judgement of
+  animation smoothness or perceptual lyric alignment.
+- A further track change was observed at 11:28:50 UTC while full-frame mode
+  remained active, with no new transport error. The user confirmed that music
+  and lyrics looked normal after fallback, without reporting new flashing or
+  stuttering. That visual report does not establish exact lyric timing.
+- At 11:30:13 UTC, 222 full frames had been acknowledged since fallback entry,
+  with no further error or recovery. An additional three-minute run sampled 90
+  states, all connected in full mode, across another track change and 49 lyric
+  advances. Transfer times were 201–225 ms; maximum sampled state age was 1.25 s.
+  The initial reason for partial rejection remains unresolved; this verifies
+  mitigation of the observed recurrence, not indefinite stability or a firmware
+  root cause. The running 0.7.5 agent was left connected in full-frame mode.
