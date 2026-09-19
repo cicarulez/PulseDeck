@@ -6,6 +6,23 @@ public class LyricsTests
 {
     private static MediaSnapshot Track => new(true, "Synthetic track", "Synthetic artist", "Spotify.exe", 0, 180, "connected");
     [Theory]
+    [InlineData(0.350, 0.650, 0)] [InlineData(0, 0.650, -1)]
+    [InlineData(-0.350, 1.349, -1)] [InlineData(-0.350, 1.350, 0)]
+    public void ConfigurableAdvanceAndDelay(double advance, double position, int expected)
+    {
+        var state = new LyricsSnapshot("synced", "fixture", [new(1, "Synthetic line")]);
+        Assert.Equal(expected, state.CurrentLine(position, advance));
+        Assert.Equal(1, state.Lines![0].Seconds);
+    }
+    [Theory]
+    [InlineData(-5001, false)] [InlineData(-5000, true)] [InlineData(0, true)]
+    [InlineData(350, true)] [InlineData(5000, true)] [InlineData(5001, false)]
+    public void AdvanceBoundsAndLegacyDefault(int milliseconds, bool valid)
+    {
+        Assert.Equal(valid, (new DeckConfig { LyricsAdvanceMilliseconds = milliseconds }).Validate() is null);
+        Assert.Equal(350, System.Text.Json.JsonSerializer.Deserialize<DeckConfig>("{}")!.LyricsAdvanceMilliseconds);
+    }
+    [Theory]
     [InlineData("Spotify.exe", "windows", true)]
     [InlineData("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify", "windows", true)]
     [InlineData("Chrome · YouTube", "youtube-extension", false)]

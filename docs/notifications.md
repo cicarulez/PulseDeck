@@ -77,6 +77,7 @@ pending authorization; revoke the Google-side grant separately in
 
 - The badge uses `users.labels.get(INBOX).messagesUnread`, not unread threads or
   a list estimate. It excludes archived unread messages and includes all Inbox categories.
+  At zero the mail icon and count are hidden; unavailable data still shows `?`.
 - `users.history.list` identifies new unread arrivals with the INBOX label. All pages are processed;
   the cursor advances only after the history and authoritative count succeed.
   Reading messages, marking old messages unread or deleting them does not by

@@ -47,6 +47,8 @@ public class RendererTests
             Assert.NotEqual(zero, unknown);
             // The badge must not alter the clock or the underlying content below the header.
             var absent = renderer.Render(state with { Notifications = new([]) }, config).Pixels;
+            Assert.Equal(absent, zero);
+            Assert.Equal(absent, renderer.Render(state with { Notifications = visual with { Sources = [new("gmail", "mail", "connected", 0)] } }, config).Pixels);
             Assert.True(badge.AsSpan(60 * 1920 * 4).SequenceEqual(absent.AsSpan(60 * 1920 * 4)));
             for (var y = 0; y < 60; y++) Assert.True(badge.AsSpan((y * 1920 + 1750) * 4, 170 * 4).SequenceEqual(absent.AsSpan((y * 1920 + 1750) * 4, 170 * 4)));
         }
@@ -235,6 +237,22 @@ public class RendererTests
         }
         var gap=synced with {SpotifyTransition=true,Media=new(false,"","","",0,0,"idle")};
         Assert.Equal(r.Render(gap,c).Pixels,r.Render(gap with {Lyrics=new()},c).Pixels);
+    }
+    [Fact]
+    public void LyricsAdvanceConfigurationChangesOnlySynchronizedSelection()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Synthetic track", "Synthetic artist", "Spotify.exe", 3.8, 180, "connected");
+        var state = State with { Profile = "music", Media = media,
+            Lyrics = new("synced", SpotifyLyrics.Key(media), [new(1, "First synthetic line"), new(4, "Second synthetic line")]) };
+        var config = new DeckConfig();
+        var original = renderer.Render(state, config).Pixels;
+        Assert.Equal(original, renderer.Render(state, config with { LyricsAdvanceMilliseconds = 350 }).Pixels);
+        var delayed = renderer.Render(state, config with { LyricsAdvanceMilliseconds = -350 }).Pixels;
+        Assert.NotEqual(original, delayed);
+        var plain = state with { Lyrics = new("plain", SpotifyLyrics.Key(media), PlainText: "Synthetic unsynchronized text") };
+        Assert.Equal(renderer.Render(plain, config).Pixels,
+            renderer.Render(plain, config with { LyricsAdvanceMilliseconds = -350 }).Pixels);
     }
     [Fact]
     public void SpotifyLyricsAreIsolatedAndDiscordHeaderDisappearsOutsideRoster()

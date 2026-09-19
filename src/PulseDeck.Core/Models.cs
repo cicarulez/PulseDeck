@@ -20,6 +20,7 @@ public sealed record DeckConfig
     public NotificationOptions Notifications { get; init; } = new();
     public CalendarOptions Calendar { get; init; } = new();
     public bool SpotifyLyrics { get; init; } = true;
+    public int LyricsAdvanceMilliseconds { get; init; } = 350;
     public bool GamingLayout { get; init; } = true;
     public bool GamingVoiceActivity { get; init; } = true;
     public GameTheme[] GameThemes { get; init; } = [];
@@ -28,6 +29,7 @@ public sealed record DeckConfig
 
     public string? Validate()
     {
+        if (LyricsAdvanceMilliseconds is < -5000 or > 5000) return "La regolazione testi deve essere tra -5000 e +5000 ms.";
         if (Notifications is null) return "Invalid notification settings.";
         if (Notifications.Validate() is { } notificationError) return notificationError;
         if (Calendar is null) return "Invalid calendar settings.";

@@ -2175,3 +2175,28 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   brought the badge to 3. The later matching count cannot rule out the earlier
   discrepancy. Keep this anomaly open; capture counts before deletion on recurrence.
   No cause (staleness, conversations versus messages, or spam inclusion) is proven.
+
+
+### 2026-09-19 — Configurable lyric timing and hidden zero-mail badge
+
+- Added signed `lyricsAdvanceMilliseconds` (-5000 to +5000 whole milliseconds),
+  preserving +350 for existing configurations. Positive advances and negative
+  delays synchronized line selection; media position, LRC timestamps/cache and
+  unsynchronized pagination remain unchanged. Configurator validates and saves it.
+- A zero Gmail count now draws neither the envelope nor its numeric badge, even
+  while an arrival is active. Unknown counts still render `?`; calendar is unaffected.
+- Core suite: 215 passed. Rendering suite: 47 passed, including zero-versus-absent
+  pixel equivalence across all three layouts/profiles; an additional renderer test
+  passed separately for configured lyric selection and unchanged plain text (48
+  rendering cases total). Angular build and Windows publish passed.
+- Browser fixture checks confirmed +350 default, saved negative/zero/positive
+  offsets including both limits, blocked invalid input, preserved notification
+  settings and found no Angular errors or overflow at 390px.
+- Deployed after clean agent exit with backup `before-lyrics-offset-20260919-114000`;
+  configuration and credential hashes preserved. Runtime reports +350 ms, a real
+  zero Inbox count, active Music profile and synchronized lyrics. Inspected the
+  shared live preview: no envelope/count near the clock. The verified physical
+  panel acknowledged 26 frames with zero recoveries or transport errors. Playback
+  and saved timing were not changed; subjective lyric synchronization at other
+  offsets still requires user observation. No simulated Desktop test interrupted
+  the active Music session. Live preview retained only outside the repository.

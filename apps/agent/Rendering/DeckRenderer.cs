@@ -385,7 +385,7 @@ public sealed class DeckRenderer : IDisposable
             else if (state.Lyrics.Status == "synced" && state.Lyrics.Lines is { } lines)
             {
                 lyricsCredit += " · Sincronizzato";
-                var index = state.Lyrics.CurrentLine(state.Media.PositionSeconds);
+                var index = state.Lyrics.CurrentLine(state.Media.PositionSeconds, config.LyricsAdvanceMilliseconds / 1000d);
                 if (index > 0) Text(lines[index - 1].Text, x, 174, 23, muted, maxWidth: width);
                 var current = index >= 0 ? lines[index].Text : "";
                 var wrapped = Wrap(current.Length == 0 ? "♪" : current, 38);

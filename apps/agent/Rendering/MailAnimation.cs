@@ -8,7 +8,7 @@ internal static class MailAnimation
     private static float Smooth(float value) { var t = Math.Clamp(value, 0, 1); return t * t * (3 - 2 * t); }
     public static void Draw(SKCanvas canvas, float seconds, SKTypeface typeface, int? count = 3, string title = "Nuova email", string caption = "GMAIL", bool test = false, string kind = "mail")
     {
-        if (seconds <= 0) return;
+        if (seconds <= 0 || kind == "mail" && count == 0) return;
         var arrival = Smooth(seconds / .25f);
         if (kind == "calendar") arrival *= 1 - Smooth((seconds - 2.75f) / .4f);
         var travel = Smooth((seconds - 1.7f) / 1.05f);

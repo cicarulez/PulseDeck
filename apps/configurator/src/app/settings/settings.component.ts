@@ -19,11 +19,13 @@ export class SettingsComponent {
   constructor() { effect(() => { this.draft = { ...this.config(), gameProcesses: [...this.config().gameProcesses], gameThemes: this.config().gameThemes.map(t => ({ ...t })) }; this.processes = this.draft.gameProcesses.join(', '); }); }
   gameProcesses() { return [...new Set(this.processes.split(',').map(p => p.trim()).filter(Boolean))]; }
   themeProcesses() { return [...new Set([...this.gameProcesses(), ...this.discoveredProcesses])]; }
-  pollingError() {
+  validationError() {
     const gmail = this.draft.notifications.pollSeconds, calendar = this.draft.calendar.pollMinutes;
     if (!Number.isInteger(gmail) || gmail < 15 || gmail > 300) return 'Inserisci un intervallo Gmail intero tra 15 e 300 secondi.';
     if (!Number.isInteger(calendar) || calendar < 1 || calendar > 60) return 'Inserisci un intervallo calendario intero tra 1 e 60 minuti.';
+    const advance = this.draft.lyricsAdvanceMilliseconds;
+    if (!Number.isInteger(advance) || advance < -5000 || advance > 5000) return 'Inserisci una regolazione testi intera tra -5000 e +5000 ms.';
     return '';
   }
-  submit() { if (this.pollingError()) return; this.save.emit({ ...this.draft, gameProcesses: this.gameProcesses() }); }
+  submit() { if (this.validationError()) return; this.save.emit({ ...this.draft, gameProcesses: this.gameProcesses() }); }
 }

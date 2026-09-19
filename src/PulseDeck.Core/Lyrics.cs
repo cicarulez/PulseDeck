@@ -10,10 +10,10 @@ public sealed record LyricsSnapshot(string Status = "idle", string TrackKey = ""
     // Advance only the displayed lyrics, keeping media position and cached LRC timestamps intact.
     public const double DisplayAdvanceSeconds = 0.350;
 
-    public int CurrentLine(double seconds)
+    public int CurrentLine(double seconds, double advanceSeconds = DisplayAdvanceSeconds)
     {
-        if (!double.IsFinite(seconds) || Lines is null) return -1;
-        seconds += DisplayAdvanceSeconds;
+        if (!double.IsFinite(seconds) || !double.IsFinite(advanceSeconds) || Lines is null) return -1;
+        seconds += advanceSeconds;
         for (var i = Lines.Length - 1; i >= 0; i--) if (Lines[i].Seconds <= seconds) return i;
         return -1;
     }
