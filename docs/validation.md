@@ -2223,3 +2223,18 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   `before-section-tabs-20260919-124405`. Configuration and credential hashes
   preserved. Updated frontend served successfully; Gmail and the verified physical
   display reconnected. This UI-only change did not require new animation trials.
+
+
+### 2026-09-19 — Short configurator pages stay top-aligned
+
+- Removed main's automatic vertical margins and used a full-height flex column
+  with the footer consuming spare space above it. Mobile shell also stretches
+  main below navigation. Short tabs no longer shift the heading downward; long
+  pages keep the footer after content.
+- Angular build passed. Browser geometry checks on Meteo and expanded Gmail at
+  1440px and 390px confirmed stable header position, short-page footer at viewport
+  bottom, long-page footer below content, no overflow or Angular errors, and no
+  configuration writes. Desktop screenshot inspected.
+- Installed two frontend files after clean shutdown; backup
+  `before-short-page-layout-20260919-132952`. Runtime settings/credentials preserved;
+  updated frontend served and the physical panel reconnected without recoveries.
