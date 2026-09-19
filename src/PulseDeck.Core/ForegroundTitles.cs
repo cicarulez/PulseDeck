@@ -7,10 +7,13 @@ public static class ForegroundTitles
         || process.Equals("WindowsTerminalHost", StringComparison.OrdinalIgnoreCase);
     public static bool IsExplorer(string process, string? windowClass) => process.Equals("explorer", StringComparison.OrdinalIgnoreCase)
         && windowClass is "CabinetWClass" or "ExploreWClass";
+    public static bool IsDesktop(string process, string? windowClass) => process.Equals("explorer", StringComparison.OrdinalIgnoreCase)
+        && windowClass is "Progman" or "WorkerW";
     public static string Clean(string value) => new string(value.Where(c => !char.IsControl(c)).ToArray()).Trim();
 
     public static string? FromWindow(string process, string? title, string? windowClass = null)
     {
+        if (IsDesktop(process, windowClass)) return "Desktop";
         if (title is null || !IsChrome(process) && !IsTerminal(process) && !IsExplorer(process, windowClass)) return null;
         var clean = Clean(title);
         if (IsChrome(process))

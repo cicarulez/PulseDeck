@@ -39,6 +39,29 @@ public sealed class ApplicationMetadataCacheTests
         Assert.Equal("first-icon", cache.Read("first")?.Icon?.Id);
     }
     [Fact]
+    public async Task FailedRefreshKeepsResolvedNameAndIcon()
+    {
+        var clock = new Clock();
+        var calls = 0;
+        var failed = new TaskCompletionSource<ApplicationMetadata?>();
+        var cache = new ApplicationMetadataCache((id, token) =>
+            Interlocked.Increment(ref calls) == 1
+                ? Task.FromResult<ApplicationMetadata?>(new("Paint", new("paint-icon", [1]))) : failed.Task, clock);
+        Assert.True(cache.IsLoading("paint"));
+        Assert.Equal("Paint", (await UntilResult(cache, "paint"))?.Name);
+        Assert.False(cache.IsLoading("paint"));
+        clock.Now = clock.Now.AddSeconds(61);
+        Assert.Equal("Paint", cache.Read("paint")?.Name);
+        Assert.True(cache.IsLoading("paint"));
+        failed.SetResult(null);
+        for (var i = 0; i < 200 && cache.IsLoading("paint"); i++) { await Task.Delay(5); cache.Read("paint"); }
+        Assert.False(cache.IsLoading("paint"));
+        Assert.Equal("Paint", cache.Read("paint")?.Name);
+        Assert.Equal("paint-icon", cache.Read("paint")?.Icon?.Id);
+        Assert.Null(cache.Read("other"));
+    }
+
+    [Fact]
     public async Task MissingLogoPreservesNameAndRetriesAfterShortExpiry()
     {
         var clock = new Clock(); var calls = 0;

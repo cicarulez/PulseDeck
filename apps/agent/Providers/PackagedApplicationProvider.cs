@@ -18,8 +18,9 @@ public sealed class PackagedApplicationProvider
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetApplicationUserModelId(SafeProcessHandle process, ref uint length, StringBuilder? value);
 
-    public ApplicationMetadata? Read(int processId)
+    public ApplicationMetadata? Read(int processId, out bool loading)
     {
+        loading = false;
         try
         {
             using var handle = OpenProcess(0x1000, false, processId);
@@ -27,7 +28,11 @@ public sealed class PackagedApplicationProvider
             uint length = 0;
             if (GetApplicationUserModelId(handle, ref length, null) != 122 || length is < 2 or > 512) return null;
             var value = new StringBuilder((int)length);
-            return GetApplicationUserModelId(handle, ref length, value) == 0 ? cache.Read(value.ToString()) : null;
+            if (GetApplicationUserModelId(handle, ref length, value) != 0) return null;
+            var id = value.ToString();
+            var result = cache.Read(id);
+            loading = cache.IsLoading(id);
+            return result;
         }
         catch { return null; }
     }

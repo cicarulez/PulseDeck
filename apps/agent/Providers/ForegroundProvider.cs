@@ -15,6 +15,7 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
     private readonly TerminalIcon terminalIcon = new();
     private readonly PackagedApplicationProvider packagedApps = new();
     private readonly BrowserTabIcon browserTabIcon = new(browserTabs);
+    private ApplicationIcon? desktopIcon;
     public ApplicationIcon? Icon { get; private set; }
 
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
@@ -48,7 +49,13 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
             var name = process.ProcessName;
             var windowClass = new StringBuilder(256);
             GetClassName(window, windowClass, windowClass.Capacity);
-            var packaged = packagedApps.Read((int)id);
+            var isDesktop = ForegroundTitles.IsDesktop(name, windowClass.ToString());
+            if (isDesktop)
+            {
+                Icon = ReadDesktopIcon();
+                return new((int)id, name, "Desktop", false, Icon?.Id, Icon is null ? "unavailable" : "available");
+            }
+            var packaged = packagedApps.Read((int)id, out var metadataLoading);
             // Read active tab titles every tick, outside the executable metadata cache.
             string? tabTitle = null;
             if (ForegroundTitles.IsTerminal(name) || ForegroundTitles.IsChrome(name) || ForegroundTitles.IsExplorer(name, windowClass.ToString()))
@@ -60,6 +67,9 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
             var chromeIcon = ForegroundTitles.IsChrome(name) ? browserTabIcon.Read(tabTitle) : null;
             var terminalTitle = ForegroundTitles.IsTerminal(name) ? tabTitle : null;
             var displayTitle = tabTitle is null ? null : new string(tabTitle.Take(120).ToArray());
+            // Do not flash executable metadata while Windows resolves a packaged app.
+            // The real foreground PID/process remain available for profile selection.
+            if (metadataLoading && packaged?.Name is null) displayTitle ??= "";
             Icon = chromeIcon ?? packaged?.Icon;
             var snapshot = new ForegroundSnapshot((int)id, name, displayTitle ?? packaged?.Name ?? name, ProfileSelector.IsGame(config, name),
                 Icon?.Id, Icon is null ? "unavailable" : "available");
@@ -77,7 +87,7 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
                     if (!cache.ContainsKey(path) && cache.Count >= 32) cache.Remove(cache.Keys.First());
                     cache[path] = entry;
                 }
-                Icon = chromeIcon ?? (terminalTitle is null ? null : terminalIcon.Read(path, terminalTitle)) ?? packaged?.Icon ?? entry.Icon;
+                Icon = chromeIcon ?? (terminalTitle is null ? null : terminalIcon.Read(path, terminalTitle)) ?? packaged?.Icon ?? (metadataLoading ? null : entry.Icon);
                 return snapshot with { DisplayName = displayTitle ?? discovered?.Name ?? installed?.Name ?? packaged?.Name ?? entry.Name, IconId = Icon?.Id, IconStatus = Icon is null ? "unavailable" : "available" };
             }
             catch { return snapshot; } // Restricted processes still keep their actual process name.
@@ -113,5 +123,24 @@ public sealed class ForegroundProvider(InstalledGameCatalog catalog, GameDiscove
         }
         catch { }
         return new(name, artwork, DateTimeOffset.UtcNow.AddSeconds(artwork is null ? 10 : 60));
+    }
+
+    private ApplicationIcon? ReadDesktopIcon()
+    {
+        if (desktopIcon is not null) return desktopIcon;
+        try
+        {
+            using var bitmap = new SkiaSharp.SKBitmap(64, 64);
+            using var canvas = new SkiaSharp.SKCanvas(bitmap);
+            canvas.Clear(SkiaSharp.SKColors.Transparent);
+            using var paint = new SkiaSharp.SKPaint { Color = new SkiaSharp.SKColor(0, 120, 212) };
+            foreach (var x in new[] { 4, 34 })
+                foreach (var y in new[] { 4, 34 }) canvas.DrawRect(x, y, 26, 26, paint);
+            using var image = SkiaSharp.SKImage.FromBitmap(bitmap);
+            using var png = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+            var bytes = png.ToArray();
+            return desktopIcon = new(Convert.ToHexString(SHA256.HashData(bytes)), bytes);
+        }
+        catch { return null; }
     }
 }

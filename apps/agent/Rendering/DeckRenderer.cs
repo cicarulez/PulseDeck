@@ -20,6 +20,7 @@ public sealed class DeckRenderer : IDisposable
     private string? coverId;
     private SKBitmap? appIcon;
     private string? appIconId;
+    private SKRect appIconBounds;
     private SKBitmap? gameIcon;
     private string? gameIconId;
     private readonly SKShader baseGradient = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(1920, 480),
@@ -32,7 +33,12 @@ public sealed class DeckRenderer : IDisposable
         {
             appIcon?.Dispose(); appIcon = null; appIconId = nextAppIconId;
             if (nextAppIconId is not null)
-                try { appIcon = SKBitmap.Decode(applicationIcon!.Png); } catch { }
+                try
+                {
+                    appIcon = SKBitmap.Decode(applicationIcon!.Png);
+                    appIconBounds = appIcon is null ? SKRect.Empty : ApplicationIconLayout.VisibleBounds(appIcon);
+                }
+                catch { }
         }
         var nextGameIconId = state.Profile == "gaming" ? state.Game?.IconId : null;
         if (gameIconId != nextGameIconId)
@@ -421,7 +427,7 @@ public sealed class DeckRenderer : IDisposable
         }
         Text("PULSEDECK", 32, 42, 23, accent, true);
         Text("RECON / " + state.Profile.ToUpperInvariant(), 320, 42, 18, muted);
-        if (appIcon is not null) canvas.DrawBitmap(appIcon, SKRect.Create(642, 14, 40, 40));
+        if (appIcon is not null) ApplicationIconLayout.Draw(canvas, appIcon, appIconBounds, SKRect.Create(644, 16, 36, 36));
 
         Text(state.Foreground.DisplayName, 698, 44, 28, maxWidth: 450);
         Text(state.Timestamp.ToLocalTime().ToString("HH:mm:ss"), 1760, 42, 22);

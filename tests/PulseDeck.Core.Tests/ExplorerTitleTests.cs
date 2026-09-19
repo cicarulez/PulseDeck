@@ -13,8 +13,8 @@ public sealed class ExplorerTitleTests
     [InlineData("explorer", "CabinetWClass", @"\\server\share\Folder", "Folder")]
     [InlineData("explorer", "CabinetWClass", @"\\server\share\", "share")]
     [InlineData("explorer", "CabinetWClass", "", null)]
-    [InlineData("explorer", "Progman", "Program Manager", null)]
-    [InlineData("explorer", "WorkerW", "Desktop", null)]
+    [InlineData("explorer", "Progman", "Program Manager", "Desktop")]
+    [InlineData("explorer", "WorkerW", "Desktop", "Desktop")]
     [InlineData("explorer", "Shell_TrayWnd", "", null)]
     [InlineData("OtherApp", "CabinetWClass", "Documenti", null)]
     public void FolderWindowsUseSelectedTitleWithoutLeakingDesktopOrParentPaths(string process,

@@ -2238,3 +2238,31 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
 - Installed two frontend files after clean shutdown; backup
   `before-short-page-layout-20260919-132952`. Runtime settings/credentials preserved;
   updated frontend served and the physical panel reconnected without recoveries.
+
+## Desktop label update — 2026-09-19
+
+- Built in WSL using the existing dedicated SDK at `~/.local/share/pulsedeck-dotnet`
+  (10.0.401) and Node installation at `~/.local/share/pulsedeck-node`.
+  Full build passed, including 215 Core tests, 48 rendering tests and extension tests.
+- Desktop foreground now returns before executable metadata lookup, including when
+  its native window title is empty. Its Windows-style four-pane icon is generated locally.
+- Updated the existing `%LOCALAPPDATA%\PulseDeck\app` installation after waiting for
+  both agent and scheduled-task supervisor exit. Backup: `deployment-backups\20260919-172532`
+  under the runtime directory. Published-file hashes and existing runtime-file hashes
+  were verified before restarting the unchanged interactive task.
+- Agent 0.8.0 restarted elevated, one process, PawnIO available, hardware and Discord
+  connected, FPS collector ready, legacy TURZX task disabled. COM5 reconnected as
+  `chs_88inch.dev1_rom1.90`, with 11 acknowledged frames and no transport error.
+  Actual desktop focus transition and physical icon appearance were not observed.
+
+## Packaged application label and icon sizing — 2026-09-19
+
+- Rendering suite passed (51 tests), including transparent-logo bounds/aspect ratio
+  and metadata retention after a failed refresh. Windows self-contained publish passed.
+- Installed the verified package after agent and task exit; backup under the runtime
+  directory: `deployment-backups\20260919-173914`. All published file hashes matched
+  the installation, and existing runtime file hashes were unchanged before restart.
+- One elevated agent 0.8.0, task Running, hardware and Discord connected. Identified
+  COM5 as `chs_88inch.dev1_rom1.90`; first full frame acknowledged without error.
+  User subsequently confirmed that both the Paint label transition and icon sizing
+  issues were resolved on the installed build.
