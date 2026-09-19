@@ -1,5 +1,6 @@
+import { SectionTabsComponent, SectionTab } from '../shared/section-tabs.component';
 import { NotificationSettingsComponent } from './notification-settings.component';
-import { Component, effect, input, output } from '@angular/core';
+import { Component, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DeckConfig, NewsSnapshot, CalendarSnapshot } from '../models';
 import { NewsSettingsComponent } from './news-settings.component';
@@ -10,8 +11,14 @@ import { CalendarSettingsComponent } from './calendar-settings.component';
 import { DiscordSettingsComponent } from './discord-settings.component';
 import { GameThemesComponent } from './game-themes.component';
 
-@Component({ selector: 'pd-settings', standalone: true, imports: [NotificationSettingsComponent, FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
+@Component({ selector: 'pd-settings', standalone: true, imports: [SectionTabsComponent, NotificationSettingsComponent, FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
 export class SettingsComponent {
+  readonly sections: readonly SectionTab[] = [
+    { id: 'behavior', label: 'Profili e giochi' }, { id: 'display', label: 'Display e musica' },
+    { id: 'discord', label: 'Discord' }, { id: 'gmail', label: 'Gmail' },
+    { id: 'calendar', label: 'Calendario' }, { id: 'weather', label: 'Meteo' }, { id: 'news', label: 'News' }
+  ];
+  readonly section = signal('behavior');
   calendarState = input<CalendarSnapshot | null>(null);
   newsState = input<NewsSnapshot | null>(null);
   config = input.required<DeckConfig>(); busy = input(false); save = output<DeckConfig>();

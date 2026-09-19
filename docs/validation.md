@@ -2200,3 +2200,26 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   and saved timing were not changed; subjective lyric synchronization at other
   offsets still requires user observation. No simulated Desktop test interrupted
   the active Music session. Live preview retained only outside the repository.
+
+
+### 2026-09-19 — Configuration sections and sensor category tabs
+
+- Shared accessible section navigation with selected states, linked panels,
+  roving keyboard focus (arrows/Home/End), sticky placement and horizontal mobile
+  scrolling. Configuration displays one of seven sections at a time; hidden
+  sections remain mounted so drafts, connector input and pending work survive
+  switching. The shared save bar applies changes across sections.
+- Sensors offer All/CPU/GPU/Memory/Motherboard/Storage/Network/Other categories as
+  present in the live inventory, with counts and existing search/type/availability
+  filters combined. Inventory changes fall back to All if the selected category
+  disappears. GPU Bus and GPU Memory still use ID plus name for row tracking.
+- Angular production build passed. Browser fixtures verified cross-section draft
+  retention, combined saves, keyboard navigation, sensor filtering, duplicate-ID
+  rows, live-inventory fallback, and no Angular errors or page overflow at 390px.
+  Desktop/mobile screenshots were inspected and remain under ignored artifacts.
+  Fixture saves did not modify real user configuration. No backend, provider,
+  rendering or serial-protocol changes were needed.
+- Installed two changed frontend files after clean agent exit; backup
+  `before-section-tabs-20260919-124405`. Configuration and credential hashes
+  preserved. Updated frontend served successfully; Gmail and the verified physical
+  display reconnected. This UI-only change did not require new animation trials.

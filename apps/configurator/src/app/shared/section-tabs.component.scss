@@ -1,0 +1,6 @@
+:host{display:block;min-width:0;position:sticky;top:12px;z-index:5}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);scrollbar-width:thin;scroll-padding-inline:8px}
+button{display:flex;align-items:center;gap:8px;flex-shrink:0;white-space:nowrap;padding:11px 14px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--muted);font-size:12px}
+button:hover{color:var(--text);background:#17201c}button.active{color:var(--accent);background:#1b2820;border-color:#2b3c2d}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}span{font:10px var(--mono);opacity:.8}
+@media(max-width:700px){:host{top:8px}button{padding:10px 12px}}

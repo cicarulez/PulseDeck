@@ -4,11 +4,13 @@
   <pd-status [label]="hardware()?.pawnIoInstalled ? 'PawnIO installato' : 'PawnIO assente'" [active]="hardware()?.pawnIoInstalled ?? false" />
 </div>
 @if (hardware()?.detail) { <div class="notice" role="status">{{ hardware()?.detail }}</div> }
+<pd-section-tabs [items]="categoryTabs()" [selected]="selectedCategory()" (selectedChange)="category.set($event)" label="Categorie sensori" prefix="sensors" panelId="sensors-panel" />
 <div class="filters panel">
   <label>Cerca un sensore<input type="search" placeholder="CPU, ventola, GPU, SSD…" [ngModel]="query()" (ngModelChange)="query.set($event)"></label>
   <label>Tipo<select [ngModel]="type()" (ngModelChange)="type.set($event)"><option value="">Tutti i tipi</option>@for (item of types(); track item) { <option [value]="item">{{ label(item) }}</option> }</select></label>
   <label>Lettura<select [ngModel]="availability()" (ngModelChange)="availability.set($event)"><option value="all">Tutti i sensori</option><option value="available">Con valore</option><option value="unavailable">Senza valore</option></select></label>
 </div>
+<div role="tabpanel" id="sensors-panel" [attr.aria-labelledby]="'sensors-tab-' + selectedCategory()">
 <p class="caption">{{ filtered().length }} risultati · Minimo e massimo dall’avvio dell’agent. {{ online() ? 'Aggiornamento automatico.' : 'Agent offline: letture non aggiornate.' }}</p>
 @for (group of groups(); track group.id) {
   <section class="panel sensor-group" [attr.aria-label]="group.name">
@@ -25,4 +27,5 @@
     </tbody></table></div>
   </section>
 } @empty { <div class="panel empty">{{ sensors().length ? 'Nessun sensore corrisponde ai filtri.' : 'In attesa dell’inventario dei sensori.' }}</div> }
+</div>
 <p class="caption">L’elenco comprende i sensori esposti da LibreHardwareMonitor. I sensori non riconosciuti dall’hardware o dal driver non compaiono. L’esplorazione non modifica il pannello sul display.</p>

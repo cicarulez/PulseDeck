@@ -1,8 +1,9 @@
 <form (ngSubmit)="submit()">
-  <section class="panel"><div class="section-title"><span>NOTIFICHE</span><h2>Email e avvisi.</h2></div>
+  <pd-section-tabs [items]="sections" [selected]="section()" (selectedChange)="section.set($event)" label="Sezioni configurazione" prefix="settings" />
+  <section class="panel" role="tabpanel" id="settings-panel-gmail" aria-labelledby="settings-tab-gmail" [hidden]="section() !== 'gmail'"><div class="section-title"><span>NOTIFICHE</span><h2>Email e avvisi.</h2></div>
     <pd-notification-settings [(options)]="draft.notifications" [busy]="busy()" />
   </section>
-  <section class="panel"><div class="section-title"><span>01 / COMPORTAMENTO</span><h2>Il profilo giusto, al momento giusto.</h2></div>
+  <section class="panel" role="tabpanel" id="settings-panel-behavior" aria-labelledby="settings-tab-behavior" [hidden]="section() !== 'behavior'"><div class="section-title"><span>01 / COMPORTAMENTO</span><h2>Il profilo giusto, al momento giusto.</h2></div>
     <div class="fields">
       <label>Profilo<select name="profile" [(ngModel)]="draft.profileMode"><option value="auto">Automatico</option><option value="desktop">Desktop</option><option value="gaming">Gaming</option><option value="music">Musica</option></select></label>
       <label>Attesa prima del cambio (secondi)<input name="delay" type="number" min="0" max="30" [(ngModel)]="draft.profileDelaySeconds" required></label>
@@ -10,7 +11,7 @@
     </div>
     <pd-game-discovery [options]="draft.gameDiscovery" [busy]="busy()" (optionsChange)="draft.gameDiscovery = $event" (processesChange)="discoveredProcesses = $event" />
   </section>
-  <section class="panel"><div class="section-title"><span>02 / DISPLAY E ASPETTO</span><h2>Il tuo pannello.</h2></div>
+  <section class="panel" role="tabpanel" id="settings-panel-display" aria-labelledby="settings-tab-display" [hidden]="section() !== 'display'"><div class="section-title"><span>02 / DISPLAY E ASPETTO</span><h2>Il tuo pannello.</h2></div>
     <div class="fields">
       <label>Porta del TURZX<input name="port" [(ngModel)]="draft.displayPort" pattern="[Cc][Oo][Mm][1-9][0-9]{0,3}" required></label>
       <label>Colore principale<input name="accent" type="color" [(ngModel)]="draft.accentColor"></label>
@@ -22,18 +23,18 @@
     <pd-steam-grid />
     <pd-game-themes [themes]="draft.gameThemes" [processes]="themeProcesses()" [busy]="busy()" (themesChange)="draft.gameThemes = $event" />
   </section>
-  <section class="panel"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>
+  <section class="panel" role="tabpanel" id="settings-panel-discord" aria-labelledby="settings-tab-discord" [hidden]="section() !== 'discord'"><div class="section-title"><span>03 / DISCORD</span><h2>La squadra, a colpo d’occhio.</h2></div>
     <pd-discord-settings [config]="draft" [busy]="busy()" (configChange)="draft = $event" />
   </section>
-  <section class="panel"><div class="section-title"><span>04 / METEO</span><h2>Il tempo nella tua città.</h2></div>
+  <section class="panel" role="tabpanel" id="settings-panel-weather" aria-labelledby="settings-tab-weather" [hidden]="section() !== 'weather'"><div class="section-title"><span>04 / METEO</span><h2>Il tempo nella tua città.</h2></div>
     <pd-weather-settings [location]="draft.weatherLocation" [busy]="busy()" (locationChange)="draft.weatherLocation = $event" />
   </section>
-  <section class="panel"><div class="section-title"><span>05 / NEWS</span><h2>Le tue fonti, nel footer.</h2></div>
+  <section class="panel" role="tabpanel" id="settings-panel-news" aria-labelledby="settings-tab-news" [hidden]="section() !== 'news'"><div class="section-title"><span>05 / NEWS</span><h2>Le tue fonti, nel footer.</h2></div>
     <pd-news-settings [options]="draft.news" [state]="newsState()" [busy]="busy()" (optionsChange)="draft.news = $event" />
   </section>
-  <section class="panel"><div class="section-title"><span>06 / CALENDARIO</span><h2>Il prossimo impegno.</h2></div>
+  <section class="panel" role="tabpanel" id="settings-panel-calendar" aria-labelledby="settings-tab-calendar" [hidden]="section() !== 'calendar'"><div class="section-title"><span>06 / CALENDARIO</span><h2>Il prossimo impegno.</h2></div>
     <pd-calendar-settings [options]="draft.calendar" [state]="calendarState()" [busy]="busy()" (optionsChange)="draft.calendar = $event" />
   </section>
   @if (validationError()) { <p role="alert">{{ validationError() }}</p> }
-  <div class="save-row"><span>Le modifiche vengono applicate dopo il salvataggio.</span><button class="button button--primary" type="submit" [disabled]="busy() || !!validationError()">{{ busy() ? 'Salvataggio…' : 'Salva configurazione' }}</button></div>
+  <div class="save-row"><span>Salva le modifiche di tutte le sezioni.</span><button class="button button--primary" type="submit" [disabled]="busy() || !!validationError()">{{ busy() ? 'Salvataggio…' : 'Salva configurazione' }}</button></div>
 </form>
