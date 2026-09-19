@@ -50,7 +50,7 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
         healthyFrames = 0;
     }
 
-    public void Send(byte[] pixels)
+    public void Send(byte[] pixels, bool fullFrame = false)
     {
         if (!active || cancelled()) return;
         if (pending && time.GetElapsedTime(failedAt) < TimeSpan.FromSeconds(Attempts == 0 ? 2 : 5)) return;
@@ -80,7 +80,7 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
                     counter = 0;
                 }
             }
-            if (previous is null || FullFrameFallback)
+            if (previous is null || FullFrameFallback || fullFrame)
             {
                 LastFrameKind = "full";
                 LastFrameRegion = new(0, 0, TurzxProtocol.Width, TurzxProtocol.Height);
@@ -92,6 +92,9 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
                 var response = ReadStatus();
                 if (!response.Contains("full_png_sucess", StringComparison.OrdinalIgnoreCase))
                     throw new IOException($"Frame was not acknowledged: {response}");
+                // The full-frame preparation resets the panel's partial render counter.
+                // Resume partial delivery at zero after an animation, as after initial connection.
+                counter = 0;
             }
             else if (rect is { } changed)
             {

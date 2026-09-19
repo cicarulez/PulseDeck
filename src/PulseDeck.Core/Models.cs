@@ -17,6 +17,7 @@ public sealed record DeckConfig
     public string Layout { get; init; } = "compact";
     public WeatherLocation? WeatherLocation { get; init; }
     public NewsOptions News { get; init; } = new();
+    public NotificationOptions Notifications { get; init; } = new();
     public CalendarOptions Calendar { get; init; } = new();
     public bool SpotifyLyrics { get; init; } = true;
     public bool GamingLayout { get; init; } = true;
@@ -27,7 +28,10 @@ public sealed record DeckConfig
 
     public string? Validate()
     {
+        if (Notifications is null) return "Invalid notification settings.";
+        if (Notifications.Validate() is { } notificationError) return notificationError;
         if (Calendar is null) return "Invalid calendar settings.";
+        if (Calendar.Validate() is { } calendarError) return calendarError;
         if (DiscordVoiceChannelId is null || DiscordVoiceChannelId.Length > 0
             && (!ulong.TryParse(DiscordVoiceChannelId, out var channel) || channel == 0 || DiscordVoiceChannelId.Any(c => !char.IsAsciiDigit(c))))
             return "Invalid Discord voice channel ID.";
@@ -111,5 +115,6 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
     public NewsSnapshot News { get; init; } = new();
     public CalendarSnapshot Calendar { get; init; } = new();
     public LyricsSnapshot Lyrics { get; init; } = new();
+    public NotificationVisual Notifications { get; init; } = new([]);
     public bool SpotifyTransition { get; init; }
 }

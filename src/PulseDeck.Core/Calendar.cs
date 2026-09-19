@@ -1,4 +1,6 @@
 using System.Text;
+using System.Security.Cryptography;
+using System.Text.Json.Serialization;
 using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
@@ -10,10 +12,14 @@ public sealed record CalendarOptions
 {
     public bool Enabled { get; init; } = true;
     public bool HideTitles { get; init; }
+    public bool NotifyNewEvents { get; init; } = true;
+    public int PollMinutes { get; init; } = 5;
+    public string? Validate() => PollMinutes is < 1 or > 60 ? "Il controllo calendario deve essere tra 1 e 60 minuti." : null;
 }
 public sealed record CalendarAppointment(string Title, DateTimeOffset Start, DateTimeOffset End, bool AllDay);
 public sealed record CalendarSnapshot(string Status = "not-configured", CalendarAppointment[]? Events = null, DateTimeOffset? FetchedAt = null)
 {
+    [JsonIgnore] public CalendarIdentity[]? Identities { get; init; }
     public CalendarAppointment? Next(DateTimeOffset now) => Status is "connected" or "empty"
         ? Events?.Where(e => e.End > now || e.Start >= now)
             .OrderBy(e => !e.AllDay && e.Start <= now && e.End > now ? 0 : e.AllDay ? 2 : 1)
@@ -31,6 +37,30 @@ public static class GoogleCalendarUrl
 public static class CalendarParser
 {
     public const int MaximumBytes = 4 * 1024 * 1024;
+    private static bool HasStableEventIds(string text)
+    {
+        // Ical.Net assigns a random UID to malformed VEVENTs that omit it.
+        // Keep their appointments renderable but suppress identity-based notifications
+        // for an incomplete feed, rather than inventing arrivals on every refresh.
+        var unfolded = System.Text.RegularExpressions.Regex.Replace(text, @"\r?\n[ \t]", "");
+        var depth = 0; var hasUid = false;
+        foreach (var raw in unfolded.Split('\n'))
+        {
+            var line = raw.TrimEnd('\r');
+            if (line.Equals("BEGIN:VEVENT", StringComparison.OrdinalIgnoreCase)) { depth = 1; hasUid = false; }
+            else if (depth > 0 && line.StartsWith("BEGIN:", StringComparison.OrdinalIgnoreCase)) depth++;
+            else if (depth > 0 && line.StartsWith("END:", StringComparison.OrdinalIgnoreCase))
+            {
+                if (--depth == 0 && !hasUid) return false;
+            }
+            else if (depth == 1 && (line.StartsWith("UID:", StringComparison.OrdinalIgnoreCase) || line.StartsWith("UID;", StringComparison.OrdinalIgnoreCase)))
+            {
+                var colon = line.IndexOf(':');
+                hasUid |= colon >= 0 && !string.IsNullOrWhiteSpace(line[(colon + 1)..]);
+            }
+        }
+        return true;
+    }
     public static CalendarSnapshot Parse(string text, DateTimeOffset now, CancellationToken token = default, TimeZoneInfo? localZone = null)
     {
         if (Encoding.UTF8.GetByteCount(text) > MaximumBytes || !text.TrimStart('\uFEFF', ' ', '\r', '\n').StartsWith("BEGIN:VCALENDAR", StringComparison.Ordinal)
@@ -45,6 +75,16 @@ public static class CalendarParser
         // High-frequency rules are not suitable for an appointment panel; bound evaluation work.
         if (calendar.Events.Any(e => e.Properties.GetMany<RecurrencePattern>("RRULE").Any(r => r.Frequency is FrequencyType.Secondly or FrequencyType.Minutely)))
             throw new InvalidDataException("Calendar recurrence too frequent.");
+        string? Identity(CalendarEvent entry) => string.IsNullOrWhiteSpace(entry.Uid) ? null
+            : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(entry.Uid)));
+        var identities = new Dictionary<string, bool>(StringComparer.Ordinal);
+        foreach (var entry in calendar.Events)
+        {
+            token.ThrowIfCancellationRequested();
+            if (Identity(entry) is not { } id) continue;
+            var future = entry.IsActive && entry.DtStart is { } date && Instant(date) >= now;
+            identities[id] = identities.GetValueOrDefault(id) || future;
+        }
         var events = new List<CalendarAppointment>();
         var horizon = now.AddDays(7);
         var occurrences = calendar.GetOccurrences<CalendarEvent>(new CalDateTime(now.AddDays(-2).UtcDateTime),
@@ -60,15 +100,17 @@ public static class CalendarParser
             var allDay = !occurrence.Period.StartTime.HasTime;
             var end = occurrence.Period.EffectiveEndTime is { } finish ? Instant(finish) : start;
             if (end <= now && start < now || start >= horizon) continue;
+            if (Identity(entry) is { } id) identities[id] = true;
             var title = new string((entry.Summary ?? "").Select(c => char.IsControl(c) ? ' ' : c).Take(240).ToArray()).Trim();
             events.Add(new(title.Length == 0 ? "Impegno" : title, start, end, allDay));
         }
         var result = events.OrderBy(e => e.Start).Take(100).ToArray();
-        return new(result.Length == 0 ? "empty" : "connected", result, now);
+        return new(result.Length == 0 ? "empty" : "connected", result, now)
+            { Identities = HasStableEventIds(text) ? identities.Select(p => new CalendarIdentity(p.Key, p.Value)).ToArray() : null };
     }
 }
 
-// Single render-loop owner. Fetch and recurrence evaluation never run on the render thread.
+// Single collection-loop owner. Fetch and recurrence evaluation never run on the render thread.
 public sealed class CalendarFeed(HttpClient client, TimeProvider? timeProvider = null) : IDisposable
 {
     private readonly TimeProvider clock = timeProvider ?? TimeProvider.System;
@@ -76,15 +118,17 @@ public sealed class CalendarFeed(HttpClient client, TimeProvider? timeProvider =
     private CalendarSnapshot snapshot = new();
     private Task<CalendarSnapshot>? pending;
     private CancellationTokenSource? request;
-    private DateTimeOffset nextFetch;
+    private DateTimeOffset? lastCompleted;
+    private bool lastFailed;
     private int revision, pendingRevision;
+    public int SourceRevision => revision;
     public CalendarSnapshot Read(CalendarOptions options, string? url, CancellationToken stoppingToken)
     {
         var next = options.Enabled && GoogleCalendarUrl.IsValid(url) ? url : null;
         if (selected != next)
         {
             request?.Cancel(); revision++; selected = next; snapshot = new(next is null ? "not-configured" : "loading");
-            nextFetch = DateTimeOffset.MinValue;
+            lastCompleted = null; lastFailed = false;
             // Keep the old task until it ends; do not queue abandoned CPU work on repeated edits.
         }
         if (pending?.IsCompleted == true)
@@ -93,12 +137,15 @@ public sealed class CalendarFeed(HttpClient client, TimeProvider? timeProvider =
             if (pendingRevision == revision && selected is not null)
             {
                 snapshot = result;
-                nextFetch = clock.GetUtcNow().AddMinutes(result.Status == "unavailable" ? 2 : 5);
+                lastCompleted = clock.GetUtcNow();
+                lastFailed = result.Status == "unavailable";
             }
         }
         if (next is null) return new(options.Enabled ? "not-configured" : "disabled");
         var now = clock.GetUtcNow();
-        if (snapshot.FetchedAt is { } fetched && now - fetched > TimeSpan.FromMinutes(15)) snapshot = new("unavailable");
+        var interval = Math.Clamp(options.PollMinutes, 1, 60);
+        var nextFetch = lastCompleted?.AddMinutes(lastFailed ? Math.Max(2, interval) : interval) ?? DateTimeOffset.MinValue;
+        if (snapshot.FetchedAt is { } fetched && now - fetched > TimeSpan.FromMinutes(Math.Max(15, interval * 3))) snapshot = new("unavailable");
         if (pending is null && now >= nextFetch && !stoppingToken.IsCancellationRequested)
         {
             request = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);

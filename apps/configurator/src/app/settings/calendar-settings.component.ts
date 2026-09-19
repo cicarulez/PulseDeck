@@ -18,7 +18,7 @@ export class CalendarSettingsComponent implements OnInit {
   async connect() {
     this.connecting.set(true); this.message.set('Verifica del calendario…');
     const url = this.url.trim(); this.url = '';
-    try { this.configured.set((await this.deck.connectCalendar(url)).configured); this.message.set('Calendario collegato. Gli appuntamenti vengono aggiornati ogni 5 minuti.'); }
+    try { this.configured.set((await this.deck.connectCalendar(url)).configured); this.message.set('Calendario collegato. Il controllo segue l’intervallo salvato nella configurazione.'); }
     catch (e) { this.message.set(e instanceof Error ? e.message : 'Collegamento non riuscito.'); }
     finally { this.connecting.set(false); }
   }
@@ -27,6 +27,10 @@ export class CalendarSettingsComponent implements OnInit {
     try { this.configured.set((await this.deck.disconnectCalendar()).configured); this.message.set('Collegamento rimosso.'); }
     catch (e) { this.message.set(e instanceof Error ? e.message : 'Rimozione non riuscita.'); }
     finally { this.connecting.set(false); }
+  }
+  async test() {
+    try { await this.deck.testNotification('calendar'); this.message.set('Prova calendario sul display: evento simulato, nessun appuntamento aggiunto.'); }
+    catch (e) { this.message.set(e instanceof Error ? e.message : 'Prova non riuscita.'); }
   }
   status() {
     if (!this.configured()) return 'Non collegato';

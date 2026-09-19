@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { DiscordOptions, GameLibraryStatus, DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
+import { GmailStatus, DiscordOptions, GameLibraryStatus, DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class DeckService {
@@ -43,6 +43,11 @@ export class DeckService {
     return response.json() as Promise<T>;
   }
   discordOptions() { return this.request<DiscordOptions>('/api/discord/options'); }
+  gmailStatus() { return this.request<GmailStatus>('/api/notifications/gmail'); }
+  importGmailClient(json: string) { return this.request<GmailStatus>('/api/notifications/gmail/client', 'POST', { json }); }
+  connectGmail() { return this.request<{url: string}>('/api/notifications/gmail/connect', 'POST'); }
+  disconnectGmail() { return this.request<GmailStatus>('/api/notifications/gmail', 'DELETE'); }
+  testNotification(kind: 'mail' | 'calendar' = 'mail') { return this.request(`/api/notifications/test?kind=${kind}`, 'POST'); }
   calendarStatus() { return this.request<{configured: boolean}>('/api/calendar'); }
   connectCalendar(url: string) { return this.request<{configured: boolean}>('/api/calendar', 'POST', {url}); }
   disconnectCalendar() { return this.request<{configured: boolean}>('/api/calendar', 'DELETE'); }

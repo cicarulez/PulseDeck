@@ -4,6 +4,8 @@ PulseDeck is an early-stage project built around one verified Windows/TURZX setu
 
 ## Available now
 
+- Shared notifications with Gmail OAuth, unread-message counts and Desktop-only arrival animation; see [setup and remaining validation](notifications.md). New calendar additions also notify through the existing iCal connection; time-based reminders remain future work.
+
 - Google Calendar appointments in the empty Desktop media panel; Discord server labels and configurable channel/user selection.
 
 - Configurable sensor values, bars and rings; combined network widget and power/temperature trends.
@@ -43,3 +45,11 @@ PulseDeck is an early-stage project built around one verified Windows/TURZX setu
 | Daily lifecycle | Tray controls and a clearer update/recovery experience. |
 
 For protocol and runtime constraints see [architecture](architecture.md). For what was actually tested, see [validation](validation.md). The detailed earlier investigation is retained in [development history](development-history.it.md); historical entries may describe features that have since shipped.
+
+### Gmail connection after the development phase
+
+The current personal-project OAuth setup is provisional. Evaluate a PulseDeck-managed
+desktop OAuth client only if users can connect through Google consent without their
+own Cloud project, JSON import or website. Assess verification and maintenance first;
+keep API access and encrypted user tokens local. No migration is committed or scheduled.
+If the alternative still requires the same per-user setup, retain the current solution.

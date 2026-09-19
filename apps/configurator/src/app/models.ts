@@ -1,4 +1,7 @@
-export interface CalendarOptions { enabled: boolean; hideTitles: boolean; }
+export interface NotificationOptions { gmailEnabled: boolean; animate: boolean; pollSeconds: number; }
+export interface NotificationSource { id: string; kind: string; status: string; unreadCount: number | null; updatedAt: string | null; }
+export interface GmailStatus { clientConfigured: boolean; connected: boolean; authorizationStatus: string; source: NotificationSource; }
+export interface CalendarOptions { enabled: boolean; hideTitles: boolean; notifyNewEvents: boolean; pollMinutes: number; }
 export interface CalendarSnapshot { status: string; events: { title: string; start: string; end: string; allDay: boolean }[] | null; fetchedAt: string | null; }
 export interface DiscordOptions { status: string; serverName: string | null; channelId: string; channels: {id: string; name: string}[]; members: {id: string; name: string}[]; }
 export interface GameDiscoveryOptions { enabled: boolean; folders: string[]; confirmedExecutables: string[]; ignoredExecutables: string[]; }
@@ -15,6 +18,7 @@ export interface WidgetSlot { id: string; name: string; isBar: boolean; }
 export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; }
 export interface GameTheme { processName: string; backgroundPath: string; }
 export interface DeckConfig {
+  notifications: NotificationOptions;
   calendar: CalendarOptions; discordVoiceChannelId: string;
   gameDiscovery: GameDiscoveryOptions;
   widgets: WidgetConfig[];

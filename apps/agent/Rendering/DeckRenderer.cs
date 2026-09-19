@@ -497,6 +497,14 @@ public sealed class DeckRenderer : IDisposable
             Text(headline?.Title ?? notice, 286, 470, newsSize, maxWidth: 1450, minimumSize: newsSize);
             Text(headline?.PublishedAt?.ToLocalTime().ToString("dd/MM HH:mm") ?? "data n/d", 1764, 470, Math.Max(20, newsSize - 4), maxWidth: 136);
         }
+        var notification = state.Notifications;
+        var mail = notification.Sources.FirstOrDefault(s => s.Kind == "mail" && s.Status is not ("disabled" or "not-configured"));
+        if (mail is not null)
+            MailAnimation.Draw(canvas, notification.Arrival?.Kind != "mail" || state.Profile != "desktop" ? 4 : Math.Max(.001f, notification.Seconds), bold,
+                mail.UnreadCount, notification.Arrival?.Title ?? "Nuova email", notification.Arrival?.Caption ?? "GMAIL");
+        if (notification.Arrival is { Kind: "calendar" } calendarArrival && state.Profile == "desktop")
+            MailAnimation.Draw(canvas, Math.Max(.001f, notification.Seconds), bold, null, calendarArrival.Title, calendarArrival.Caption, kind: "calendar");
+        if (notification.IsTest) Text("PROVA NOTIFICHE · DATI SIMULATI", 700, 85, 18, accent);
         using var image = SKImage.FromBitmap(bitmap);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         var pixels = new byte[1920 * 480 * 4]; Marshal.Copy(bitmap.GetPixels(), pixels, 0, pixels.Length);

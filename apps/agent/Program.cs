@@ -39,6 +39,13 @@ builder.Services.AddSingleton(provider => new WeatherFeed(provider.GetRequiredSe
 builder.Services.AddHttpClient("news", client => { client.Timeout = TimeSpan.FromSeconds(8); client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.8.0"); })
     .ConfigurePrimaryHttpMessageHandler(NewsHttp.CreateHandler);
 builder.Services.AddSingleton(provider => new NewsFeed(provider.GetRequiredService<IHttpClientFactory>().CreateClient("news")));
+builder.Services.AddSingleton<NotificationCenter>();
+builder.Services.AddSingleton<GmailCredentials>();
+builder.Services.AddHttpClient("gmail", client => { client.Timeout = TimeSpan.FromSeconds(20); client.MaxResponseContentBufferSize = 2 * 1024 * 1024; })
+    .RemoveAllLoggers()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+builder.Services.AddSingleton<GmailService>();
+builder.Services.AddHostedService(p => p.GetRequiredService<GmailService>());
 builder.Services.AddSingleton<CalendarCredentials>();
 builder.Services.AddHttpClient("calendar", client => client.Timeout = TimeSpan.FromSeconds(15))
     .RemoveAllLoggers() // The Google iCal URL contains a private access token.
@@ -94,6 +101,33 @@ app.MapPost("/api/browser-tab", (BrowserTabUpdate update, BrowserTabStore store)
     store.Update(update.Tab) ? Results.Ok(new { connected = true }) : Results.BadRequest());
 app.MapGet("/api/state", (DeckRuntime runtime) => runtime.State);
 app.MapGet("/api/discord/options", (EmbeddedDiscordService discord) => discord.Options());
+app.MapGet("/api/notifications/gmail", (GmailService gmail) => gmail.Status);
+app.MapPost("/api/notifications/gmail/client", async (GmailClientRequest request, GmailService gmail, CancellationToken token) =>
+{
+    try { await gmail.Import(request.Json ?? "", token); return Results.Ok(gmail.Status); }
+    catch (ArgumentException e) { return Results.BadRequest(new { error = e.Message }); }
+    catch { return Results.Problem("Impossibile salvare il client OAuth cifrato."); }
+});
+app.MapPost("/api/notifications/gmail/connect", async (GmailService gmail, CancellationToken token) =>
+{
+    try { return Results.Ok(new { url = await gmail.Connect(token) }); }
+    catch (ArgumentException e) { return Results.BadRequest(new { error = e.Message }); }
+    catch { return Results.Problem("Impossibile avviare il collegamento Google."); }
+});
+app.MapDelete("/api/notifications/gmail", async (GmailService gmail, CancellationToken token) =>
+{
+    try { await gmail.Disconnect(token); return Results.Ok(gmail.Status); }
+    catch { return Results.Problem("Impossibile rimuovere le credenziali dal PC."); }
+});
+app.MapPost("/api/notifications/test", (NotificationCenter center, DeckRuntime runtime, ConfigStore config, string? kind) =>
+{
+    if (!config.Current.Notifications.Animate) return Results.Conflict(new { error = "Abilita e salva l’animazione per eseguire la prova." });
+    if (runtime.State.Profile != "desktop") return Results.Conflict(new { error = "La prova animata è disponibile solo in Recon / Desktop." });
+    if (kind is not (null or "mail" or "calendar")) return Results.BadRequest(new { error = "Tipo di prova sconosciuto." });
+    center.StartTest(kind ?? "mail"); return Results.Ok(new { started = true });
+});
+app.MapGet("/api/notifications/diagnostics", (DeckRuntime runtime, NotificationCenter center) =>
+    new { runtime.ProviderUpdates, runtime.RenderUpdates, center.AnimationsStarted });
 app.MapGet("/api/calendar", (CalendarCredentials credentials) => new { configured = credentials.Configured });
 app.MapPost("/api/calendar", async (CalendarLinkRequest request, CalendarCredentials credentials, IHttpClientFactory clients, CancellationToken token) =>
 {

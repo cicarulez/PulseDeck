@@ -1,4 +1,7 @@
 <form (ngSubmit)="submit()">
+  <section class="panel"><div class="section-title"><span>NOTIFICHE</span><h2>Email e avvisi.</h2></div>
+    <pd-notification-settings [(options)]="draft.notifications" [busy]="busy()" />
+  </section>
   <section class="panel"><div class="section-title"><span>01 / COMPORTAMENTO</span><h2>Il profilo giusto, al momento giusto.</h2></div>
     <div class="fields">
       <label>Profilo<select name="profile" [(ngModel)]="draft.profileMode"><option value="auto">Automatico</option><option value="desktop">Desktop</option><option value="gaming">Gaming</option><option value="music">Musica</option></select></label>
@@ -30,5 +33,6 @@
   <section class="panel"><div class="section-title"><span>06 / CALENDARIO</span><h2>Il prossimo impegno.</h2></div>
     <pd-calendar-settings [options]="draft.calendar" [state]="calendarState()" [busy]="busy()" (optionsChange)="draft.calendar = $event" />
   </section>
-  <div class="save-row"><span>Le modifiche vengono applicate dopo il salvataggio.</span><button class="button button--primary" type="submit" [disabled]="busy()">{{ busy() ? 'Salvataggio…' : 'Salva configurazione' }}</button></div>
+  @if (pollingError()) { <p role="alert">{{ pollingError() }}</p> }
+  <div class="save-row"><span>Le modifiche vengono applicate dopo il salvataggio.</span><button class="button button--primary" type="submit" [disabled]="busy() || !!pollingError()">{{ busy() ? 'Salvataggio…' : 'Salva configurazione' }}</button></div>
 </form>

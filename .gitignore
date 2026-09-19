@@ -17,3 +17,6 @@ local-assets/
 .env.*
 !.env.example
 *.credentials.*
+
+# Downloaded Google OAuth client definitions must remain outside source control.
+client_secret_*.json

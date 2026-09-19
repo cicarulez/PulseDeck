@@ -86,3 +86,13 @@ File.WriteAllText(Path.Combine(output, "state.json"), JsonSerializer.Serialize(s
 File.WriteAllText(Path.Combine(output, "config.json"), JsonSerializer.Serialize(config, json));
 File.WriteAllText(Path.Combine(output, "catalog.json"), JsonSerializer.Serialize(new { slots = WidgetCatalog.Slots, defaults = WidgetCatalog.Defaults() }, json));
 Console.WriteLine($"Documentation fixtures rendered to {output}. Nothing sent to hardware.");
+
+// Notification composition fixtures, including a real-style mail badge underneath
+// the transient calendar arrival. All counts and events here are synthetic.
+foreach (var (name, seconds) in new[] { ("arrival", 1f), ("travel", 2.2f), ("settled", 3.2f) })
+{
+    var notification = new NotificationVisual([new("gmail", "mail", "connected", 3)],
+        new("calendar", "calendar", "Nuovo evento nel calendario", "GOOGLE CALENDAR"), seconds);
+    File.WriteAllBytes(Path.Combine(output, $"calendar-notification-{name}.png"),
+        renderer.Render(state with { Notifications = notification }, config, artwork).Png);
+}

@@ -135,6 +135,74 @@ public class CalendarTests
         Assert.Equal("not-configured", feed.Read(new(), null, default).Status);
     }
     [Fact]
+    public async Task NewFeedIdentityTriggersOnceWithoutExposingTitlesOrAcceleratingPolls()
+    {
+        var handler = new Handler(); using var client = new HttpClient(handler); var clock = new Clock();
+        using var feed = new CalendarFeed(client, clock); var tracker = new CalendarArrivalTracker();
+        var options = new CalendarOptions { HideTitles = true };
+        var baseline = await Settle(feed, options, Url);
+        Assert.Equal(0, tracker.Observe(baseline, feed.SourceRevision, options.NotifyNewEvents));
+        handler.Text = Feed(Event("live", "DTSTART:20260918T100000Z\nDTEND:20260918T110000Z\nSUMMARY:Changed title"),
+            Event("new-invite", "DTSTART:20261018T100000Z\nDTEND:20261018T110000Z\nSUMMARY:Private future invitation"));
+        for (var i = 0; i < 100; i++) feed.Read(options, Url, default);
+        Assert.Equal(1, handler.Calls);
+        clock.Now += TimeSpan.FromMinutes(5);
+        var snapshot = feed.Read(options, Url, default);
+        for (var i = 0; i < 200 && snapshot.FetchedAt != clock.Now; i++)
+        { await Task.Delay(5); snapshot = feed.Read(options, Url, default); }
+        Assert.Equal(clock.Now, snapshot.FetchedAt);
+        Assert.Equal(1, tracker.Observe(snapshot, feed.SourceRevision, options.NotifyNewEvents));
+        Assert.Equal(0, tracker.Observe(feed.Read(options, Url, default), feed.SourceRevision, options.NotifyNewEvents));
+        Assert.Equal(2, handler.Calls);
+        var json = System.Text.Json.JsonSerializer.Serialize(snapshot);
+        Assert.DoesNotContain("Private", json); Assert.DoesNotContain("Changed", json); Assert.DoesNotContain("Identities", json);
+    }
+    [Theory]
+    [InlineData(0, false)] [InlineData(1, true)] [InlineData(5, true)]
+    [InlineData(60, true)] [InlineData(61, false)]
+    public void PollIntervalValidationAndLegacyDefault(int minutes, bool valid)
+    {
+        Assert.Equal(valid, (new DeckConfig { Calendar = new() { PollMinutes = minutes } }).Validate() is null);
+        Assert.Equal(5, System.Text.Json.JsonSerializer.Deserialize<CalendarOptions>("{}")!.PollMinutes);
+    }
+    [Fact]
+    public async Task IntervalEditsRescheduleWithoutResettingBaselineOrExpiringLongIntervals()
+    {
+        var handler = new Handler(); using var client = new HttpClient(handler); var clock = new Clock();
+        using var feed = new CalendarFeed(client, clock);
+        await Settle(feed, new(), Url); var revision = feed.SourceRevision;
+        clock.Now += TimeSpan.FromMinutes(2);
+        feed.Read(new(), Url, default); Assert.Equal(1, handler.Calls);
+        var options = new CalendarOptions { PollMinutes = 1 };
+        CalendarSnapshot state = feed.Read(options, Url, default);
+        for (var i = 0; i < 200 && state.FetchedAt != clock.Now; i++)
+        { await Task.Delay(5); state = feed.Read(options, Url, default); }
+        Assert.Equal(clock.Now, state.FetchedAt); Assert.Equal(2, handler.Calls);
+        Assert.Equal(revision, feed.SourceRevision);
+        options = options with { PollMinutes = 60 };
+        clock.Now += TimeSpan.FromMinutes(59);
+        Assert.Equal("connected", feed.Read(options, Url, default).Status);
+        Assert.Equal(2, handler.Calls);
+        clock.Now += TimeSpan.FromMinutes(1);
+        state = feed.Read(options, Url, default);
+        for (var i = 0; i < 200 && state.FetchedAt != clock.Now; i++)
+        { await Task.Delay(5); state = feed.Read(options, Url, default); }
+        Assert.Equal(clock.Now, state.FetchedAt); Assert.Equal(3, handler.Calls);
+    }
+    [Fact]
+    public async Task MinimumIntervalStillBacksOffAfterFailure()
+    {
+        var handler = new Handler { Fail = true }; using var client = new HttpClient(handler); var clock = new Clock();
+        using var feed = new CalendarFeed(client, clock); var options = new CalendarOptions { PollMinutes = 1 };
+        Assert.Equal("unavailable", (await Settle(feed, options, Url)).Status);
+        clock.Now += TimeSpan.FromMinutes(1);
+        feed.Read(options, Url, default); Assert.Equal(1, handler.Calls);
+        clock.Now += TimeSpan.FromMinutes(1);
+        feed.Read(options, Url, default);
+        for (var i = 0; i < 200 && handler.Calls < 2; i++) await Task.Delay(5);
+        Assert.Equal(2, handler.Calls);
+    }
+    [Fact]
     public async Task FailureRemovesOldEventsAndRetriesAfterBackoff()
     {
         var handler = new Handler(); using var client = new HttpClient(handler); var clock = new Clock();

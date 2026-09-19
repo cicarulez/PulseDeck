@@ -308,6 +308,24 @@ public class DisplayRecoveryTests
     }
 
     [Fact]
+    public void AnimationExplicitlyUsesVerifiedFullFramesWithoutChangingCommand()
+    {
+        var rig = new Rig(); rig.FullSuccess(Frame());
+        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(2));
+        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(3));
+        Assert.Equal((uint)1, rig.Delivery.LastFrameCounter);
+        rig.Writes.Clear();
+        rig.Replies.Enqueue("full_png_sucess"); rig.Replies.Enqueue("needReSend:0");
+        rig.Delivery.Send(Frame(1), fullFrame: true);
+        Assert.Equal("full", rig.Delivery.LastFrameKind);
+        Assert.Equal(TurzxProtocol.FullFrameCommand(), rig.Writes[2]);
+        Assert.Equal(TurzxProtocol.FullFrame(Frame(1)), rig.Writes[3]);
+        Assert.Equal(4, rig.Delivery.AcknowledgedFrames);
+        rig.Replies.Enqueue("needReSend:0"); rig.Delivery.Send(Frame(4));
+        Assert.Equal((uint)0, rig.Delivery.LastFrameCounter);
+    }
+
+    [Fact]
     public void InvalidFrameDoesNotTouchTransport()
     {
         var rig = new Rig();

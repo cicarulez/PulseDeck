@@ -5,6 +5,7 @@
     <PackageReference Include="SkiaSharp" Version="3.119.1" />
     <PackageReference Include="System.IO.Ports" Version="10.0.12" />
     <PackageReference Include="System.Management" Version="10.0.12" />
+    <Compile Include="../../apps/agent/Rendering/MailAnimation.cs" Link="ProductionMailAnimation.cs" />
     <Compile Include="../notification-preview/MailAnimation.cs" Link="MailAnimation.cs" />
     <None Include="Invoke-Probe.ps1" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

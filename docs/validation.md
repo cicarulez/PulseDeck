@@ -1967,3 +1967,211 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   Retaining the child handle before waiting corrected this; a no-write Windows
   dry run verified exit code zero. The probe has a bounded supervisor timeout
   and reconnection cleanup. No runtime configuration or agent binaries changed.
+
+### Shared notifications and Gmail integration (2026-09-19)
+
+- Implemented the shared source/count/event center, Gmail connector, local Desktop
+  OAuth (state, S256 PKCE and bounded loopback callback), CurrentUser DPAPI store
+  and configurator controls. Only `gmail.metadata` is requested. Personal setup,
+  Google's restricted-scope/Testing constraints and polling latency are documented
+  in [notifications](notifications.md), based on official Google documentation.
+- Moved the approved envelope effect into the production renderer; both earlier
+  experiments now call the same effect. Live counts replace the synthetic badge.
+  At the user's request, arrival animation runs only in Recon / Desktop; Gaming
+  and Music retain the count without replaying suppressed arrivals on return.
+- Gmail uses the authoritative UNREAD label message count and paginated history.
+  Missing labels in history are resolved with label-only message metadata.
+  Baseline/restart/history expiry are quiet; read/deleted messages update counts,
+  and bursts are coalesced without restarting or queuing animations. Failures
+  remove stale counts and back off. No subjects, bodies or attachments are fetched.
+- Provider acquisition remains on its one-second timer; rendering uses the latest
+  immutable sample and monotonic animation time in a separate loop. There is one
+  synchronous display writer and no pending-frame queue. Animation uses the
+  unchanged verified full-frame command `C8 EF 69 00 38 40 0E 10`.
+- 181 Core tests passed, covering baseline, arrivals with unchanged total count,
+  pagination, read-to-zero, expired history, failed-count cursor rollback,
+  label-only fallback, sent/spam suppression, burst timing, unavailable counts,
+  profile suppression, test restoration and full-to-partial transport transition.
+  44 renderer/provider tests passed, including Desktop-only animation in all three
+  layouts, badge changes, unavailable-vs-zero and clock/content isolation.
+  Angular production build, self-contained Windows publish and both existing
+  visual/probe tool builds passed. Local documentation links and diff whitespace
+  checks passed.
+- An isolated Chromium test with synthetic fixtures passed client file import,
+  cleared file selection, removal, notification-option save, excluding OAuth data
+  from saved config, test action and mobile width with expanded OAuth help. No
+  Angular page errors. A long scope URI originally caused mobile overflow; the
+  shared settings text style now permits code wrapping. The notification panel
+  screenshot was visually reviewed.
+- `tools/notification-integration-probe` ran in Windows user session 3 with a
+  synthetic Google transport: DPAPI encryption/reload, minimal scope, S256 PKCE,
+  rejected wrong state, successful loopback callback, refresh-token persistence,
+  status privacy, quiet baseline, refresh after restart and pending-authorization
+  removal all passed. No Google account or physical display was accessed by this
+  credential probe. Temporary test credentials were deleted.
+- Published Windows files were backed up outside Git; each update stopped the
+  agent and waited for exit before replacing DLLs. The first attempt exposed the
+  scheduled-task supervisor's exit race: IgnoreNew discarded a restart while the
+  old supervisor still ran. Rollback restored the old build and display. The
+  corrected update procedure waits for both agent and supervisor; the scheduled
+  task definition and legacy TURZX task were not changed. Final backup:
+  `%LOCALAPPDATA%\PulseDeck\before-notifications-20260919-015600`.
+  Existing config/calendar/Discord/other credential files remained hash-identical.
+- The first integrated physical animation exposed a partial-frame rejection after
+  successful full frames (`needReSend:1|renderCnt:0`, old host counter 22). Bounded
+  recovery restored the display. The full-frame preparation resets the panel's
+  partial counter: delivery now resets the host counter to zero after a successful
+  full transfer. A regression test covers partial → full → partial sequencing;
+  full-frame command bytes and payload format were not changed.
+- With that correction deployed, a three-cycle physical run acknowledged 52
+  frames with 27 provider updates and zero recoveries. Its supervisor initially
+  checked test expiry against the previous one-second API snapshot; the supervisor
+  now explicitly waits for the published snapshot to observe expiry.
+- The final complete three-cycle run passed: **51 acknowledged frames, 51 render
+  updates, 27 provider updates**, 24 distinct live background timestamps, and mean
+  sampled animation transfer **214.8 ms** (34 samples, approximately 4.7 fps USB
+  transfer capacity). The badge was observed at 3 and then 0; test state expired,
+  the agent PID was preserved, display remained connected and recovery delta was
+  zero. Ordinary partial frames resumed without full-frame fallback. This used
+  the real agent/renderer/USB loop over continuously collected data, not the old
+  frozen-background standalone probe. Counts and arrival events were explicitly
+  synthetic; nothing was written to Gmail.
+- Live API guards rejected missing client headers and foreign origins with 403,
+  malformed OAuth client definitions and connect-without-client with 400. No
+  credentials were created by those negative checks. The deployed agent remained
+  elevated, connected and without transport recovery after the corrected trials.
+- **Pending:** the user must create/import their own Google Desktop OAuth client
+  and consent in the browser. No real Gmail token, unread count, arrival or
+  read-state transition has been observed yet. Physical motion was previously
+  approved with a static background. The user reported not observing these
+  integrated trials, so visual approval with a live background remains pending;
+  the configurator can repeat the clearly labelled physical test on demand. Calendar reminders and
+  additional connectors have contracts but are not implemented.
+
+### Notifications for newly added calendar events (2026-09-19)
+
+- Added arrival detection to the existing Google iCal connector, without Gmail
+  OAuth or changes to its five-minute polling interval. A new future VEVENT UID
+  produces a generic calendar card; multiple additions in one fetch are grouped.
+  The approved rotate/shrink motion uses a calendar glyph that fades at the clock.
+  It has no synthetic unread count, preserves the independent Gmail badge, and
+  runs only in Recon / Desktop.
+- Baseline identities cover the entire feed rather than only the visible seven
+  days. Edits, moved instances, recurring occurrences, future-window entry,
+  historical/cancelled-only additions, restart and source changes do not create
+  repeated arrival alerts. Missing UID input suppresses notification detection
+  for that fetch because Ical.Net otherwise manufactures random IDs. SHA-256 UID
+  fingerprints stay in bounded process memory and are excluded from JSON APIs.
+- Added `calendar.notifyNewEvents` (enabled by default) and a dedicated simulated
+  physical-test action in the existing Calendar settings component. Notification
+  suppression still consumes changes, preventing replay when returning to Desktop.
+  The common center now groups bursts by source, so a recent mail event does not
+  suppress a later calendar event through Gmail's grouping window.
+- Core coverage includes whole-feed baseline, events beyond the visible horizon,
+  grouped additions, edits/recurrences, past/cancelled events, source changes,
+  errors/temporary omission, disabled notifications, private identities, missing
+  UIDs, independent connector grouping and real CalendarFeed refresh integration.
+  The final Core suite passed 188 tests. All 47 renderer/provider tests passed,
+  including calendar arrival/expiry in classic, compact and weather layouts,
+  Desktop-only behavior and preservation of the mail badge.
+- Angular production build and self-contained Windows publish passed. An isolated
+  Chromium test with generated synthetic fixtures passed notification-option save,
+  preservation of the other calendar options, calendar-specific test dispatch and
+  mobile width, with zero Angular page errors. Calendar settings and synthetic
+  arrival/travel/settled compositions were generated; the settings and arrival
+  images were visually reviewed. No user appointments were captured.
+- Deployed into the existing elevated interactive-user session after backing up
+  changed files and waiting for agent and scheduled-task supervisor exit. Existing
+  runtime configuration and credentials remained hash-identical. Backup:
+  `%LOCALAPPDATA%\PulseDeck\before-calendar-notifications-20260919-101015`.
+  The existing calendar link remained configured and the verified COM5 panel
+  reconnected; no scheduled-task definition or TURZX firmware was changed.
+- Three simulated calendar trials ran through the production runtime and USB
+  writer over the live background: **52 acknowledged frames, 52 render updates,
+  27 provider updates**, 24 distinct background timestamps and mean sampled full
+  transfer **215.5 ms** (31 samples). Calendar arrival was observed in state,
+  synthetic test state expired, agent PID remained unchanged, panel stayed
+  connected and recovery delta was zero. Mail-counter checks do not apply to the
+  calendar glyph. The test did not add appointments or send invitations.
+- Limitations: notifications indicate new events that actually appear in Google's
+  iCal feed, not every incoming invitation email. Google may withhold invitations
+  until the user responds or confirms the sender. Refresh is five minutes plus
+  possible Google feed delay. Actual new-invite/new-event arrival in the user's
+  feed and user visual approval of the calendar glyph remain unobserved. Future
+  appointment-time reminders are still not implemented.
+
+
+### 2026-09-19 — Gmail Inbox-only count and arrivals
+
+- Changed the authoritative count to `labels/INBOX.messagesUnread`; new-message
+  animations require both INBOX and UNREAD labels. Archived additions and already
+  read Inbox additions are ignored. All Inbox categories remain included.
+- Core regression suite: 191 passed, including Inbox/unread combinations and the
+  exact label count endpoint. Configurator production build and Windows publish passed.
+- Deployed four changed files after stopping the old agent, preserving configuration
+  and credential file hashes. Backup: `%LOCALAPPDATA%\PulseDeck\before-inbox-notifications-20260919-103606`.
+- Real OAuth refresh succeeded after restart in the signed-in Windows session:
+  Gmail returned 4 unread Inbox messages, also present in the live render state.
+  Physical COM5 panel identified as `chs_88inch.dev1_rom1.90`, connected with 12
+  acknowledged frames, zero recoveries and no transport error at the final check.
+- No real new-message arrival or read/archive transition was exercised in this
+  check; filtering is covered by synthetic transport tests. No claim of new visual
+  approval. Provider cadence, animation rendering and full-frame command unchanged.
+
+
+### 2026-09-19 — Gmail setup guide in the configurator
+
+- Replaced the abbreviated OAuth help with three expandable sections: initial
+  setup (including exact test-user step), production/weekly expiry, and practical
+  troubleshooting for 403 access_denied, Branding, consent and Inbox notifications.
+  Added official sources and review date; no personal addresses or secrets included.
+- Angular production build passed. Playwright opened all three guide sections,
+  checked key instructions and 390px layout with no overflow or Angular errors,
+  and verified that reading the guide issued no configuration writes. Synthetic
+  screenshots: `artifacts/gmail-setup-guide-{desktop,mobile}.png` (not committed).
+- Installed two changed frontend files after clean agent shutdown, backing up to
+  `%LOCALAPPDATA%\PulseDeck\before-gmail-guide-20260919-110015`; configuration
+  and credential hashes preserved, existing physical panel automatically reconnected.
+  This change does not alter providers, rendering or the serial protocol.
+
+- Follow-up: configurator now explicitly labels personal OAuth as the development
+  connection. A project-managed client is a conditional future option, not a
+  promised migration; preserve the current approach if per-user setup is unchanged.
+  Clarified that Google's public branding pages do not host mailbox data. Angular
+  build and the three-section desktop/mobile browser check passed again. Deployed
+  with runtime hashes preserved; backup `before-gmail-development-guide-20260919-110204`.
+  Updated frontend served successfully; Gmail and the physical display reconnected
+  with zero recoveries. No rendering or provider behavior changed.
+
+
+### 2026-09-19 — Configurable calendar polling and spam count investigation
+
+- Calendar polling now accepts whole minutes from 1 to 60, default 5. Gmail keeps
+  15–300 whole seconds, default 30; both limits are visible in the configurator.
+  Invalid values are blocked in the settings UI and validated by the backend.
+- Calendar interval edits reschedule from the previous completion without changing
+  source revision or arrival baseline. Only one fetch may run. Error retries wait
+  at least two minutes and at least the configured interval; stale-data expiry
+  scales with longer intervals rather than expiring a 60-minute feed at 15 minutes.
+- Core tests: 205 passed, covering defaults, boundaries, interval edits, long
+  intervals, failure backoff and spam/trash arrival exclusion. Angular build and
+  Windows publish passed. Browser checks saved both boundary pairs (1m/15s and
+  60m/300s), rejected invalid/empty/fractional input, and found no Angular errors or
+  390px overflow. These saves used synthetic API fixtures, not user settings.
+- Read-only Google diagnostic in the signed-in Windows user's context: Inbox
+  messagesUnread=3 and threadsUnread=3; paginated INBOX+UNREAD message IDs with
+  includeSpamTrash=false also counted 3. Spam messagesUnread=3 separately. No
+  message bodies/headers or IDs were output and no mailbox data changed. The
+  current sample does not reproduce spam inflating the badge; no speculative
+  subtraction from Google's authoritative Inbox count was introduced.
+- Deployed after agent exit with backup `before-poll-settings-20260919-112114`,
+  preserving configuration/credential hashes. Runtime confirmed calendar interval
+  5 minutes, Gmail 30 seconds, both sources connected and Inbox count 3. The
+  verified physical panel reconnected and acknowledged 9 frames with zero recoveries.
+  Actual changed-interval cadence was tested with the fake clock, not by modifying
+  the user's saved intervals. No new animation visual approval is claimed.
+- User clarification after this check: the badge showed 5 while Gmail Inbox showed
+  4 and a new message was in Spam; deleting that spam message and one Inbox message
+  brought the badge to 3. The later matching count cannot rule out the earlier
+  discrepancy. Keep this anomaly open; capture counts before deletion on recurrence.
+  No cause (staleness, conversations versus messages, or spam inclusion) is proven.

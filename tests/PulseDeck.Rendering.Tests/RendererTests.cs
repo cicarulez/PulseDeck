@@ -7,6 +7,52 @@ using Xunit;
 public class RendererTests
 {
     [Theory]
+    [InlineData("classic")]
+    [InlineData("compact")]
+    [InlineData("weather")]
+    public void CalendarArrivalIsTransientDesktopOnlyAndKeepsMailCount(string layout)
+    {
+        using var renderer = new DeckRenderer(); var config = new DeckConfig { Layout = layout };
+        var baseline = new NotificationVisual([new("gmail", "mail", "connected", 7), new("calendar", "calendar", "connected")]);
+        foreach (var profile in new[] { "desktop", "gaming", "music" })
+        {
+            var state = State with { Profile = profile, Notifications = baseline };
+            var before = renderer.Render(state, config).Pixels;
+            var visual = baseline with { Arrival = new("calendar", "calendar", "Nuovo evento nel calendario", "GOOGLE CALENDAR"), Seconds = 1 };
+            var during = renderer.Render(state with { Notifications = visual }, config).Pixels;
+            if (profile == "desktop") Assert.NotEqual(before, during); else Assert.Equal(before, during);
+            Assert.Equal(before, renderer.Render(state with { Notifications = visual with { Seconds = 3.2f } }, config).Pixels);
+            for (var y = 0; y < 60; y++)
+                Assert.True(before.AsSpan(y * 1920 * 4, 1920 * 4).SequenceEqual(during.AsSpan(y * 1920 * 4, 1920 * 4)));
+        }
+    }
+
+    [Theory]
+    [InlineData("classic")]
+    [InlineData("compact")]
+    [InlineData("weather")]
+    public void MailAnimationIsDesktopOnlyAndBadgeTracksRealCounts(string layout)
+    {
+        using var renderer = new DeckRenderer(); var config = new DeckConfig { Layout = layout };
+        var visual = new NotificationVisual([new("gmail", "mail", "connected", 12345)], new("gmail", "mail", "Nuova email", "GMAIL"), 1);
+        foreach (var profile in new[] { "desktop", "gaming", "music" })
+        {
+            var state = State with { Profile = profile, Notifications = visual };
+            var animated = renderer.Render(state, config).Pixels;
+            var badge = renderer.Render(state with { Notifications = visual with { Arrival = null } }, config).Pixels;
+            if (profile == "desktop") Assert.NotEqual(animated, badge); else Assert.Equal(animated, badge);
+            var zero = renderer.Render(state with { Notifications = new([new("gmail", "mail", "connected", 0)]) }, config).Pixels;
+            Assert.NotEqual(badge, zero);
+            var unknown = renderer.Render(state with { Notifications = new([new("gmail", "mail", "unavailable")]) }, config).Pixels;
+            Assert.NotEqual(zero, unknown);
+            // The badge must not alter the clock or the underlying content below the header.
+            var absent = renderer.Render(state with { Notifications = new([]) }, config).Pixels;
+            Assert.True(badge.AsSpan(60 * 1920 * 4).SequenceEqual(absent.AsSpan(60 * 1920 * 4)));
+            for (var y = 0; y < 60; y++) Assert.True(badge.AsSpan((y * 1920 + 1750) * 4, 170 * 4).SequenceEqual(absent.AsSpan((y * 1920 + 1750) * 4, 170 * 4)));
+        }
+    }
+
+    [Theory]
     [InlineData("compact")]
     [InlineData("weather")]
     [InlineData("classic")]

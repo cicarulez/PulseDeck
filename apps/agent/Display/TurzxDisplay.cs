@@ -142,14 +142,14 @@ public sealed class TurzxDisplay : IDisposable
         throw new IOException("TURZX is waking up; retry the connection and check its configured COM port.");
     }
 
-    public void Send(byte[] pixels)
+    public void Send(byte[] pixels, bool fullFrame = false)
     {
         lock (gate)
         {
             if (IsCancelled() || status.Status is "disconnected" or "error" or "off") return;
             var recoveries = delivery.Recoveries;
             var attempts = delivery.Attempts;
-            delivery.Send(pixels);
+            delivery.Send(pixels, fullFrame);
             var next = status with
             {
                 Connected = delivery.State == "connected", Status = delivery.State,
