@@ -37,35 +37,38 @@ public sealed class SteamGridArtwork(HttpClient client, ConfigStore config, Stea
         if (key is null) return new();
         var directory = Path.Combine(config.DirectoryPath, "game-artwork");
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(SteamGridImages.Normalize(title))));
+        var poster = Path.Combine(directory, "sgdb-" + hash + "-poster.img");
         var cover = Path.Combine(directory, "sgdb-" + hash + "-cover.img");
         var hero = Path.Combine(directory, "sgdb-" + hash + "-hero.img");
         bool Fresh(string path) => File.Exists(path) && DateTime.UtcNow - File.GetLastWriteTimeUtc(path) < TimeSpan.FromDays(30);
-        string? coverPath = Fresh(cover) ? cover : null, heroPath = Fresh(hero) ? hero : null;
+        string? posterPath = Fresh(poster) ? poster : null, coverPath = Fresh(cover) ? cover : null,
+            heroPath = Fresh(hero) ? hero : null;
         try
         {
             Directory.CreateDirectory(directory);
-            if (coverPath is null || heroPath is null)
+            if (posterPath is null || heroPath is null)
             {
                 using var search = await Request("search/autocomplete/" + Uri.EscapeDataString(title), key, token);
                 var id = SteamGridImages.MatchGame(search.RootElement, title);
                 if (id is not null)
                 {
+                    if (posterPath is null) posterPath = await FetchImage($"grids/game/{id}?types=static&dimensions=600x900&nsfw=false&humor=false", key, poster, false, token, portrait: true);
                     if (heroPath is null) heroPath = await FetchImage($"heroes/game/{id}?types=static&nsfw=false&humor=false", key, hero, true, token);
-                    if (coverPath is null) coverPath = await FetchImage($"grids/game/{id}?types=static&dimensions=920x430,460x215&nsfw=false&humor=false", key, cover, false, token);
+                    if (posterPath is null && coverPath is null) coverPath = await FetchImage($"grids/game/{id}?types=static&dimensions=920x430,460x215&nsfw=false&humor=false", key, cover, false, token);
                 }
             }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
         catch { } // Steam remains available if this optional service fails.
-        return new(coverPath is not null || heroPath is not null ? "available" : "unavailable", coverPath ?? heroPath,
-            coverPath is not null || heroPath is not null ? "SteamGridDB · titolo esatto" : null) { BackgroundPath = heroPath };
+        return new(posterPath is not null || coverPath is not null || heroPath is not null ? "available" : "unavailable", posterPath ?? coverPath ?? heroPath,
+            posterPath is not null || coverPath is not null || heroPath is not null ? "SteamGridDB · titolo esatto" : null) { BackgroundPath = heroPath };
     }
-    private async Task<string?> FetchImage(string query, string key, string path, bool hero, CancellationToken token)
+    private async Task<string?> FetchImage(string query, string key, string path, bool hero, CancellationToken token, bool portrait = false)
     {
         try
         {
             using var json = await Request(query, key, token);
-            foreach (var url in SteamGridImages.Candidates(json.RootElement, hero))
+            foreach (var url in SteamGridImages.Candidates(json.RootElement, hero, portrait))
             {
                 try
                 {

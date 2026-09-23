@@ -398,6 +398,30 @@ public class RendererTests
         Assert.Equal(renderer.Render(State, config).Pixels, renderer.Render(State, config with { GamingLayout = false }).Pixels);
     }
 
+    [Theory]
+    [InlineData("compact", 1444)]
+    [InlineData("weather", 1352)]
+    public void PortraitGameCoverSitsBesideLiveSessionData(string layout, int panelX)
+    {
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".png");
+        try
+        {
+            File.WriteAllBytes(path, ArtworkTests.Picture(SKColors.Red, 600, 900));
+            using var renderer = new DeckRenderer();
+            var config = new DeckConfig { Layout = layout, GameProcesses = ["bf6"], GameThemes = [new("bf6", "") { CoverPath = path }] };
+            var game = new ForegroundSnapshot(42, "bf6", "Synthetic game", true, null, "unavailable");
+            var state = State with { Profile = "gaming", Game = game,
+                GameSession = new(42, "bf6", DateTimeOffset.UnixEpoch, 65), Fps = new("connected", 144, 6.9) };
+            var first = renderer.Render(state, config).Pixels;
+            var later = renderer.Render(state with { GameSession = state.GameSession! with { ElapsedSeconds = 125 } }, config).Pixels;
+            var posterPixel = (350 * 1920 + panelX + 110) * 4;
+            Assert.True(first[posterPixel + 2] > 150); // The vertical cover reaches below the old horizontal strip.
+            Assert.Equal(first.AsSpan(posterPixel, 4).ToArray(), later.AsSpan(posterPixel, 4).ToArray());
+            Assert.NotEqual(first, later); // Session time still updates beside the cover.
+        }
+        finally { File.Delete(path); }
+    }
+
     [Fact]
     public void GameBackgroundSwitchesAndClearsWithoutLeakingIntoOtherProfiles()
     {

@@ -192,7 +192,8 @@ app.MapGet("/api/games/artwork/{id}/{kind}", async (string id, string kind, Game
 });
 app.MapPost("/api/games/artwork/custom-preview", (CustomGameImageRequest request, GameThumbnailProvider thumbnails) =>
 {
-    var image = thumbnails.ReadCustom(request.Path ?? "");
+    if (request.Kind is not ("cover" or "background")) return Results.NotFound();
+    var image = thumbnails.ReadCustom(request.Path ?? "", request.Kind);
     return image is null ? Results.NotFound() : Results.File(image, "image/jpeg");
 });
 app.MapPost("/api/games/artwork/upload", async (HttpRequest request, GameThumbnailProvider thumbnails, CancellationToken token) =>

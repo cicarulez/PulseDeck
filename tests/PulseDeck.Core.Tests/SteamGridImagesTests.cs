@@ -31,6 +31,19 @@ public class SteamGridImagesTests
         Assert.False(SteamGridImages.SafeImageUrl(new("https://secret@cdn2.steamgriddb.com/image.png")));
     }
     [Fact]
+    public void PortraitCandidatesPreferSixHundredByNineHundredAndRejectLandscape()
+    {
+        using var json = JsonDocument.Parse("""
+        {"success":true,"data":[
+            {"url":"https://cdn2.steamgriddb.com/grid/wide.png","width":920,"height":430,"score":99},
+            {"url":"https://cdn2.steamgriddb.com/grid/portrait.png","width":600,"height":900,"score":3},
+            {"url":"https://cdn2.steamgriddb.com/grid/square.png","width":600,"height":600,"score":20}
+        ]}
+        """);
+        Assert.Equal("https://cdn2.steamgriddb.com/grid/portrait.png",
+            Assert.Single(SteamGridImages.Candidates(json.RootElement, hero: false, portrait: true)).AbsoluteUri);
+    }
+    [Fact]
     public void ManualBackgroundWinsAndAutomaticBackgroundNeverLeaksOutsideGaming()
     {
         var config = new DeckConfig { BackgroundPath = "general.png", GameThemes = [new("bf6", "manual.png")] };

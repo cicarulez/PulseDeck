@@ -59,9 +59,9 @@ export class DeckService {
   disconnectCalendar() { return this.request<{configured: boolean}>('/api/calendar', 'DELETE'); }
   gameLibraries() { return this.request<GameLibraryStatus>('/api/games'); }
   scanGames() { return this.request<{ requested: boolean }>('/api/games/scan', 'POST'); }
-  async previewGameImage(path: string): Promise<Blob> {
+  async previewGameImage(path: string, kind: 'cover' | 'background'): Promise<Blob> {
     const response = await fetch('/api/games/artwork/custom-preview', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-PulseDeck-Client': 'configurator' }, body: JSON.stringify({ path })
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-PulseDeck-Client': 'configurator' }, body: JSON.stringify({ path, kind })
     });
     if (!response.ok) throw new Error('Immagine non disponibile');
     return response.blob();

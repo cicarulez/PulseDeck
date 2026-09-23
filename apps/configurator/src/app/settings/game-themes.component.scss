@@ -7,6 +7,7 @@ p{font-size:12px;color:var(--muted);line-height:1.6}.game-name{color:var(--text)
 .preview-card{display:grid;align-content:start;gap:9px;padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--panel);min-width:0}
 .preview-card h4{font-size:14px;margin:0}.preview-card p{margin:0}.preview-card>strong{font-size:11px;font-weight:600}
 .image-frame{height:120px;display:grid;place-items:center;background:#090e10;border-radius:4px;overflow:hidden}
+.image-frame.portrait{height:240px}
 .image-frame img{display:block;width:100%;height:100%;object-fit:contain}.image-frame img[hidden]{display:none}
 .image-frame span{padding:12px;color:var(--muted);font-size:11px;text-align:center}.file-name{overflow-wrap:anywhere;color:var(--muted)}
 .selection{padding-top:5px}.selection strong{color:var(--text)}.actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}

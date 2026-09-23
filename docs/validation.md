@@ -2282,3 +2282,15 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   user's `0.8.1` deployment. The live `/api/health` reported `0.8.1`; the footer
   now reads that value. Angular 0.8.1 production build passed. This frontend
   correction has not yet been installed.
+
+## Portrait game posters — 2026-09-23
+
+- SteamGridDB's static 600×900 grids are now preferred for the gaming widget.
+  Cached landscape grids remain the fallback; panoramic heroes remain the
+  background source. A portrait image moves the poster to the left and puts
+  title, session time and FPS alongside it in compact and weather gaming layouts.
+- Core tests passed (217), including portrait candidate filtering. Renderer tests
+  passed (55), including poster placement and live session updates in both layouts.
+  Angular production build and self-contained win-x64 publish passed.
+- Authenticated poster downloads, the installed Windows agent and the physical
+  display were not exercised in this check.

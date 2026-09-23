@@ -279,6 +279,27 @@ public sealed class DeckRenderer : IDisposable
             var game = state.Game;
             var explicitTheme = GameTheme.ManualCoverFor(state, config);
             var picture = gameArtwork.Get(explicitTheme.Length > 0 ? explicitTheme : state.GameArtwork.Path ?? "");
+            var duration = state.GameSession is { } session ? TimeSpan.FromSeconds(session.ElapsedSeconds) : (TimeSpan?)null;
+            var time = duration is { } elapsed ? $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}" : "—";
+            var fps = state.Fps;
+            var fpsValue = fps.Status == "connected" && fps.FramesPerSecond is { } value ? value.ToString("0") : "—";
+            var fpsDetail = fps.Status == "connected" && fps.FrameTimeMs is { } ms ? $"{ms:0.0} ms · PresentMon"
+                : fps.Status == "waiting" ? "FPS: in attesa del gioco" : "FPS non disponibili";
+            if (picture is not null && picture.Height > picture.Width)
+            {
+                var poster = SKRect.Create(x + 14, 102, 192, 294);
+                var scale = Math.Min(poster.Width / picture.Width, poster.Height / picture.Height);
+                canvas.DrawBitmap(picture, SKRect.Create(poster.MidX - picture.Width * scale / 2,
+                    poster.MidY - picture.Height * scale / 2, picture.Width * scale, picture.Height * scale));
+                var infoX = x + 220; var infoWidth = width - 234;
+                Text(game?.DisplayName ?? "Nessun gioco in primo piano", infoX, 136, 24, heavy: true, maxWidth: infoWidth, minimumSize: 18);
+                Text("SESSIONE", infoX, 209, 14, muted);
+                Text(time, infoX, 250, 30, heavy: true, maxWidth: infoWidth);
+                Text("FPS APP", infoX, 303, 14, muted);
+                Text(fpsValue, infoX, 344, 30, heavy: true, maxWidth: infoWidth);
+                Text(fpsDetail, infoX, 400, 15, muted, maxWidth: infoWidth, minimumSize: 12);
+                return;
+            }
             var bounds = SKRect.Create(x + 12, 98, width - 24, 173);
             canvas.Save(); canvas.ClipRect(bounds);
             if (picture is not null)
@@ -294,15 +315,11 @@ public sealed class DeckRenderer : IDisposable
             }
             canvas.Restore();
             Text(game?.DisplayName ?? "Nessun gioco in primo piano", x + 14, 306, 27, heavy: true, maxWidth: width - 28, minimumSize: 20);
-            var duration = state.GameSession is { } session ? TimeSpan.FromSeconds(session.ElapsedSeconds) : (TimeSpan?)null;
-            var time = duration is { } elapsed ? $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}" : "—";
             Text("SESSIONE", x + 14, 337, 14, muted);
             Text(time, x + 14, 374, 30, heavy: true);
-            var fps = state.Fps;
             Text("FPS APP", x + width / 2, 337, 14, muted);
-            Text(fps.Status == "connected" && fps.FramesPerSecond is { } value ? value.ToString("0") : "—", x + width / 2, 374, 30, heavy: true);
-            Text(fps.Status == "connected" && fps.FrameTimeMs is { } ms ? $"{ms:0.0} ms · PresentMon"
-                : fps.Status == "waiting" ? "FPS: in attesa del gioco" : "FPS non disponibili", x + 14, 412, 17, muted, maxWidth: width - 28);
+            Text(fpsValue, x + width / 2, 374, 30, heavy: true);
+            Text(fpsDetail, x + 14, 412, 17, muted, maxWidth: width - 28);
         }
         void WeatherPanel()
         {

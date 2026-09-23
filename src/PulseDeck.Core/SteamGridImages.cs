@@ -17,7 +17,7 @@ public static class SteamGridImages
             .Where(item => item.TryGetProperty("id", out var id) && id.TryGetInt32(out var value) && value > 0).ToArray();
         return matches.Length == 1 ? matches[0].GetProperty("id").GetInt32() : null;
     }
-    public static IReadOnlyList<Uri> Candidates(JsonElement root, bool hero)
+    public static IReadOnlyList<Uri> Candidates(JsonElement root, bool hero, bool portrait = false)
     {
         if (!root.TryGetProperty("success", out var success) || success.ValueKind != JsonValueKind.True
             || !root.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array) return [];
@@ -30,9 +30,10 @@ public static class SteamGridImages
                 || !Uri.TryCreate(url.GetString(), UriKind.Absolute, out var uri) || !SafeImageUrl(uri)
                 || !item.TryGetProperty("width", out var width) || !width.TryGetInt32(out var w)
                 || !item.TryGetProperty("height", out var height) || !height.TryGetInt32(out var h)
-                || w < 100 || h < 100 || w <= h || (long)w * h > 4 * 1024 * 1024) continue;
+                || w < 100 || h < 100 || (portrait ? w >= h : w <= h)
+                || (long)w * h > 4 * 1024 * 1024) continue;
             var score = item.TryGetProperty("score", out var points) && points.TryGetInt32(out var p) ? p : 0;
-            images.Add((uri, Math.Abs((double)w / h - (hero ? 4 : 3)), score));
+            images.Add((uri, Math.Abs((double)w / h - (portrait ? 2d / 3 : hero ? 4 : 3)), score));
         }
         return images.OrderBy(i => i.Ratio).ThenByDescending(i => i.Score).Take(3).Select(i => i.Url).ToArray();
     }

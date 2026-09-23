@@ -10,7 +10,7 @@
       <div class="preview-card">
         <h4>{{ kind.title }}</h4><p>{{ kind.description }}</p>
         <strong>Immagine automatica</strong>
-        <div class="image-frame">
+        <div class="image-frame" [class.portrait]="kind.id === 'cover'">
           @if (selectedGame(); as game) {
             @if (automaticState()[kind.id] !== 'unavailable') {
               <img [src]="'/api/games/artwork/' + game.thumbnailId + '/' + kind.automatic" [alt]="kind.title + ' automatica per ' + game.name"
@@ -22,7 +22,7 @@
         </div>
         @if (manualPath(kind.id)) {
           <strong>Immagine personalizzata</strong>
-          <div class="image-frame">
+          <div class="image-frame" [class.portrait]="kind.id === 'cover'">
             @if (manualState()[kind.id] === 'available') { <img [src]="manualUrls()[kind.id]!" [alt]="kind.title + ' personalizzata'"> }
             @else if (manualState()[kind.id] === 'loading') { <span>Caricamento anteprima…</span> }
             @else { <span>Il file salvato non è disponibile sul PC</span> }

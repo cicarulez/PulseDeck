@@ -37,11 +37,12 @@ public sealed class GameThumbnailProvider(GameArtworkProvider artwork, SteamGrid
                 using var budget = CancellationTokenSource.CreateLinkedTokenSource(lifetime.ApplicationStopping);
                 budget.CancelAfter(TimeSpan.FromSeconds(15));
                 var result = await artwork.Fetch(title, budget.Token);
-                var path = kind == "hero" ? result.BackgroundPath : result.Path;
+                var path = kind == "hero" ? result.BackgroundPath
+                    : kind == "thumbnail" ? result.BackgroundPath ?? result.Path : result.Path;
                 if (path is null) return null;
                 using var bitmap = SKBitmap.Decode(path);
                 if (bitmap is null) return null;
-                var preview = kind == "thumbnail" ? (Width: 160, Height: 90) : (Width: 480, Height: 120);
+                var preview = kind switch { "thumbnail" => (Width: 160, Height: 90), "cover" => (Width: 240, Height: 360), _ => (Width: 480, Height: 120) };
                 using var surface = SKSurface.Create(new SKImageInfo(preview.Width, preview.Height));
                 surface.Canvas.Clear(SKColors.Black);
                 var scale = kind == "thumbnail"
@@ -58,7 +59,7 @@ public sealed class GameThumbnailProvider(GameArtworkProvider artwork, SteamGrid
         catch { return null; }
     }
 
-    public byte[]? ReadCustom(string path)
+    public byte[]? ReadCustom(string path, string kind)
     {
         try
         {
@@ -72,12 +73,13 @@ public sealed class GameThumbnailProvider(GameArtworkProvider artwork, SteamGrid
                 || (long)codec.Info.Width * codec.Info.Height > 4 * 1024 * 1024) return null;
             using var bitmap = SKBitmap.Decode(codec);
             if (bitmap is null) return null;
-            using var surface = SKSurface.Create(new SKImageInfo(480, 120));
+            var preview = kind == "cover" ? (Width: 240, Height: 360) : (Width: 480, Height: 120);
+            using var surface = SKSurface.Create(new SKImageInfo(preview.Width, preview.Height));
             surface.Canvas.Clear(SKColors.Black);
-            var scale = Math.Min(480f / bitmap.Width, 120f / bitmap.Height);
+            var scale = Math.Min((float)preview.Width / bitmap.Width, (float)preview.Height / bitmap.Height);
             using var paint = new SKPaint { IsAntialias = true };
-            surface.Canvas.DrawBitmap(bitmap, SKRect.Create((480 - bitmap.Width * scale) / 2,
-                (120 - bitmap.Height * scale) / 2, bitmap.Width * scale, bitmap.Height * scale), paint);
+            surface.Canvas.DrawBitmap(bitmap, SKRect.Create((preview.Width - bitmap.Width * scale) / 2,
+                (preview.Height - bitmap.Height * scale) / 2, bitmap.Width * scale, bitmap.Height * scale), paint);
             using var image = surface.Snapshot(); using var encoded = image.Encode(SKEncodedImageFormat.Jpeg, 85);
             return encoded.ToArray();
         }
@@ -114,4 +116,4 @@ public sealed class GameThumbnailProvider(GameArtworkProvider artwork, SteamGrid
     }
 }
 
-public sealed record CustomGameImageRequest(string? Path);
+public sealed record CustomGameImageRequest(string? Path, string? Kind);

@@ -14,7 +14,7 @@ export class GameThemesComponent implements OnDestroy {
   themes = input.required<GameTheme[]>(); processes = input.required<string[]>(); games = input<DiscoveredGame[]>([]); busy = input(false);
   themesChange = output<GameTheme[]>();
   readonly kinds: { id: ImageKind; title: string; description: string; automatic: 'cover' | 'hero' }[] = [
-    { id: 'cover', title: 'Copertina del widget', description: 'Immagine nel riquadro con sessione e FPS', automatic: 'cover' },
+    { id: 'cover', title: 'Locandina del widget', description: 'Verticale 600×900 se disponibile; altrimenti copertina orizzontale', automatic: 'cover' },
     { id: 'background', title: 'Sfondo panoramico', description: 'Immagine dietro a tutto il deck', automatic: 'hero' }
   ];
   readonly selected = signal(''); readonly uploading = signal<ImageKind | null>(null); readonly message = signal('');
@@ -58,7 +58,7 @@ export class GameThemesComponent implements OnDestroy {
     await Promise.all(([['cover', cover], ['background', background]] as const).map(async ([kind, path]) => {
       if (!path) return;
       try {
-        const url = URL.createObjectURL(await this.deck.previewGameImage(path));
+        const url = URL.createObjectURL(await this.deck.previewGameImage(path, kind));
         if (version !== this.previewVersion) { URL.revokeObjectURL(url); return; }
         this.manualUrls.update(urls => ({ ...urls, [kind]: url }));
         this.manualState.update(state => ({ ...state, [kind]: 'available' }));
