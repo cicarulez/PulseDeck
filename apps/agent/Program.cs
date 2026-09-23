@@ -89,6 +89,11 @@ app.Use(async (context, next) =>
     if (context.Request.Path.StartsWithSegments("/api") && context.Request.Method is "POST" or "PUT" or "DELETE"
         && context.Request.Headers["X-PulseDeck-Client"] != "configurator")
     { context.Response.StatusCode = 403; return; }
+    if (context.Request.Path == "/api/games/artwork/upload")
+    {
+        var size = context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
+        if (size is { IsReadOnly: false }) size.MaxRequestBodySize = 32 * 1024 * 1024 + 65536;
+    }
     context.Response.Headers.CacheControl = "no-store";
     await next();
 });
@@ -178,6 +183,32 @@ app.MapGet("/api/games/thumbnail/{id}", async (string id, GameDiscoveryService g
     if (title is null) return Results.NotFound();
     var image = await thumbnails.Read(title).WaitAsync(token);
     return image is null ? Results.NotFound() : Results.File(image, "image/jpeg");
+});
+app.MapGet("/api/games/artwork/{id}/{kind}", async (string id, string kind, GameDiscoveryService games, GameThumbnailProvider thumbnails, CancellationToken token) =>
+{
+    if (kind is not ("cover" or "hero") || games.ThumbnailTitle(id) is not { } title) return Results.NotFound();
+    var image = await thumbnails.ReadPreview(title, kind).WaitAsync(token);
+    return image is null ? Results.NotFound() : Results.File(image, "image/jpeg");
+});
+app.MapPost("/api/games/artwork/custom-preview", (CustomGameImageRequest request, GameThumbnailProvider thumbnails) =>
+{
+    var image = thumbnails.ReadCustom(request.Path ?? "");
+    return image is null ? Results.NotFound() : Results.File(image, "image/jpeg");
+});
+app.MapPost("/api/games/artwork/upload", async (HttpRequest request, GameThumbnailProvider thumbnails, CancellationToken token) =>
+{
+    if (!request.HasFormContentType) return Results.BadRequest(new { error = "Seleziona un file immagine." });
+    try
+    {
+        var form = await request.ReadFormAsync(token);
+        var file = form.Files.GetFile("image");
+        if (file is null) return Results.BadRequest(new { error = "Seleziona un file immagine." });
+        var path = await thumbnails.SaveCustom(file, token);
+        return path is null ? Results.BadRequest(new { error = "Immagine non valida: usa PNG, JPEG o WebP statico fino a 4 megapixel e 32 MiB." })
+            : Results.Ok(new { path });
+    }
+    catch (OperationCanceledException) when (token.IsCancellationRequested) { return Results.StatusCode(499); }
+    catch (Exception) { return Results.Problem("Impossibile salvare l'immagine sul PC Windows."); }
 });
 app.MapPost("/api/games/scan", (GameDiscoveryService games) => { games.RequestScan(); return Results.Ok(new { requested = true }); });
 app.MapGet("/api/steamgriddb", (SteamGridCredentials credentials) => new { configured = credentials.Configured });

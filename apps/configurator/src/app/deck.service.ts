@@ -7,6 +7,7 @@ export class DeckService {
   readonly state = signal<DeckState | null>(null);
   readonly widgetCatalog = signal<WidgetCatalog | null>(null);
   readonly config = signal<DeckConfig | null>(null);
+  readonly version = signal<string | null>(null);
   readonly connected = signal(false);
   readonly error = signal('');
   readonly busy = signal(false);
@@ -25,8 +26,13 @@ export class DeckService {
   }
   private async open() {
     try {
-      const [config, state, catalog] = await Promise.all([this.request<DeckConfig>('/api/config'), this.request<DeckState>('/api/state'), this.request<WidgetCatalog>('/api/widget-slots')]);
+      const [config, state, catalog, health] = await Promise.all([
+        this.request<DeckConfig>('/api/config'), this.request<DeckState>('/api/state'),
+        this.request<WidgetCatalog>('/api/widget-slots'),
+        this.request<{ version: string | null }>('/api/health').catch(() => ({ version: null }))
+      ]);
       this.widgetCatalog.set(catalog);
+      this.version.set(health.version);
       if (!this.config()) this.config.set(config);
       this.state.set(state);
       this.lastState = new Date(state.timestamp).getTime();
@@ -53,6 +59,24 @@ export class DeckService {
   disconnectCalendar() { return this.request<{configured: boolean}>('/api/calendar', 'DELETE'); }
   gameLibraries() { return this.request<GameLibraryStatus>('/api/games'); }
   scanGames() { return this.request<{ requested: boolean }>('/api/games/scan', 'POST'); }
+  async previewGameImage(path: string): Promise<Blob> {
+    const response = await fetch('/api/games/artwork/custom-preview', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-PulseDeck-Client': 'configurator' }, body: JSON.stringify({ path })
+    });
+    if (!response.ok) throw new Error('Immagine non disponibile');
+    return response.blob();
+  }
+  async uploadGameImage(file: File): Promise<string> {
+    const form = new FormData(); form.append('image', file);
+    const response = await fetch('/api/games/artwork/upload', {
+      method: 'POST', headers: { 'X-PulseDeck-Client': 'configurator' }, body: form
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({})) as { error?: string; detail?: string };
+      throw new Error(data.error || data.detail || `Caricamento non riuscito (${response.status})`);
+    }
+    return (await response.json() as { path: string }).path;
+  }
   steamGridStatus() { return this.request<{ configured: boolean }>('/api/steamgriddb'); }
   connectSteamGrid(key: string) { return this.request<{ configured: boolean }>('/api/steamgriddb', 'POST', { key }); }
   disconnectSteamGrid() { return this.request<{ configured: boolean }>('/api/steamgriddb', 'DELETE'); }

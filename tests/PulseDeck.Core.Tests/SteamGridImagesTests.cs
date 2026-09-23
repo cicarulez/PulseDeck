@@ -37,6 +37,11 @@ public class SteamGridImagesTests
         var state = new DeckState(DateTimeOffset.UtcNow, "gaming", "bf6", new([], "connected"), new(false,"","","",0,0,"idle"), new([],null,"idle"), new(false,"",null,"idle"))
             { Game = new(42,"bf6","Battlefield 6",true,null,"available"), GameArtwork = new("available","cover.png","SteamGridDB") { BackgroundPath = "hero.png" } };
         Assert.Equal("manual.png", GameTheme.BackgroundFor(state, config));
+        Assert.Equal("manual.png", GameTheme.ManualCoverFor(state, config)); // Existing configurations keep the shared image.
+        var separate = config with { GameThemes = [new("bf6", "background.png") { CoverPath = "widget.png" }] };
+        Assert.Equal("background.png", GameTheme.BackgroundFor(state, separate));
+        Assert.Equal("widget.png", GameTheme.ManualCoverFor(state, separate));
+        Assert.Equal("", GameTheme.ManualCoverFor(state, separate with { GameThemes = [new("bf6", "background.png") { CoverPath = "" }] }));
         Assert.Equal("hero.png", GameTheme.BackgroundFor(state, config with { GameThemes = [] }));
         Assert.Equal("general.png", GameTheme.BackgroundFor(state with { Profile = "desktop" }, config));
         Assert.Equal("general.png", GameTheme.BackgroundFor(state, config with { GameProcesses = [] }));

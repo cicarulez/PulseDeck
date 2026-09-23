@@ -7,7 +7,7 @@ import { DiscoveredGame, GameDiscoveryOptions, GameLibraryStatus } from '../mode
   templateUrl: './game-discovery.component.html', styleUrl: './game-discovery.component.scss' })
 export class GameDiscoveryComponent implements OnInit, OnDestroy {
   options = input.required<GameDiscoveryOptions>(); busy = input(false);
-  optionsChange = output<GameDiscoveryOptions>(); processesChange = output<string[]>();
+  optionsChange = output<GameDiscoveryOptions>(); processesChange = output<string[]>(); gamesChange = output<DiscoveredGame[]>();
   readonly state = signal<GameLibraryStatus | null>(null); readonly message = signal('');
   readonly requesting = signal(false); readonly failedImages = signal<Set<string>>(new Set());
   private readonly deck = inject(DeckService);
@@ -32,7 +32,7 @@ export class GameDiscoveryComponent implements OnInit, OnDestroy {
       ignoredExecutables: [...without(this.options().ignoredExecutables), ...(decision === 'ignore' ? [game.executable] : [])] });
   }
   async refresh() {
-    try { this.state.set(await this.deck.gameLibraries()); }
+    try { const catalog = await this.deck.gameLibraries(); this.state.set(catalog); this.gamesChange.emit(catalog.games); }
     catch { this.message.set('Catalogo non disponibile.'); }
   }
   async scan() {

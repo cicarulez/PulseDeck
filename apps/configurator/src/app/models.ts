@@ -17,7 +17,7 @@ export interface WeatherPlace extends WeatherLocation { label: string; }
 export interface WidgetConfig { slot: string; source: 'metric' | 'sensor' | 'network' | 'none'; metricId: string; sensorId: string; sensorName: string; label: string; maximum: number; style: 'auto' | 'value' | 'bar' | 'ring'; }
 export interface WidgetSlot { id: string; name: string; isBar: boolean; }
 export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; }
-export interface GameTheme { processName: string; backgroundPath: string; }
+export interface GameTheme { processName: string; backgroundPath: string; coverPath?: string | null; }
 export interface DeckConfig {
   notifications: NotificationOptions;
   calendar: CalendarOptions; discordVoiceChannelId: string;

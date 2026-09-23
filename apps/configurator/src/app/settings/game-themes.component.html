@@ -1,12 +1,44 @@
-<div class="theme-heading"><h3>Sfondi dei giochi</h3><button class="button" type="button" (click)="add()" [disabled]="busy() || !available().length || themes().length >= 50">Aggiungi sfondo</button></div>
-<p>Associa un’immagine locale a un processo dell’elenco giochi. Ha precedenza sulla immagini recuperate automaticamente da SteamGridDB o Steam per titolo esatto. Le copertine scaricate restano nella cartella dati di PulseDeck.</p>
-@for (theme of themes(); track $index; let i = $index) {
-  <div class="theme-row fields">
-    <label>Gioco<select [name]="'game-theme-process-' + i" [ngModel]="theme.processName" (ngModelChange)="update(i, { processName: $event })" [disabled]="busy()">
-      @for (process of options(theme); track process) { <option [value]="process">{{ process }}</option> }
-    </select></label>
-    <label>Immagine sul PC Windows<input [name]="'game-theme-background-' + i" [ngModel]="theme.backgroundPath" (ngModelChange)="update(i, { backgroundPath: $event })" placeholder="C:\Immagini\gioco.jpg" maxlength="1024" [disabled]="busy()"></label>
-    <button class="button" type="button" (click)="remove(i)" [disabled]="busy()" [attr.aria-label]="'Rimuovi sfondo per ' + theme.processName">Rimuovi</button>
+<div class="theme-heading"><h3>Immagini dei giochi</h3></div>
+<p>Scegli un gioco, poi cambia separatamente la copertina del widget o lo sfondo del deck. Puoi usare le immagini automatiche o scegliere un file dal PC.</p>
+@if (choices().length) {
+  <div class="fields"><label>Gioco<select name="game-image-process" [ngModel]="selected()" (ngModelChange)="select($event)" [disabled]="busy() || !!uploading()">
+    @for (process of choices(); track process) { <option [value]="process">{{ process }}</option> }
+  </select></label></div>
+  @if (selectedGame(); as game) { <p class="game-name">{{ game.name }}</p> }
+  <div class="previews">
+    @for (kind of kinds; track kind.id) {
+      <div class="preview-card">
+        <h4>{{ kind.title }}</h4><p>{{ kind.description }}</p>
+        <strong>Immagine automatica</strong>
+        <div class="image-frame">
+          @if (selectedGame(); as game) {
+            @if (automaticState()[kind.id] !== 'unavailable') {
+              <img [src]="'/api/games/artwork/' + game.thumbnailId + '/' + kind.automatic" [alt]="kind.title + ' automatica per ' + game.name"
+                [hidden]="automaticState()[kind.id] !== 'available'" (load)="automaticLoaded(kind.id)" (error)="automaticFailed(kind.id)">
+            }
+            @if (automaticState()[kind.id] === 'loading') { <span>Ricerca dell’immagine in corso…</span> }
+            @if (automaticState()[kind.id] === 'unavailable') { <span>Immagine automatica non disponibile</span> }
+          } @else { <span>Gioco non presente nel catalogo</span> }
+        </div>
+        @if (manualPath(kind.id)) {
+          <strong>Immagine personalizzata</strong>
+          <div class="image-frame">
+            @if (manualState()[kind.id] === 'available') { <img [src]="manualUrls()[kind.id]!" [alt]="kind.title + ' personalizzata'"> }
+            @else if (manualState()[kind.id] === 'loading') { <span>Caricamento anteprima…</span> }
+            @else { <span>Il file salvato non è disponibile sul PC</span> }
+          </div>
+          <small class="file-name">{{ fileName(kind.id) }}</small>
+        }
+        <p class="selection">In uso: <strong>{{ manualPath(kind.id) ? 'personalizzata' : 'automatica' }}</strong></p>
+        <div class="actions">
+          <label class="button file-button" [class.disabled]="busy() || uploading()">Scegli file personalizzato
+            <input type="file" accept="image/png,image/jpeg,image/webp" [disabled]="busy() || !!uploading()" (change)="chooseFile($event, kind.id)">
+          </label>
+          @if (manualPath(kind.id)) { <button class="button" type="button" (click)="useAutomatic(kind.id)" [disabled]="busy() || !!uploading()">Usa immagine automatica</button> }
+        </div>
+      </div>
+    }
   </div>
-} @empty { <p>Nessuna immagine manuale: ricerca automatica della copertina; se assente, icona del gioco su sfondo scuro.</p> }
-<p>PNG, JPEG o WebP, fino a 32 MiB e 4 megapixel. Lascia il percorso vuoto per usare lo sfondo automatico, se disponibile, oppure quello generale. Le associazioni si attivano soltanto per i processi presenti nell’elenco giochi.</p>
+  @if (message()) { <p role="status">{{ message() }}</p> }
+  <p>Le immagini personalizzate vengono salvate sul PC Windows. Premi Salva configurazione per applicare le scelte al deck.</p>
+} @else { <p>Nessun gioco disponibile. Aggiungi un processo o attiva il riconoscimento automatico.</p> }

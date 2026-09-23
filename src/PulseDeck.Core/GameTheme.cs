@@ -2,6 +2,9 @@ namespace PulseDeck.Core;
 
 public sealed record GameTheme(string ProcessName, string BackgroundPath)
 {
+    // Null preserves the old behavior where one manual image served both the widget and background.
+    public string? CoverPath { get; init; }
+
     public static string? Validate(GameTheme[] themes)
     {
         if (themes is null || themes.Length > 50) return "At most 50 game backgrounds are allowed.";
@@ -11,7 +14,8 @@ public sealed record GameTheme(string ProcessName, string BackgroundPath)
             if (theme is null || string.IsNullOrWhiteSpace(theme.ProcessName) || theme.ProcessName.Length > 100
                 || theme.ProcessName.IndexOfAny(['/', '\\', ':']) >= 0
                 || string.IsNullOrWhiteSpace(Path.GetFileNameWithoutExtension(theme.ProcessName))
-                || theme.BackgroundPath is null || theme.BackgroundPath.Length > 1024)
+                || theme.BackgroundPath is null || theme.BackgroundPath.Length > 1024
+                || theme.CoverPath is { Length: > 1024 })
                 return "Invalid game background or process name.";
             if (!processes.Add(Path.GetFileNameWithoutExtension(theme.ProcessName))) return "Duplicate game background process.";
         }
@@ -29,10 +33,20 @@ public sealed record GameTheme(string ProcessName, string BackgroundPath)
     public static string ManualBackgroundFor(DeckState state, DeckConfig config)
     {
         if (state.Profile != "gaming" || state.Game is not { } game || !ProfileSelector.IsGame(config, game.ProcessName)) return "";
-        return config.GameThemes.FirstOrDefault(t => string.Equals(Path.GetFileNameWithoutExtension(t.ProcessName),
-            Path.GetFileNameWithoutExtension(game.ProcessName), StringComparison.OrdinalIgnoreCase))?.BackgroundPath
-            is { Length: > 0 } path ? path : "";
+        return Find(state, config)?.BackgroundPath is { Length: > 0 } path ? path : "";
     }
+
+    public static string ManualCoverFor(DeckState state, DeckConfig config)
+    {
+        if (state.Profile != "gaming" || state.Game is not { } game || !ProfileSelector.IsGame(config, game.ProcessName)) return "";
+        var theme = Find(state, config);
+        // CoverPath is null only for configurations saved before separate image choices existed.
+        return theme?.CoverPath ?? theme?.BackgroundPath ?? "";
+    }
+
+    private static GameTheme? Find(DeckState state, DeckConfig config) => config.GameThemes.FirstOrDefault(t =>
+        string.Equals(Path.GetFileNameWithoutExtension(t.ProcessName),
+            Path.GetFileNameWithoutExtension(state.Game!.ProcessName), StringComparison.OrdinalIgnoreCase));
 }
 
 /// <summary>Keep artwork during a brief automatic Alt-Tab without claiming the game is still in the foreground.</summary>

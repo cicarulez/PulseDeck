@@ -2,7 +2,7 @@ import { SectionTabsComponent, SectionTab } from '../shared/section-tabs.compone
 import { NotificationSettingsComponent } from './notification-settings.component';
 import { Component, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DeckConfig, NewsSnapshot, CalendarSnapshot } from '../models';
+import { DeckConfig, NewsSnapshot, CalendarSnapshot, DiscoveredGame } from '../models';
 import { NewsSettingsComponent } from './news-settings.component';
 import { WeatherSettingsComponent } from './weather-settings.component';
 import { GameDiscoveryComponent } from './game-discovery.component';
@@ -22,7 +22,7 @@ export class SettingsComponent {
   calendarState = input<CalendarSnapshot | null>(null);
   newsState = input<NewsSnapshot | null>(null);
   config = input.required<DeckConfig>(); busy = input(false); save = output<DeckConfig>();
-  draft!: DeckConfig; processes = ''; discoveredProcesses: string[] = [];
+  draft!: DeckConfig; processes = ''; discoveredProcesses: string[] = []; discoveredGames: DiscoveredGame[] = [];
   constructor() { effect(() => { this.draft = { ...this.config(), gameProcesses: [...this.config().gameProcesses], gameThemes: this.config().gameThemes.map(t => ({ ...t })) }; this.processes = this.draft.gameProcesses.join(', '); }); }
   gameProcesses() { return [...new Set(this.processes.split(',').map(p => p.trim()).filter(Boolean))]; }
   themeProcesses() { return [...new Set([...this.gameProcesses(), ...this.discoveredProcesses])]; }

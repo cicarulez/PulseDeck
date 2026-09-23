@@ -2266,3 +2266,19 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   COM5 as `chs_88inch.dev1_rom1.90`; first full frame acknowledged without error.
   User subsequently confirmed that both the Paint label transition and icon sizing
   issues were resolved on the installed build.
+
+## Separate game artwork choices — 2026-09-23
+
+- The configurator now previews the automatic widget cover and panoramic background
+  separately for a selected game. Each has its own file picker and automatic reset.
+  Uploaded images are validated and stored under the agent's runtime data directory.
+- Existing configurations that used one manual background for both positions keep
+  that appearance until a choice is edited. New choices are stored independently.
+- Angular production build, 216 Core tests, 53 renderer tests and self-contained
+  win-x64 publish passed with .NET SDK 10.0.401 and Node 24.19.0 in WSL.
+- The new upload interaction, installed Windows agent and physical display were not
+  exercised in this check. No installed build or startup task was changed.
+- Follow-up: the configurator footer was still hard-coded to `v0.8.0` after the
+  user's `0.8.1` deployment. The live `/api/health` reported `0.8.1`; the footer
+  now reads that value. Angular 0.8.1 production build passed. This frontend
+  correction has not yet been installed.

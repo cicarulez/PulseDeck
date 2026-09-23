@@ -58,6 +58,7 @@ public class GamePresentationTests
         Assert.NotNull((new DeckConfig { GameThemes = [new("bf6", "a.png"), new("BF6.exe", "b.png")] }).Validate());
         Assert.NotNull((new DeckConfig { GameThemes = [new("C:\\Games\\bf6.exe", "a.png")] }).Validate());
         Assert.NotNull((new DeckConfig { GameThemes = [new("bf6", null!)] }).Validate());
+        Assert.NotNull((new DeckConfig { GameThemes = [new("bf6", "") { CoverPath = new string('x', 1025) }] }).Validate());
         Assert.NotNull((new DeckConfig { GameThemes = [null!] }).Validate());
         Assert.NotNull((new DeckConfig { GameThemes = null! }).Validate());
         Assert.Null((new DeckConfig { GameThemes = [new("BF6.exe", "a.png")] }).Validate());
