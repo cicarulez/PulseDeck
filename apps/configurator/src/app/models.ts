@@ -1,4 +1,5 @@
-export interface NotificationOptions { gmailEnabled: boolean; animate: boolean; pollSeconds: number; }
+export type NotificationProfile = 'desktop' | 'gaming' | 'music';
+export interface NotificationOptions { gmailEnabled: boolean; animate: boolean; profiles: NotificationProfile[]; pollSeconds: number; }
 export interface NotificationSource { id: string; kind: string; status: string; unreadCount: number | null; updatedAt: string | null; }
 export interface GmailStatus { clientConfigured: boolean; connected: boolean; authorizationStatus: string; source: NotificationSource; }
 export interface CalendarOptions { enabled: boolean; hideTitles: boolean; notifyNewEvents: boolean; pollMinutes: number; }

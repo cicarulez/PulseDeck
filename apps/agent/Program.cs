@@ -122,7 +122,7 @@ app.MapDelete("/api/notifications/gmail", async (GmailService gmail, Cancellatio
 app.MapPost("/api/notifications/test", (NotificationCenter center, DeckRuntime runtime, ConfigStore config, string? kind) =>
 {
     if (!config.Current.Notifications.Animate) return Results.Conflict(new { error = "Abilita e salva l’animazione per eseguire la prova." });
-    if (runtime.State.Profile != "desktop") return Results.Conflict(new { error = "La prova animata è disponibile solo in Recon / Desktop." });
+    if (!config.Current.Notifications.AnimatesIn(runtime.State.Profile)) return Results.Conflict(new { error = "Seleziona e salva il profilo attivo nelle notifiche per eseguire la prova." });
     if (kind is not (null or "mail" or "calendar")) return Results.BadRequest(new { error = "Tipo di prova sconosciuto." });
     center.StartTest(kind ?? "mail"); return Results.Ok(new { started = true });
 });

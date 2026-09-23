@@ -4,8 +4,16 @@ public sealed record NotificationOptions
 {
     public bool GmailEnabled { get; init; } = true;
     public bool Animate { get; init; } = true;
+    public string[] Profiles { get; init; } = ["desktop"];
     public int PollSeconds { get; init; } = 30;
-    public string? Validate() => PollSeconds is < 15 or > 300 ? "Il controllo Gmail deve essere tra 15 e 300 secondi." : null;
+    public bool AnimatesIn(string profile) => Animate && Profiles?.Contains(profile, StringComparer.Ordinal) == true;
+    public string? Validate()
+    {
+        if (PollSeconds is < 15 or > 300) return "Il controllo Gmail deve essere tra 15 e 300 secondi.";
+        if (Profiles is null || Profiles.Length > 3 || Profiles.Any(profile => profile is not ("desktop" or "gaming" or "music")) || Profiles.Distinct(StringComparer.Ordinal).Count() != Profiles.Length)
+            return "Scegli profili di notifica validi e senza duplicati.";
+        return null;
+    }
 }
 
 // Connectors publish authoritative counts independently from arrival events.

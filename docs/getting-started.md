@@ -88,6 +88,39 @@ From the permanent published folder, run `Install-PulseDeckStartup.ps1` in an el
 
 To update a build, stop the agent, wait for its process and startup task to exit, then replace the application folder. Preserve the separate runtime directory. Do not overwrite DLLs while the agent is running.
 
+For a source checkout on Windows or WSL, `scripts/Publish-Deploy-PulseDeck.ps1` automates
+the full update. Sign in as the Windows user who runs PulseDeck. For a Windows
+checkout, open an elevated PowerShell in the checkout and run the command below. The script finds the
+installation from the `PulseDeck` scheduled task and verifies its user and path.
+Press Enter at the version prompt to keep the current source version. It runs
+the tests and publish, backs up the task, prepares a complete new application
+folder, stops and waits for the running agent and task, swaps the folders,
+starts the task and verifies the expected version through `/api/health`.
+If the new version fails to start, it attempts to restore and restart the old
+installation. The old folder remains beside the installation as a backup after
+a successful update; runtime data in `%LOCALAPPDATA%\PulseDeck` is untouched.
+
+```powershell
+.\scripts\Publish-Deploy-PulseDeck.ps1
+```
+
+For a WSL checkout, obtain the Windows path with
+`wslpath -w scripts/Publish-Deploy-PulseDeck.ps1` in WSL, then run it from an
+elevated Windows PowerShell with:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File '<path returned by wslpath>'
+```
+
+The script builds with the SDK and Node
+installed in WSL, then deploys in the signed-in Windows session. Windows will
+ask for administrator approval when opening the elevated PowerShell.
+
+The script requires .NET SDK 10.x and Node.js 24.15+. Use `-Version 0.8.1` to
+set the agent, configurator and npm lockfile version without the interactive
+prompt, or `-SkipVersionPrompt` to keep the checked-in version. Changes to the
+source version remain in the checkout even if a later build fails.
+
 ## Optional desktop window
 
 The main Windows package uses the browser configurator. An Electron wrapper can be built separately with `scripts/build-desktop.ps1` or `scripts/build-desktop.sh`. Its install script is emitted under `artifacts/desktop`; it expects the agent/startup task to be installed already. The wrapper has its own package version and is not required to use PulseDeck.

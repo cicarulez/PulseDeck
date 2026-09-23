@@ -506,9 +506,9 @@ public sealed class DeckRenderer : IDisposable
         var notification = state.Notifications;
         var mail = notification.Sources.FirstOrDefault(s => s.Kind == "mail" && s.Status is not ("disabled" or "not-configured"));
         if (mail is not null)
-            MailAnimation.Draw(canvas, notification.Arrival?.Kind != "mail" || state.Profile != "desktop" ? 4 : Math.Max(.001f, notification.Seconds), bold,
+            MailAnimation.Draw(canvas, notification.Arrival?.Kind != "mail" || !config.Notifications.AnimatesIn(state.Profile) ? 4 : Math.Max(.001f, notification.Seconds), bold,
                 mail.UnreadCount, notification.Arrival?.Title ?? "Nuova email", notification.Arrival?.Caption ?? "GMAIL");
-        if (notification.Arrival is { Kind: "calendar" } calendarArrival && state.Profile == "desktop")
+        if (notification.Arrival is { Kind: "calendar" } calendarArrival && config.Notifications.AnimatesIn(state.Profile))
             MailAnimation.Draw(canvas, Math.Max(.001f, notification.Seconds), bold, null, calendarArrival.Title, calendarArrival.Caption, kind: "calendar");
         if (notification.IsTest) Text("PROVA NOTIFICHE · DATI SIMULATI", 700, 85, 18, accent);
         using var image = SKImage.FromBitmap(bitmap);

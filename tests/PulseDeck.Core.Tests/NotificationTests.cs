@@ -41,6 +41,23 @@ public class NotificationTests
     [InlineData(14, false)] [InlineData(15, true)] [InlineData(300, true)] [InlineData(301, false)]
     public void GmailPollIntervalHasEnforcedLimits(int seconds, bool valid) =>
         Assert.Equal(valid, (new DeckConfig { Notifications = new() { PollSeconds = seconds } }).Validate() is null);
+    [Fact] public void NotificationProfilesDefaultToDesktopAndValidateSelections()
+    {
+        var defaults = new NotificationOptions();
+        Assert.Equal(["desktop"], System.Text.Json.JsonSerializer.Deserialize<NotificationOptions>("{}")!.Profiles);
+        Assert.True(defaults.AnimatesIn("desktop"));
+        Assert.False(defaults.AnimatesIn("gaming"));
+        var all = defaults with { Profiles = ["desktop", "gaming", "music"] };
+        Assert.Null(all.Validate());
+        Assert.True(all.AnimatesIn("gaming"));
+        Assert.True(all.AnimatesIn("music"));
+        Assert.False((all with { Animate = false }).AnimatesIn("gaming"));
+        Assert.Null((all with { Profiles = [] }).Validate());
+        Assert.False((all with { Profiles = [] }).AnimatesIn("desktop"));
+        Assert.NotNull((all with { Profiles = ["desktop", "desktop"] }).Validate());
+        Assert.NotNull((all with { Profiles = ["auto"] }).Validate());
+        Assert.NotNull((all with { Profiles = null! }).Validate());
+    }
     private sealed class Handler : HttpMessageHandler
     {
         public Queue<(HttpStatusCode Code, string Json)> Replies = new();

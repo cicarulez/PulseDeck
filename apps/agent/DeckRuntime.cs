@@ -68,10 +68,10 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     notifications.Publish(new("calendar", "calendar", calendarStatus, UpdatedAt: next.Calendar.FetchedAt),
                         addedEvents == 0 ? null : new("calendar", "calendar",
                             addedEvents == 1 ? "Nuovo evento nel calendario" : $"{addedEvents} nuovi eventi nel calendario", "GOOGLE CALENDAR"),
-                        settings.Notifications.Animate && settings.Calendar.NotifyNewEvents && profile == "desktop");
+                        settings.Notifications.AnimatesIn(profile) && settings.Calendar.NotifyNewEvents);
                     Volatile.Write(ref latest, new(next, settings, media.Artwork, foreground.Icon));
                     Interlocked.Increment(ref providerUpdates);
-                    State = next with { Display = display.Status, Notifications = notifications.Read(settings.Notifications.Animate && next.Profile == "desktop") };
+                    State = next with { Display = display.Status, Notifications = notifications.Read(settings.Notifications.AnimatesIn(next.Profile)) };
                     await hub.Clients.All.SendAsync("state", State, stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
@@ -92,7 +92,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                 var input = Volatile.Read(ref latest);
                 if (input is not null)
                 {
-                    var visual = notifications.Read(config.Current.Notifications.Animate && input.State.Profile == "desktop");
+                    var visual = notifications.Read(input.Config.Notifications.AnimatesIn(input.State.Profile));
                     var interval = visual.Arrival is not null && visual.Seconds < 3.2f ? 100 : 1000;
                     if (watch.Elapsed.TotalMilliseconds - last >= interval)
                     {

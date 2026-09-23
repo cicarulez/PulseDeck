@@ -6,3 +6,9 @@ p,summary{font-size:12px;color:var(--muted);line-height:1.6}a{color:var(--accent
 ul{padding-left:20px}li{padding:8px 0;font-size:13px}li span{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
 @media(max-width:850px){.channel-fields{grid-template-columns:1fr}.presets{flex-direction:column}}
 code{overflow-wrap:anywhere}
+.notification-profiles{border:1px solid var(--line);border-radius:6px;padding:12px 16px;color:var(--muted)}
+.notification-profiles legend{padding:0 6px;font-size:12px}
+.notification-profiles__choices{display:flex;flex-wrap:wrap;gap:12px 24px;margin:8px 0 12px}
+.notification-profiles__choices label{display:flex;align-items:center;gap:8px;color:var(--text)}
+.notification-profiles__choices input[type=checkbox]{width:18px;min-width:18px;height:18px;padding:0;accent-color:var(--accent)}
+.notification-profiles small{font-size:11px;line-height:1.5}

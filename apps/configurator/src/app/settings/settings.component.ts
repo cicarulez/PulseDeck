@@ -15,7 +15,7 @@ import { GameThemesComponent } from './game-themes.component';
 export class SettingsComponent {
   readonly sections: readonly SectionTab[] = [
     { id: 'behavior', label: 'Profili e giochi' }, { id: 'display', label: 'Display e musica' },
-    { id: 'discord', label: 'Discord' }, { id: 'gmail', label: 'Gmail' },
+    { id: 'discord', label: 'Discord' }, { id: 'gmail', label: 'Notifiche' },
     { id: 'calendar', label: 'Calendario' }, { id: 'weather', label: 'Meteo' }, { id: 'news', label: 'News' }
   ];
   readonly section = signal('behavior');

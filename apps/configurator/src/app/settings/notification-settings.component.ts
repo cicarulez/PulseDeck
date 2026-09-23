@@ -1,7 +1,7 @@
 import { Component, inject, input, model, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DeckService } from '../deck.service';
-import { GmailStatus, NotificationOptions } from '../models';
+import { GmailStatus, NotificationOptions, NotificationProfile } from '../models';
 
 @Component({ selector: 'pd-notification-settings', standalone: true, imports: [FormsModule],
   templateUrl: './notification-settings.component.html', styleUrl: './news-settings.component.scss' })
@@ -14,6 +14,14 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
   ngOnDestroy() { clearInterval(this.timer); }
   async refresh() { try { this.status.set(await this.deck.gmailStatus()); } catch { this.message.set('Stato Gmail non disponibile.'); } }
   update(patch: Partial<NotificationOptions>) { this.options.update(value => ({ ...value, ...patch })); }
+  readonly profiles: readonly { id: NotificationProfile; label: string }[] = [
+    { id: 'desktop', label: 'Desktop' }, { id: 'gaming', label: 'Gaming' }, { id: 'music', label: 'Musica' }
+  ];
+  profileSelected(profile: NotificationProfile) { return (this.options().profiles ?? ['desktop']).includes(profile); }
+  setProfile(profile: NotificationProfile, selected: boolean) {
+    const profiles = this.profiles.map(item => item.id).filter(id => id === profile ? selected : this.profileSelected(id));
+    this.update({ profiles });
+  }
   async importClient(event: Event) {
     const input = event.target as HTMLInputElement; const file = input.files?.[0]; input.value = '';
     if (!file) return;

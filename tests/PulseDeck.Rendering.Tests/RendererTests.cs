@@ -55,6 +55,25 @@ public class RendererTests
     }
 
     [Theory]
+    [InlineData("gaming")]
+    [InlineData("music")]
+    public void SelectedProfilesShowMailAndCalendarAnimations(string profile)
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig { Notifications = new() { Profiles = [profile] } };
+        var state = State with { Profile = profile };
+        var sources = new NotificationSource[] { new("gmail", "mail", "connected", 7), new("calendar", "calendar", "connected") };
+        var baseline = renderer.Render(state with { Notifications = new(sources) }, config).Pixels;
+        var mail = new NotificationVisual(sources, new("gmail", "mail", "Nuova email", "GMAIL"), 1);
+        var calendar = new NotificationVisual(sources, new("calendar", "calendar", "Nuovo evento", "CALENDAR"), 1);
+        Assert.NotEqual(baseline, renderer.Render(state with { Notifications = mail }, config).Pixels);
+        Assert.NotEqual(baseline, renderer.Render(state with { Notifications = calendar }, config).Pixels);
+        var desktop = state with { Profile = "desktop" };
+        Assert.Equal(renderer.Render(desktop with { Notifications = new(sources) }, config).Pixels,
+            renderer.Render(desktop with { Notifications = mail }, config).Pixels);
+    }
+
+    [Theory]
     [InlineData("compact")]
     [InlineData("weather")]
     [InlineData("classic")]
