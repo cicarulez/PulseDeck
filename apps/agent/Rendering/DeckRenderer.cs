@@ -287,11 +287,11 @@ public sealed class DeckRenderer : IDisposable
                 : fps.Status == "waiting" ? "FPS: in attesa del gioco" : "FPS non disponibili";
             if (picture is not null && picture.Height > picture.Width)
             {
-                var poster = SKRect.Create(x + 14, 102, 192, 294);
+                var poster = SKRect.Create(x + 12, 98, 220, 332);
                 var scale = Math.Min(poster.Width / picture.Width, poster.Height / picture.Height);
                 canvas.DrawBitmap(picture, SKRect.Create(poster.MidX - picture.Width * scale / 2,
                     poster.MidY - picture.Height * scale / 2, picture.Width * scale, picture.Height * scale));
-                var infoX = x + 220; var infoWidth = width - 234;
+                var infoX = x + 244; var infoWidth = width - 256;
                 Text(game?.DisplayName ?? "Nessun gioco in primo piano", infoX, 136, 24, heavy: true, maxWidth: infoWidth, minimumSize: 18);
                 Text("SESSIONE", infoX, 209, 14, muted);
                 Text(time, infoX, 250, 30, heavy: true, maxWidth: infoWidth);

@@ -2294,3 +2294,10 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   Angular production build and self-contained win-x64 publish passed.
 - Authenticated poster downloads, the installed Windows agent and the physical
   display were not exercised in this check.
+- A later user screenshot of the installed portrait layout showed the poster
+  ending visibly above the other widget bottoms. The poster bounds were expanded
+  to keep 12–13 pixels of inner padding at the top and bottom; the metadata column
+  moved right to retain a 12-pixel gap. This adjustment has not been checked on
+  the physical display yet.
+- The game panel itself already shares the widget rows' vertical bounds (y=86–442);
+  its apparent height difference in the screenshot was caused by the background.
