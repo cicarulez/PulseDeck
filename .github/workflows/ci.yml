@@ -23,8 +23,16 @@ jobs:
           node-version: '24.15.0'
           cache: npm
           cache-dependency-path: apps/configurator/package-lock.json
+      - name: Prepare Gmail Desktop client for maintainer builds
+        if: github.event_name != 'pull_request'
+        env:
+          PULSEDECK_GMAIL_OAUTH_CLIENT_JSON: ${{ secrets.PULSEDECK_GMAIL_OAUTH_CLIENT_JSON }}
+        run: python3 scripts/prepare-gmail-client.py
       - name: Portable tests, frontend and Windows package
         run: ./scripts/build.sh
+      - name: Remove temporary OAuth client definition
+        if: always() && github.event_name != 'pull_request'
+        run: rm -f apps/agent/gmail.oauth-client.json
       - name: Desktop navigation policy
         run: node --test apps/desktop/policy.test.cjs
       - name: Documentation renderer

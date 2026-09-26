@@ -18,7 +18,7 @@ export class SettingsComponent {
     { id: 'discord', label: 'Discord' }, { id: 'gmail', label: 'Notifiche' },
     { id: 'calendar', label: 'Calendario' }, { id: 'weather', label: 'Meteo' }, { id: 'news', label: 'News' }
   ];
-  readonly section = signal('behavior');
+  readonly section = signal(window.location.hash === '#settings/gmail' ? 'gmail' : 'behavior');
   calendarState = input<CalendarSnapshot | null>(null);
   newsState = input<NewsSnapshot | null>(null);
   config = input.required<DeckConfig>(); busy = input(false); save = output<DeckConfig>();

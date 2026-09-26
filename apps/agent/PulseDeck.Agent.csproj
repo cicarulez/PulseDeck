@@ -3,9 +3,12 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <AssemblyName>PulseDeck.Agent</AssemblyName>
-    <Version>0.8.5</Version>
+    <Version>0.9.0</Version>
+    <GmailOAuthClientPath Condition="'$(GmailOAuthClientPath)' == ''">$(MSBuildProjectDirectory)/gmail.oauth-client.json</GmailOAuthClientPath>
   </PropertyGroup>
   <ItemGroup>
+    <Content Remove="gmail.oauth-client.json;$(GmailOAuthClientPath)" />
+    <EmbeddedResource Include="$(GmailOAuthClientPath)" LogicalName="PulseDeck.GmailOAuthClient.json" Condition="Exists('$(GmailOAuthClientPath)')" />
     <Content Include="../../docs/licenses/ical-net.txt" Link="licenses/ical-net.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../docs/licenses/nodatime.txt" Link="licenses/nodatime.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <ProjectReference Include="../../src/PulseDeck.Core/PulseDeck.Core.csproj" />

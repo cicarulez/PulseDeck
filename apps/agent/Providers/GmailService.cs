@@ -19,6 +19,7 @@ public sealed class GmailService : BackgroundService
     private readonly NotificationCenter center;
     private readonly HttpClient client;
     private readonly GmailMailbox mailbox;
+    private readonly GmailSecret? bundledClient;
     private readonly SemaphoreSlim gate = new(1);
     private GmailSecret? secret;
     private string? accessToken;
@@ -32,7 +33,8 @@ public sealed class GmailService : BackgroundService
     {
         this.config = config; this.credentials = credentials; this.center = center;
         client = clients.CreateClient("gmail"); mailbox = new(client);
-        try { secret = credentials.Read(); }
+        bundledClient = GmailOAuthClient.ReadBundled();
+        try { secret = credentials.Read() ?? bundledClient; }
         catch { status = status with { AuthorizationStatus = "credentials-unavailable" }; }
         status = status with { ClientConfigured = secret is not null, Connected = secret?.RefreshToken is not null };
     }
@@ -49,12 +51,7 @@ public sealed class GmailService : BackgroundService
         try
         {
             using var doc = JsonDocument.Parse(json);
-            var installed = doc.RootElement.GetProperty("installed");
-            var id = installed.GetProperty("client_id").GetString()!;
-            var key = installed.GetProperty("client_secret").GetString()!;
-            if (!id.EndsWith(".apps.googleusercontent.com", StringComparison.Ordinal) || id.Length > 256 || string.IsNullOrWhiteSpace(key) || key.Length > 256)
-                throw new FormatException();
-            value = new(id, key);
+            value = GmailOAuthClient.Parse(doc.RootElement);
         }
         catch { throw new ArgumentException("Scegli il JSON di un client OAuth Google di tipo Desktop."); }
         await gate.WaitAsync(token);
@@ -72,7 +69,7 @@ public sealed class GmailService : BackgroundService
         await gate.WaitAsync(token);
         try
         {
-            if (secret is null) throw new ArgumentException("Importa prima il client OAuth Desktop.");
+            if (secret is null) throw new ArgumentException("Collegamento Google non configurato in questa installazione.");
             authorization?.Cancel();
             var listener = new HttpListener();
             string redirect;
@@ -104,10 +101,10 @@ public sealed class GmailService : BackgroundService
     }
     private async Task CompleteAuthorization(HttpListener listener, GmailSecret pendingSecret, string redirect, string state, string verifier, CancellationTokenSource pending)
     {
+        HttpListenerContext? callback = null;
         try
         {
             using var close = pending.Token.Register(listener.Close);
-            HttpListenerContext callback;
             while (true)
             {
                 callback = await listener.GetContextAsync().WaitAsync(pending.Token);
@@ -116,11 +113,6 @@ public sealed class GmailService : BackgroundService
             }
             var code = callback.Request.QueryString["code"];
             var denied = callback.Request.QueryString["error"] is not null || string.IsNullOrWhiteSpace(code);
-            callback.Response.Headers["Cache-Control"] = "no-store";
-            callback.Response.Headers["Content-Security-Policy"] = "default-src 'none'";
-            callback.Response.ContentType = "text/plain; charset=utf-8";
-            var text = Encoding.UTF8.GetBytes(denied ? "Collegamento annullato. Torna a PulseDeck." : "Autorizzazione ricevuta. Torna a PulseDeck per verificare il collegamento.");
-            await callback.Response.OutputStream.WriteAsync(text, pending.Token); callback.Response.Close();
             if (denied) throw new InvalidOperationException();
             using var result = await Token(new() { ["client_id"] = pendingSecret.ClientId, ["client_secret"] = pendingSecret.ClientSecret,
                 ["code"] = code!, ["code_verifier"] = verifier, ["redirect_uri"] = redirect, ["grant_type"] = "authorization_code" }, pending.Token);
@@ -147,6 +139,17 @@ public sealed class GmailService : BackgroundService
         }
         finally
         {
+            if (callback is not null)
+            {
+                try
+                {
+                    callback.Response.Headers["Cache-Control"] = "no-store";
+                    callback.Response.Headers["Referrer-Policy"] = "no-referrer";
+                    callback.Response.Redirect("http://127.0.0.1:5178/#settings/gmail");
+                    callback.Response.Close();
+                }
+                catch (Exception e) when (e is HttpListenerException or ObjectDisposedException or InvalidOperationException) { }
+            }
             listener.Close();
             await gate.WaitAsync();
             try { if (ReferenceEquals(authorization, pending)) authorization = null; }
@@ -176,8 +179,8 @@ public sealed class GmailService : BackgroundService
         try
         {
             credentials.Clear(); authorization?.Cancel(); authorization = null;
-            secret = null; accessToken = null; mailbox.Reset(); failures = 0;
-            status = new(false, false, "idle", new("gmail", "mail", "not-configured")); Publish("not-configured");
+            secret = bundledClient; accessToken = null; mailbox.Reset(); failures = 0;
+            status = new(secret is not null, false, "idle", new("gmail", "mail", "not-configured")); Publish("not-configured");
         }
         finally { gate.Release(); }
     }

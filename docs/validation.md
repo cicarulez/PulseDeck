@@ -2301,3 +2301,30 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   the physical display yet.
 - The game panel itself already shares the widget rows' vertical bounds (y=86–442);
   its apparent height difference in the screenshot was caused by the background.
+
+### 2026-09-26 — Gmail connection UI and bundled Desktop client
+
+- Gmail connection, unread Inbox count (including zero) and last successful check
+  now appear above notification preferences. A connected account shows a disabled
+  `Collegato` button and a separate disconnect action. Expired consent offers
+  reconnection; pending consent prevents another connection attempt.
+- Manual Desktop-client import, Google Cloud instructions and the synthetic
+  display test are inside the initially collapsed developer section.
+- OAuth callbacks return to Configuration → Notifications after token exchange
+  and persistence, also on authorization failure. The redirect is fixed to the
+  local configurator and does not forward authorization codes or tokens.
+- Published agents can embed a Desktop OAuth client. The supplied local client
+  definition is ignored by Git and excluded as a raw JSON from published output.
+  Existing encrypted credentials take precedence; disconnect restores the bundled
+  default. No user refresh token is included in the build resource.
+- Angular production build, .NET agent build and self-contained win-x64 publish
+  passed. The bundled resource was verified in the published agent. Updated
+  configurator and launch scripts were assembled under `artifacts/windows-gmail`.
+- Browser checks with synthetic fixtures verified the Notifications return target,
+  zero unread count, connected/expired/pending states, hidden developer controls
+  and a 390-pixel viewport without horizontal overflow. Screenshot evidence is
+  under `artifacts/gmail-ui-connected.png` and is not committed.
+- This build has not been deployed to the running Windows installation. Real
+  OAuth completion, DPAPI persistence, live Gmail arrivals and the physical
+  display remain unverified for these changes. The user's preceding successful
+  consent was on the previously installed build, not evidence for this one.

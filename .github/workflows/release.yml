@@ -38,8 +38,15 @@ jobs:
           version = ET.parse('apps/agent/PulseDeck.Agent.csproj').findtext('.//Version')
           assert os.environ['RELEASE_TAG'] == 'v' + version, 'Tag and agent version differ'
           PY
+      - name: Prepare official Gmail Desktop client
+        env:
+          PULSEDECK_GMAIL_OAUTH_CLIENT_JSON: ${{ secrets.PULSEDECK_GMAIL_OAUTH_CLIENT_JSON }}
+        run: python3 scripts/prepare-gmail-client.py --required
       - name: Build and test
         run: ./scripts/build.sh
+      - name: Remove temporary OAuth client definition
+        if: always()
+        run: rm -f apps/agent/gmail.oauth-client.json
       - name: Desktop policy and documentation checks
         run: |
           node --test apps/desktop/policy.test.cjs

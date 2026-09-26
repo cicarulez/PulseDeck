@@ -20,6 +20,42 @@ remove Google's external-production Branding requirements.
 
 ## Personal OAuth setup
 
+The configurator presents connection status, unread Inbox count (including zero)
+and the last successful check next to the Gmail connection controls. Manual client
+import, setup instructions and synthetic display tests are inside the collapsed
+developer section. Successful authorization returns to Configuration → Notifications.
+
+### Bundled Desktop client for published builds
+
+The agent can embed the project's Desktop OAuth client at build time. Place the
+downloaded JSON at `apps/agent/gmail.oauth-client.json` (ignored by Git), or pass
+`-p:GmailOAuthClientPath=/absolute/path/to/client.json` to `dotnet build/publish`.
+The JSON must have the Google Desktop `installed` structure. Never supply a
+runtime credential file or user refresh token. A Desktop client is distributed
+with the application and cannot be treated as a confidential server credential.
+
+A fresh installation uses the bundled client without manual import. Existing
+encrypted credentials take precedence to preserve the user's current connection.
+Importing a custom client in developer mode overrides the bundled default;
+disconnecting clears local credentials and restores that default. User tokens are
+saved only in the DPAPI-protected runtime credential store, never in the binary.
+Without a bundled client, manual import remains available and the configurator
+explicitly reports that Google connection is not configured. Official release
+builds must supply the client file; publishing the website alone does not do so.
+
+For GitHub Actions, open repository Settings → Secrets and variables → Actions
+and create the repository secret `PULSEDECK_GMAIL_OAUTH_CLIENT_JSON`. Its value is
+the complete Desktop client JSON downloaded from Google Cloud, not a Gmail user
+token. The release workflow requires this secret and fails before building if it
+is missing or invalid. It writes only the Desktop client definition to the ignored
+build-input file, which is embedded in the agent and removed after the build.
+No raw JSON is included in the Windows package.
+
+Main-branch/manual CI builds use the secret when available. Pull-request builds
+never receive this client through the preparation step and retain manual import.
+All workflow changes and the bundled-client code must be committed before creating
+the release tag: the release workflow checks out the selected tag's source.
+
 1. Create a personal project in [Google Cloud](https://console.cloud.google.com/)
    and enable Gmail API.
 2. Configure Google Auth Platform's branding and audience. For a personal Gmail

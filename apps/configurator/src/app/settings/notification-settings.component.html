@@ -1,17 +1,33 @@
-<p><strong>Versione di sviluppo · Collegamento Gmail con progetto personale.</strong> Questa procedura è provvisoria: oggi occorre configurare il proprio progetto Google Cloud e importare il client JSON.</p>
-<p>Per una futura versione valuteremo un collegamento Google già predisposto da PulseDeck: all’utente basterebbero accesso e consenso, senza creare un progetto, scaricare JSON o pubblicare un sito. È una soluzione da verificare, non ancora disponibile. La adotteremo solo se semplificherà davvero il collegamento; altrimenti manterremo la procedura personale.</p>
-<p>Le nuove email e i nuovi eventi del calendario mostrano un avviso animato nei profili selezionati. Il contatore Gmail vicino all’orologio resta aggiornato in tutti i profili, anche quando leggi i messaggi. Gli arrivi ravvicinati vengono raggruppati.</p>
+<h3>Gmail</h3>
+<p>Collega il tuo account per vedere le email non lette in Posta in arrivo e ricevere un avviso quando ne arriva una nuova.</p>
+<div class="fields">
+  <button class="button" type="button" [disabled]="busy() || working() || awaitingConsent() || connected() || !status()?.clientConfigured" (click)="connect()">{{ connectionLabel() }}</button>
+  @if (connected()) {
+    <button class="button" type="button" [disabled]="busy() || working()" (click)="disconnect()">Scollega Gmail</button>
+  }
+</div>
+<p role="status" aria-live="polite">{{ description() }}</p>
+@if (message()) { <p role="status">{{ message() }}</p> }
+<p>PulseDeck legge conteggi ed etichette, senza corpo o allegati delle email. Le credenziali restano cifrate sul tuo PC.</p>
+<p><a href="https://pulsedeck.davidecappa.it/" target="_blank" rel="noopener noreferrer">Sito PulseDeck</a> · <a href="https://pulsedeck.davidecappa.it/privacy.html" target="_blank" rel="noopener noreferrer">Informativa privacy</a> · <a href="mailto:support@davidecappa.it">Contatta l’assistenza</a></p>
+<h3>Preferenze notifiche</h3>
+<p>Gli avvisi animati valgono per Gmail e calendario nei profili selezionati. Il contatore Gmail resta aggiornato in tutti i profili. Salva per applicare le preferenze.</p>
 <div class="fields">
   <label>Gmail<select name="gmailEnabled" [ngModel]="options().gmailEnabled" (ngModelChange)="update({gmailEnabled: $event})"><option [ngValue]="true">Attivo</option><option [ngValue]="false">Disattivato</option></select></label>
   <label>Avvisi animati<select name="notificationAnimate" [ngModel]="options().animate" (ngModelChange)="update({animate: $event})"><option [ngValue]="true">Attivi nei profili selezionati</option><option [ngValue]="false">Disattivati</option></select></label>
   <fieldset class="wide notification-profiles"><legend>Profili per gli avvisi animati</legend><div class="notification-profiles__choices">@for (profile of profiles; track profile.id) { <label><input type="checkbox" [name]="'notificationProfile-' + profile.id" [ngModel]="profileSelected(profile.id)" (ngModelChange)="setProfile(profile.id, $event)">{{ profile.label }}</label> }</div><small>Vale per Gmail e Calendar. Puoi selezionare più profili oppure nessuno. Salva per applicare.</small></fieldset>
   <label>Controllo Gmail (secondi)<input name="gmailPoll" type="number" min="15" max="300" step="1" required [ngModel]="options().pollSeconds" (ngModelChange)="update({pollSeconds: $event})"><small>Minimo 15 · massimo 300 secondi · predefinito 30. Salva per applicare.</small></label>
-  <label class="wide">Client OAuth Google Desktop<input type="file" accept=".json,application/json" [disabled]="busy() || working()" (change)="importClient($event)"><small>Importa il JSON scaricato da Google Cloud. Il client e il token vengono salvati cifrati per il tuo utente Windows. Non inviarli in chat. Importare un altro client sostituisce il collegamento attuale.</small></label>
-  <button class="button" type="button" [disabled]="busy() || working() || !status()?.clientConfigured" (click)="connect()">Collega Gmail con Google</button>
-  @if (status()?.clientConfigured) { <button class="button" type="button" [disabled]="busy() || working()" (click)="disconnect()">Rimuovi collegamento</button> }
-  <button class="button" type="button" [disabled]="busy() || working()" (click)="test()">Prova sul display · dati simulati</button>
 </div>
-<p role="status">{{ description() }} {{ message() }}</p>
+
+<details>
+  <summary>Modalità sviluppatore · client OAuth, guida e prove</summary>
+  <p>Configurazione manuale per sviluppatori o per chi usa un progetto Google personale. L’importazione sostituisce il client e il collegamento Gmail di questa installazione.</p>
+  <div class="fields">
+    <label class="wide">Client OAuth Google Desktop<input type="file" accept=".json,application/json" [disabled]="busy() || working() || awaitingConsent()" (change)="importClient($event)"><small>Importa il JSON scaricato da Google Cloud. Le credenziali restano cifrate per il tuo utente Windows. Non condividerle in chat o nel repository.</small></label>
+    <button class="button" type="button" [disabled]="busy() || working() || awaitingConsent() || !status()?.clientConfigured" (click)="connect()">Rinnova consenso Google</button>
+    @if (status()?.clientConfigured && !connected()) { <button class="button" type="button" [disabled]="busy() || working() || awaitingConsent()" (click)="disconnect()">Azzera credenziali locali</button> }
+    <button class="button" type="button" [disabled]="busy() || working()" (click)="test()">Prova sul display · dati simulati</button>
+  </div>
 <details><summary>1 · Collegare Gmail passo per passo</summary>
   <p>Serve un progetto Google Cloud personale. Completa la procedura nel browser dello stesso PC Windows su cui gira PulseDeck. Puoi iniziare in Test; per evitare la scadenza settimanale segui poi la sezione 2.</p>
   <ol>
@@ -20,9 +36,9 @@
     <li><strong>Pubblico e utenti di test.</strong> Scegli Esterno per un account Gmail personale. Finché lo stato è Test, apri Pubblico → Utenti di test → Aggiungi utenti, inserisci esattamente l’account Gmail che collegherai e salva. Essere proprietario del progetto non ti aggiunge automaticamente ai tester.</li>
     <li><strong>Ambiti / Accesso ai dati.</strong> Aggiungi e salva il solo ambito <code>https://www.googleapis.com/auth/gmail.metadata</code>. Google lo elenca tra gli ambiti con restrizioni. PulseDeck legge conteggi, etichette e cronologia, senza corpo o allegati delle email.</li>
     <li><strong>ID client OAuth.</strong> In Client → Crea client, oppure nel passaggio ID client OAuth della procedura guidata, scegli Applicazione desktop e chiamalo PulseDeck Desktop. Crea il client e scarica il file JSON delle credenziali.</li>
-    <li><strong>Importazione.</strong> Nel campo Client OAuth Google Desktop qui sopra seleziona il JSON scaricato. Non incollarne il contenuto in chat e non salvarlo nel repository. Le credenziali importate vengono conservate fuori dal progetto, cifrate per il tuo utente Windows.</li>
+    <li><strong>Importazione.</strong> Nel campo Client OAuth Google Desktop di questa sezione seleziona il JSON scaricato. Non incollarne il contenuto in chat e non salvarlo nel repository. Le credenziali importate vengono conservate fuori dal progetto, cifrate per il tuo utente Windows.</li>
     <li><strong>Consenso Google.</strong> Premi Collega Gmail con Google, scegli l’account aggiunto ai tester e autorizza. Se compare un avviso di app non verificata, continua solo dopo aver riconosciuto il tuo progetto e l’account corretto. Un errore 403 che parla di tester si risolve nella sezione 3.</li>
-    <li><strong>Conferma.</strong> Alla scritta “Autorizzazione ricevuta”, torna qui: attendi lo stato collegato e il primo conteggio. Salva la configurazione se hai cambiato le opzioni; importazione e collegamento sono già applicati.</li>
+    <li><strong>Conferma.</strong> Dopo il consenso torni automaticamente alla sezione Notifiche: attendi lo stato collegato e il primo conteggio. Salva la configurazione se hai cambiato le opzioni; importazione e collegamento sono già applicati.</li>
   </ol>
   <p>L’uso standard di Gmail API è senza costi aggiuntivi secondo le <a href="https://developers.google.com/workspace/gmail/api/reference/quota" target="_blank" rel="noopener noreferrer">quote e condizioni Google</a>. Questa procedura non richiede di avviare una prova Cloud a pagamento. Condizioni ricontrollate il 19 settembre 2026.</p>
 </details>
@@ -50,3 +66,4 @@
   </ul>
 </details>
 <p>Il badge conta solo i messaggi non letti in Posta in arrivo, comprese le categorie come Promozioni e Social. Le email archiviate sono escluse; anche l’animazione riguarda solo i nuovi arrivi non letti in Posta in arrivo. A zero, icona e contatore scompaiono. Un errore mostra “?” anziché un conteggio vecchio. Collegamento e rimozione sono immediati; salva la configurazione per applicare le opzioni. Nessuna notifica arretrata all’avvio o al ritorno in un profilo selezionato.</p>
+</details>

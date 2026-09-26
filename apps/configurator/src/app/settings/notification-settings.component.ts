@@ -12,7 +12,21 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
   private timer?: ReturnType<typeof setInterval>;
   ngOnInit() { void this.refresh(); this.timer = setInterval(() => void this.refresh(), 3000); }
   ngOnDestroy() { clearInterval(this.timer); }
-  async refresh() { try { this.status.set(await this.deck.gmailStatus()); } catch { this.message.set('Stato Gmail non disponibile.'); } }
+  async refresh() {
+    try {
+      const previous = this.status();
+      const status = await this.deck.gmailStatus();
+      this.status.set(status);
+      if (previous?.authorizationStatus === 'waiting' && status.authorizationStatus !== 'waiting') this.message.set('');
+    } catch { this.message.set('Stato Gmail non disponibile.'); }
+  }
+  connected() { return this.status()?.connected === true; }
+  awaitingConsent() { return this.status()?.authorizationStatus === 'waiting'; }
+  connectionLabel() {
+    if (this.awaitingConsent() || this.working()) return 'Collegamento in corso…';
+    if (this.connected()) return 'Collegato';
+    return this.status()?.authorizationStatus === 'reauthorize' ? 'Ricollega Gmail con Google' : 'Collega Gmail con Google';
+  }
   update(patch: Partial<NotificationOptions>) { this.options.update(value => ({ ...value, ...patch })); }
   readonly profiles: readonly { id: NotificationProfile; label: string }[] = [
     { id: 'desktop', label: 'Desktop' }, { id: 'gaming', label: 'Gaming' }, { id: 'music', label: 'Musica' }
@@ -50,12 +64,17 @@ export class NotificationSettingsComponent implements OnInit, OnDestroy {
     const status = this.status();
     if (status?.authorizationStatus === 'waiting') return 'In attesa del consenso Google (massimo 5 minuti).';
     if (status?.authorizationStatus === 'reauthorize') return 'Consenso scaduto o revocato: collega nuovamente Gmail.';
-    if (status?.authorizationStatus === 'failed') return 'Autorizzazione non riuscita. Verifica client, utente di test e permesso Gmail metadata.';
+    if (status?.authorizationStatus === 'failed') return 'Collegamento non riuscito. Riprova o contatta l’assistenza.';
     if (status?.authorizationStatus === 'cancelled') return 'Autorizzazione annullata o scaduta.';
-    if (status?.authorizationStatus === 'credentials-unavailable') return 'Credenziali non leggibili per questo utente Windows. Importa nuovamente il client.';
+    if (status?.authorizationStatus === 'credentials-unavailable') return 'Collegamento non leggibile per questo utente Windows. Collega nuovamente Gmail.';
     if (status?.source.status === 'disabled') return 'Notifiche Gmail disattivate.';
-    if (status?.source.status === 'connected') return `${status.source.unreadCount} messaggi non letti in Posta in arrivo · ultimo controllo ${new Date(status.source.updatedAt!).toLocaleTimeString()}`;
+    if (status?.source.status === 'connected') {
+      const count = status.source.unreadCount;
+      return `${count} ${count === 1 ? 'messaggio non letto' : 'messaggi non letti'} in Posta in arrivo · ultimo controllo ${new Date(status.source.updatedAt!).toLocaleTimeString()}`;
+    }
     if (status?.source.status === 'unavailable') return 'Gmail temporaneamente non disponibile. Nuovo tentativo automatico.';
-    return status?.connected ? 'Collegato, in attesa del primo conteggio.' : 'Gmail non collegato.';
+    if (!status) return 'Controllo del collegamento Gmail…';
+    if (!status.clientConfigured) return 'Collegamento Google non configurato in questa installazione. Contatta l’assistenza o usa la modalità sviluppatore.';
+    return status.connected ? 'Collegato, in attesa del primo conteggio.' : 'Gmail non collegato. Premi Collega Gmail con Google per iniziare.';
   }
 }
