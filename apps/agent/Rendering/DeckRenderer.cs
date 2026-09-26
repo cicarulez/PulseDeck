@@ -376,8 +376,11 @@ public sealed class DeckRenderer : IDisposable
                 Discord(mediaX + 12, 322, mediaWidth - 24);
             }
             canvas.Restore();
+            if (!config.News.Enabled)
+            {
             Text(BackgroundStatus == "unavailable" ? "Sfondo non disponibile" : "ACTIVE / " + (state.ForegroundApp.Length > 0 ? state.ForegroundApp : "Desktop"), 32, 469, 13, muted, maxWidth: 850);
             Text(state.Hardware.Status == "connected" ? "SENSORI LIVE" : "SENSORI NON DISPONIBILI", 920, 469, 13, muted, maxWidth: 400);
+            }
 
         }
         void SpotifyPanel()
