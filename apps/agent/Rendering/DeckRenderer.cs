@@ -350,6 +350,9 @@ public sealed class DeckRenderer : IDisposable
         var expandDesktopDiscord = state.Profile == "desktop" && discordPresent && state.Media.Status != "connected";
         void Compact(bool gaming)
         {
+            // Equal 12px gaps between the cards and the header/footer boundaries.
+            canvas.Save();
+            canvas.Translate(0, -8);
             var weatherLayout = config.Layout == "weather";
             var columns = weatherLayout ? 3 : 4;
             float startX = gaming || weatherLayout ? 380 : 32, cellWidth = weatherLayout ? 308 : gaming ? 252 : 314;
@@ -372,6 +375,7 @@ public sealed class DeckRenderer : IDisposable
                 canvas.DrawLine(mediaX + 12, 296, 1888, 296, line);
                 Discord(mediaX + 12, 322, mediaWidth - 24);
             }
+            canvas.Restore();
             Text(BackgroundStatus == "unavailable" ? "Sfondo non disponibile" : "ACTIVE / " + (state.ForegroundApp.Length > 0 ? state.ForegroundApp : "Desktop"), 32, 469, 13, muted, maxWidth: 850);
             Text(state.Hardware.Status == "connected" ? "SENSORI LIVE" : "SENSORI NON DISPONIBILI", 920, 469, 13, muted, maxWidth: 400);
 
@@ -510,7 +514,7 @@ public sealed class DeckRenderer : IDisposable
         }
         if (config.News.Enabled)
         {
-            using var strip = new SKPaint { Color = new SKColor(8, 18, 23) };
+            using var strip = new SKPaint { Color = new SKColor(8, 18, 23, 150) };
             canvas.DrawRect(SKRect.Create(0, 446, 1920, 34), strip);
             var headline = state.News.Select(state.Timestamp, config.News.RotationSeconds);
             var newsSize = Math.Clamp(config.News.FontSize, 20, 26);
