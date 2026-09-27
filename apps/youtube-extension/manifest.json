@@ -3,6 +3,12 @@
   "name": "PulseDeck · Chrome",
   "version": "0.2.0",
   "minimum_chrome_version": "120",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
   "description": "Video principale YouTube e icona della scheda Chrome attiva. Integrazione locale opzionale per PulseDeck.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyCz7JD5jd4+LcHfuNPOZ+r7/k58vLTD0geWGa6HbrjFzcmcsTWgjX1kbVav97wY/pr2F4FYpGTfZOm1bCqeOOudfn9DwXANQZekvvO5aCJZNrqbpLLSmbS6Dl1E8qlQELR01dAFAUfVYjQukem6XexoQOPN7DHDO7NipWotrBL/ZroJ8/Z7h6OsEYeNe2zCkYpo7rxt+26aP6DP4m5VkaYoF8iy9EpqnElktGxBduISonrff01USzbg+Kc1XwOfBX+RX8eye+A3pmxiPjfVI54vIZ3ilLzghDH+kSbWZy6t5e+Hjz2FaL6dm4S5t9BtdRwCg3aSAcV424RbbZ+nMqwIDAQAB",
   "permissions": [
@@ -27,6 +33,12 @@
     }
   ],
   "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
     "default_title": "PulseDeck · Chrome",
     "default_popup": "popup.html"
   },
