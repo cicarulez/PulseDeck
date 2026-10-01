@@ -258,6 +258,32 @@ public class RendererTests
         Assert.Equal(r.Render(gap,c).Pixels,r.Render(gap with {Lyrics=new()},c).Pixels);
     }
     [Fact]
+    public void LyricsLookupOutcomesKeepMusicCoverSensorsAndPlaybackGeometry()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Synthetic track", "Artist", "Spotify.exe", 2, 180, "connected");
+        var state = State with { Profile = "music", Media = media, Lyrics = new("loading", SpotifyLyrics.Key(media)) };
+        foreach (var layout in new[] { "classic", "compact", "weather" })
+        {
+            var config = new DeckConfig { Layout = layout };
+            var loading = renderer.Render(state, config).Pixels;
+            var outcomes = new List<byte[]>();
+            foreach (var status in new[] { "not-found", "unavailable", "instrumental" })
+            {
+                var result = renderer.Render(state with { Lyrics = new(status, SpotifyLyrics.Key(media)) }, config).Pixels;
+                Assert.NotEqual(loading, result);
+                for (var y = 86; y < 440; y++)
+                {
+                    Assert.True(loading.AsSpan((y * 1920 + 32) * 4, 322 * 4).SequenceEqual(result.AsSpan((y * 1920 + 32) * 4, 322 * 4)));
+                    Assert.True(loading.AsSpan((y * 1920 + 1340) * 4, 548 * 4).SequenceEqual(result.AsSpan((y * 1920 + 1340) * 4, 548 * 4)));
+                }
+                Assert.True(loading.AsSpan(390 * 1920 * 4).SequenceEqual(result.AsSpan(390 * 1920 * 4)));
+                foreach (var previous in outcomes) Assert.NotEqual(previous, result);
+                outcomes.Add(result);
+            }
+        }
+    }
+    [Fact]
     public void LyricsAdvanceConfigurationChangesOnlySynchronizedSelection()
     {
         using var renderer = new DeckRenderer();

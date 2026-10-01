@@ -2328,3 +2328,38 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   OAuth completion, DPAPI persistence, live Gmail arrivals and the physical
   display remain unverified for these changes. The user's preceding successful
   consent was on the previously installed build, not evidence for this one.
+
+## Spotify layout after unsuccessful lyrics lookup — 2026-10-01
+
+- Confirmed the reported mismatch in the running Windows 0.9.0 agent: Spotify
+  was playing and the profile remained `music`, but lyrics were `unavailable`.
+  `SpotifyLyrics.Show` selected the dedicated layout only for loading/synced/plain
+  results, so an unsuccessful lookup switched the body to the configured desktop
+  layout while the header still showed Music.
+- Layout selection now follows the Spotify session and Music profile, independently
+  of lookup results. Missing lyrics and instrumental tracks show explicit messages
+  inside the same cover/sensor/playback layout. The renderer separately validates
+  eligibility and track identity before showing text, retaining protection against
+  lyrics from the preceding track. Gaming, other players and the lyrics setting
+  retain their existing selection behavior.
+- .NET 10.0.401 Release validation: Core **217/217**, rendering **56/56**;
+  self-contained `win-x64` publish succeeded. Regression checks cover unsuccessful
+  lookup messages and stable cover, sensor and playback geometry for classic,
+  compact and weather configurations; existing stale-text and track-gap checks pass.
+- Installed the two changed DLLs after the elevated interactive user's old agent
+  and task fully exited. Published and installed dependency manifests matched;
+  installed DLL hashes matched the publish. Backed up both prior DLLs and the
+  existing startup task under
+  `%LOCALAPPDATA%\PulseDeck\deployment-backups\music-layout-20261001-201750`.
+  Config and all existing credential-file hashes remained unchanged.
+- Startup briefly encountered the existing device-waking response, then reconnected
+  COM5 as `chs_88inch.dev1_rom1.90` and received a full-frame acknowledgement.
+  The deployment verification captured Music with `not-found` lyrics; a subsequent
+  private live preview showed the dedicated layout with synced lyrics. No playback
+  controls were sent. Fifteen later passive samples, from 18:18:56 to 18:19:14 UTC,
+  stayed in Music with synced lyrics and a connected display; acknowledgements
+  increased from 39 to 56 with no current transport error.
+- Physical evidence is frame acknowledgement, not visual inspection of the panel.
+  Error-state layout geometry/messages are verified by renderer regression tests;
+  the inspected live PNG contained synced lyrics. No voice transitions were tested.
+  Private screenshots and deployment artifacts remain outside the repository.

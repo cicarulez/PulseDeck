@@ -68,12 +68,16 @@ public class LyricsTests
         Assert.Equal("instrumental", SpotifyLyrics.Parse(instrumental.RootElement, Track).Status);
     }
     [Fact]
-    public void RejectsStaleLyricsAndDoesNotReplaceGamingOrOtherPlayers()
+    public void SpotifyLayoutDoesNotDependOnLyricsAndDoesNotReplaceGamingOrOtherPlayers()
     {
         var state = new DeckState(DateTimeOffset.UtcNow,"music","",new([],"idle"),Track,new([],null,"idle"),new(false,"",null,"idle"))
             { Lyrics = new("synced", SpotifyLyrics.Key(Track), [new(0,"Original test")]) };
         Assert.True(SpotifyLyrics.Show(state, new()));
-        Assert.False(SpotifyLyrics.Show(state with { Media = Track with { Title = "Next song" } }, new()));
+        Assert.True(SpotifyLyrics.Show(state with { Media = Track with { Title = "Next song" } }, new()));
+        foreach (var status in new[] { "idle", "loading", "synced", "plain", "not-found", "unavailable", "instrumental" })
+            Assert.True(SpotifyLyrics.Show(state with { Lyrics = new(status, SpotifyLyrics.Key(Track)) }, new()));
+        Assert.True(SpotifyLyrics.Show(state with { Media = Track with { DurationSeconds = 0 } }, new()));
+        Assert.False(SpotifyLyrics.Show(state with { Profile = "desktop" }, new()));
         Assert.False(SpotifyLyrics.Show(state with { Profile = "gaming" }, new()));
         Assert.False(SpotifyLyrics.Show(state, new() { SpotifyLyrics = false }));
         Assert.False(SpotifyLyrics.Show(state with { Media = Track with { App = "chrome.exe" } }, new()));

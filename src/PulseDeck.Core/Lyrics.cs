@@ -31,7 +31,7 @@ public static class SpotifyLyrics
     public static string Key(MediaSnapshot media) => JsonSerializer.Serialize(new[] { media.Title, media.Artist, media.Album,
         Math.Round(media.DurationSeconds).ToString(CultureInfo.InvariantCulture) });
     public static bool Show(DeckState state, DeckConfig config) => config.SpotifyLyrics && state.Profile == "music"
-        && (state.SpotifyTransition || Eligible(state.Media) && state.Lyrics.TrackKey == Key(state.Media) && state.Lyrics.Status is "synced" or "plain" or "loading");
+        && (state.SpotifyTransition || IsSpotify(state.Media));
     public static LyricsSnapshot Parse(JsonElement data, MediaSnapshot media)
     {
         string Str(string key) => data.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString()! : "";

@@ -39,12 +39,12 @@ public class MusicTransitionTests
         Assert.False(s.SpotifyTransition);
     }
     [Fact]
-    public void PendingLyricsUseDedicatedLayoutWithoutAcceptingOldTrackText()
+    public void PendingAndStaleLyricsKeepDedicatedLayout()
     {
         var media=Spotify with {Title="Next"};
         var state=new DeckState(DateTimeOffset.UtcNow,"music","",new([],"idle"),media,new([],null,"idle"),new(false,"",null,"idle"))
             {Lyrics=new("loading",SpotifyLyrics.Key(media))};
         Assert.True(SpotifyLyrics.Show(state,new()));
-        Assert.False(SpotifyLyrics.Show(state with {Lyrics=new("synced",SpotifyLyrics.Key(Spotify),[new(0,"Old synthetic line")])},new()));
+        Assert.True(SpotifyLyrics.Show(state with {Lyrics=new("synced",SpotifyLyrics.Key(Spotify),[new(0,"Old synthetic line")])},new()));
     }
 }

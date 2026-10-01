@@ -385,6 +385,9 @@ public sealed class DeckRenderer : IDisposable
         }
         void SpotifyPanel()
         {
+            // Layout follows the Spotify session; only text depends on the current track's lookup.
+            var eligible = SpotifyLyrics.Eligible(state.Media);
+            var lyrics = eligible && state.Lyrics.TrackKey == SpotifyLyrics.Key(state.Media) ? state.Lyrics : new();
             Cover(48, 90, 288);
             Text(state.Media.Title.Length > 0 ? state.Media.Title : "Spotify", 48, 407, 25, heavy: true, maxWidth: 290, minimumSize: 19);
             Text(state.Media.Artist, 48, 435, 20, muted, maxWidth: 290);
@@ -408,27 +411,33 @@ public sealed class DeckRenderer : IDisposable
                 if (row.Length > 0) rows.Add(row);
                 return rows;
             }
-            if (state.SpotifyTransition || state.Lyrics.Status == "loading")
+            if (state.SpotifyTransition || lyrics.Status is "idle" or "loading")
             {
-                Text(state.SpotifyTransition ? "Cambio brano…" : "Caricamento del testo…", x, 247, 32, muted, maxWidth: width);
+                Text(state.SpotifyTransition ? "Cambio brano…" : !eligible ? "Dati del brano non disponibili"
+                    : "Caricamento del testo…", x, 247, 32, muted, maxWidth: width);
             }
-            else if (state.Lyrics.Status == "synced" && state.Lyrics.Lines is { } lines)
+            else if (lyrics.Status == "synced" && lyrics.Lines is { } lines)
             {
                 lyricsCredit += " · Sincronizzato";
-                var index = state.Lyrics.CurrentLine(state.Media.PositionSeconds, config.LyricsAdvanceMilliseconds / 1000d);
+                var index = lyrics.CurrentLine(state.Media.PositionSeconds, config.LyricsAdvanceMilliseconds / 1000d);
                 if (index > 0) Text(lines[index - 1].Text, x, 174, 23, muted, maxWidth: width);
                 var current = index >= 0 ? lines[index].Text : "";
                 var wrapped = Wrap(current.Length == 0 ? "♪" : current, 38);
                 for (var i = 0; i < Math.Min(2, wrapped.Count); i++) Text(wrapped[i] + (i == 1 && wrapped.Count > 2 ? " …" : ""), x, 247 + i * 48, 38, accent, true, width);
                 if (index + 1 < lines.Length) Text(lines[index + 1].Text, x, 353, 23, muted, maxWidth: width);
             }
-            else
+            else if (lyrics.Status == "plain")
             {
-                var rows = (state.Lyrics.PlainText ?? "").Split('\n').SelectMany(row => Wrap(row.Trim(), 26)).ToArray();
+                var rows = (lyrics.PlainText ?? "").Split('\n').SelectMany(row => Wrap(row.Trim(), 26)).ToArray();
                 var pages = Math.Max(1, (rows.Length + 5) / 6);
                 var page = (int)(state.Timestamp.ToUnixTimeSeconds() / 15 % pages);
                 lyricsCredit += $" · Non sincronizzato · {page + 1}/{pages}";
                 for (var i = 0; i < 6 && page * 6 + i < rows.Length; i++) Text(rows[page * 6 + i], x, 163 + i * 36, 26, maxWidth: width);
+            }
+            else
+            {
+                Text(lyrics.Status switch { "instrumental" => "Brano strumentale", "not-found" => "Testo non trovato",
+                    _ => "Testo non disponibile" }, x, 247, 32, muted, maxWidth: width);
             }
             canvas.DrawLine(x, 401, x + width, 401, line);
             var duration = double.IsFinite(state.Media.DurationSeconds) ? Math.Clamp(state.Media.DurationSeconds, 0, 3600) : 0;
