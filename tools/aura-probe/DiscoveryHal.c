@@ -23,6 +23,7 @@ static ULONG last_effect_id, last_effect_count, last_effect_variant;
 static LONG raw_samples;
 static ULONG raw_word;
 static ULONGLONG raw_sample_tick;
+static ULONG raw_count, raw_words[PROBE_LED_COUNT];
 /* Record incoming call shape only. No dereference of unverified color payloads. */
 static void record_effect(LONG method, ULONG effect, ULONG count, ULONG variant) {
     InterlockedIncrement(&effect_requests);
@@ -60,13 +61,16 @@ static HRESULT STDMETHODCALLTYPE device_query(Device *self, REFIID iid, void **r
 static HRESULT STDMETHODCALLTYPE device_capability(Device *self, BSTR *xml) {
     (void)self;
     if (!xml) return E_POINTER;
-    *xml = SysAllocString(L"<capability><version>1</version><type>409600</type>"
+    wchar_t capability[1024];
+    int length = swprintf(capability, 1024, L"<capability><version>1</version><type>409600</type>"
         L"<device><name>" PROBE_DEVICE_NAME L"</name><id>0</id><manufacturer>PulseDeck</manufacturer>"
-        L"<model>" PROBE_DEVICE_NAME L"</model><layout><led_count>1</led_count>"
-        L"<size><width>1</width><height>1</height></size></layout>"
+        L"<model>" PROBE_DEVICE_NAME L"</model><layout><led_count>%u</led_count>"
+        L"<size><width>%u</width><height>1</height></size></layout>"
         L"<supported_effect><effect><name>Static</name><id>1</id>"
         L"<synchronizable>0</synchronizable></effect></supported_effect>"
-        L"</device></capability>");
+        L"</device></capability>", (unsigned)PROBE_LED_COUNT, (unsigned)PROBE_LED_COUNT);
+    if (length < 0) return E_FAIL;
+    *xml = SysAllocString(capability);
     InterlockedIncrement(&capabilities);
     return *xml ? S_OK : E_OUTOFMEMORY;
 }
@@ -84,8 +88,8 @@ static HRESULT STDMETHODCALLTYPE device_sync(Device *self, ULONG effect, ULONGLO
     InterlockedIncrement(&sync_requests);
     return E_NOTIMPL;
 }
-/* The SDK requires Opt2 even for metadata reads. Only the observed SetEffect2
-   one-word envelope is accepted below; other incoming variants stay unsupported. */
+/* The SDK requires Opt2 even for metadata reads. Only bounded UI4 arrays from
+   SetEffect2 are accepted below; other incoming variants stay unsupported. */
 static HRESULT STDMETHODCALLTYPE device_effect_opt(Device *self, ULONG effect, ULONG *colors,
                                                    ULONG count, ULONG speed, ULONG direction) {
     (void)self; (void)effect; (void)colors; (void)count; (void)speed; (void)direction;
@@ -94,13 +98,15 @@ static HRESULT STDMETHODCALLTYPE device_effect_opt(Device *self, ULONG effect, U
 static HRESULT STDMETHODCALLTYPE device_effect2(Device *self, ULONG effect, VARIANT colors, ULONG count) {
     (void)self;
     record_effect(3, effect, count, V_VT(&colors));
-    /* ID 0 is the incoming mode observed from LightingService. Accept only its
-       verified one-word envelope; do not infer RGB encoding or sync selection. */
+    /* ID 0 is observed from LightingService. Preserve every received zone;
+       a short or malformed frame must not partially replace the previous one. */
     if (effect != 0) return E_NOTIMPL;
-    ULONG word = 0;
-    HRESULT hr = DecodeIncomingWord(&colors, count, &word);
+    if (count != PROBE_LED_COUNT) return E_INVALIDARG;
+    ULONG words[PROBE_LED_COUNT] = {0};
+    HRESULT hr = DecodeIncomingWords(&colors, count, words, PROBE_LED_COUNT);
     if (FAILED(hr)) return hr;
-    raw_word = word; raw_sample_tick = GetTickCount64();
+    memcpy(raw_words, words, sizeof(words)); raw_count = count;
+    raw_word = words[0]; raw_sample_tick = GetTickCount64();
     InterlockedIncrement(&raw_samples);
     return S_OK;
 }
@@ -207,7 +213,8 @@ ProbeStats GetProbeStats(void) {
     ProbeStats stats = {activations, enumerations, capabilities, effect_requests,
         sync_requests, hal.refs, device.refs, factory_refs,
         last_effect_method, last_effect_id, last_effect_count, last_effect_variant,
-        raw_samples, raw_word, raw_sample_tick};
+        raw_samples, raw_word, raw_sample_tick, raw_count, {0}};
+    memcpy(stats.raw_words, raw_words, sizeof(raw_words));
     return stats;
 }
 

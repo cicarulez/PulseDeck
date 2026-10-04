@@ -67,16 +67,26 @@ public sealed class DeckRenderer : IDisposable
             using var shade = new SKPaint { Color = new SKColor(5, 10, 13, 130) }; canvas.DrawRect(0, 0, 1920, 480, shade);
         }
         var accent = SKColor.Parse(AuraColor.Accent(config, state.Aura));
-        var textAccent = config.AuraEnabled && state.Aura.Status == "connected" ? AuraPalette.Text(accent) : accent;
+        var palette = AuraPalette.Colors(config, state.Aura);
+        SKColor TextAccent(float x) => config.AuraEnabled && state.Aura.Status == "connected"
+            ? AuraPalette.Text(AuraPalette.At(palette, x)) : accent;
         var muted = new SKColor(144, 162, 161);
         using var line = new SKPaint { Color = new SKColor(48, 65, 64), StrokeWidth = 1 };
         using var accentPaint = new SKPaint { Color = accent, IsAntialias = true };
+        void AccentBar(float x, float y, float width, float height, float colorX, float spectrumWidth = 0)
+        {
+            accentPaint.Color = AuraPalette.At(palette, colorX);
+            using var shader = spectrumWidth > 0 ? AuraPalette.Shader(palette, x, spectrumWidth) : null;
+            accentPaint.Shader = shader;
+            canvas.DrawRect(x, y, width, height, accentPaint);
+            accentPaint.Shader = null;
+        }
         using var grid = new SKPaint { Color = new SKColor(38, 60, 56, 35) };
         for (int x = 0; x < 1920; x += 80) canvas.DrawLine(x, 0, x, 480, grid);
-        void Text(string value, float x, float y, float size, SKColor? color = null, bool heavy = false, float maxWidth = 0, float minimumSize = 0)
+        void Text(string value, float x, float y, float size, SKColor? color = null, bool heavy = false, float maxWidth = 0, float minimumSize = 0, bool rainbow = false)
         {
             using var font = new SKFont(heavy ? bold : typeface, size);
-            using var paint = new SKPaint { Color = color == accent ? textAccent : color ?? SKColors.White, IsAntialias = true };
+            using var paint = new SKPaint { Color = color ?? SKColors.White, IsAntialias = true };
             var text = value;
             if (maxWidth > 0 && minimumSize > 0 && font.MeasureText(text) > maxWidth)
                 font.Size = Math.Max(minimumSize, size * maxWidth / font.MeasureText(text));
@@ -85,6 +95,8 @@ public sealed class DeckRenderer : IDisposable
                 while (text.Length > 0 && font.MeasureText(text + "…") > maxWidth) text = text[..^1];
                 text += "…";
             }
+            using var textShader = rainbow ? AuraPalette.Shader(palette, x, font.MeasureText(text), readableText: true) : null;
+            paint.Shader = textShader;
             canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
         }
         var widgets = WidgetCatalog.Expand(config.Widgets).ToDictionary(w => w.Slot, w => WidgetCatalog.Resolve(w, state.Hardware));
@@ -108,7 +120,7 @@ public sealed class DeckRenderer : IDisposable
             ValueText(widget, 168, y, 17, 114, 12);
             using var track = new SKPaint { Color = new SKColor(38, 53, 53) };
             canvas.DrawRect(32, y + 12, 250, 6, track);
-            if (widget.Fraction is { } fraction) canvas.DrawRect(32, y + 12, (float)fraction * 250, 6, accentPaint);
+            if (widget.Fraction is { } fraction) AccentBar(32, y + 12, (float)fraction * 250, 6, 157);
         }
         void Cover(float x, float y, float size)
         {
@@ -135,25 +147,25 @@ public sealed class DeckRenderer : IDisposable
         {
             if (state.Profile == "desktop" && state.Media.Status != "connected" && config.Calendar.Enabled)
             {
-                CalendarPanel.Draw(canvas, state.Calendar, config.Calendar, state.Timestamp, x, y, width, textAccent, typeface, bold);
+                CalendarPanel.Draw(canvas, state.Calendar, config.Calendar, state.Timestamp, x, y, width, TextAccent(x), typeface, bold);
                 return;
             }
             const float size = 132;
             var available = state.Media.Status == "connected";
-            Text(state.Media.App.Contains("Spotify", StringComparison.OrdinalIgnoreCase) ? "SPOTIFY" : "MEDIA SESSION", x, y, 15, accent, true);
+            Text(state.Media.App.Contains("Spotify", StringComparison.OrdinalIgnoreCase) ? "SPOTIFY" : "MEDIA SESSION", x, y, 15, TextAccent(x), true);
             Cover(x, y + 16, size);
             var textX = x + size + 18;
             var textWidth = width - size - 18;
             Text(available && state.Media.Title.Length > 0 ? state.Media.Title : "Nessuna riproduzione", textX, y + 47, 24, heavy: true, maxWidth: textWidth);
             Text(available ? state.Media.DisplayArtist : "", textX, y + 80, 18, muted, maxWidth: textWidth);
-            Text(available ? state.Media.Playing ? "IN RIPRODUZIONE" : "IN PAUSA" : "INATTIVO", textX, y + 115, 13, state.Media.Playing ? accent : muted, maxWidth: textWidth);
+            Text(available ? state.Media.Playing ? "IN RIPRODUZIONE" : "IN PAUSA" : "INATTIVO", textX, y + 115, 13, state.Media.Playing ? TextAccent(textX) : muted, maxWidth: textWidth);
             string Time(double seconds) => TimeSpan.FromSeconds(Math.Clamp(double.IsFinite(seconds) ? seconds : 0, 0, 359999)).ToString(seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
             Text(available && state.Media.DurationSeconds > 0 ? $"{Time(state.Media.PositionSeconds)} / {Time(state.Media.DurationSeconds)}" : "— / —", textX, y + 144, 20, maxWidth: textWidth);
             if (config.SpotifyLyrics && state.Profile == "music" && SpotifyLyrics.IsSpotify(state.Media))
                 Text(state.Lyrics.Status switch { "loading" => "Ricerca testo…", "instrumental" => "Brano strumentale", "not-found" => "Testo non trovato", _ => "Testo non disponibile" }, x, y + 185, 12, muted, maxWidth: width);
             canvas.DrawLine(x, y + 166, x + width, y + 166, line);
             if (available && state.Media.DurationSeconds > 0)
-                canvas.DrawRect(x, y + 164, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * width, 4, accentPaint);
+                AccentBar(x, y + 164, (float)Math.Clamp(state.Media.PositionSeconds / state.Media.DurationSeconds, 0, 1) * width, 4, x + width / 2, width);
         }
         var widgetTrends = WidgetCatalog.Expand(config.Widgets).ToDictionary(w => w.Slot,
             w => trends.Read(w, widgets[w.Slot], state.Timestamp));
@@ -187,7 +199,7 @@ public sealed class DeckRenderer : IDisposable
                 canvas.DrawOval(bounds, ring);
                 if (widget.Fraction is { } fraction)
                 {
-                    ring.Color = accent;
+                    ring.Color = AuraPalette.At(palette, bounds.MidX);
                     using var arc = new SKPath(); arc.AddArc(bounds, -90, (float)fraction * 359.99f); canvas.DrawPath(arc, ring);
                 }
                 else Text("—", x + (compact ? 20 : 31), y + 47, 18, muted);
@@ -214,7 +226,7 @@ public sealed class DeckRenderer : IDisposable
             {
                 canvas.DrawRect(x + 16, y + 70, cellWidth - 32, 3, track);
                 if (widget.Fraction is { } fraction)
-                    canvas.DrawRect(x + 16, y + 70, (float)fraction * (cellWidth - 32), 3, accentPaint);
+                    AccentBar(x + 16, y + 70, (float)fraction * (cellWidth - 32), 3, x + cellWidth / 2);
             }
         }
         bool IsSpeaking(VoiceMember member) => state.Discord.SpeakingStatus == "connected"
@@ -224,12 +236,13 @@ public sealed class DeckRenderer : IDisposable
             var speaking = IsSpeaking(member);
             if (speaking)
             {
-                using var highlight = new SKPaint { Color = accent.WithAlpha(40), IsAntialias = true };
+                using var highlight = new SKPaint { Color = AuraPalette.At(palette, x + width / 2).WithAlpha(40), IsAntialias = true };
                 canvas.DrawRoundRect(SKRect.Create(x - 6, y - 22, width + 12, 28), 5, 5, highlight);
+                accentPaint.Color = AuraPalette.At(palette, x + 3);
                 canvas.DrawCircle(x + 3, y - 7, 4, accentPaint);
             }
             var streaming = member.Streaming == true;
-            Text(member.Name, x + 14, y, size, speaking ? accent : SKColors.White, speaking,
+            Text(member.Name, x + 14, y, size, speaking ? TextAccent(x + 14) : SKColors.White, speaking,
                 maxWidth: width - (streaming ? 116 : 85));
             if (streaming)
             {
@@ -246,11 +259,11 @@ public sealed class DeckRenderer : IDisposable
                 canvas.DrawPath(play, monitor);
             }
             Text(member.Deaf ? "DEAF" : member.Mute ? "MUTO" : speaking ? "VOCE" : "ON",
-                x + width - 62, y, 13, member.Deaf || member.Mute ? new SKColor(255, 146, 131) : speaking ? accent : muted, maxWidth: 62);
+                x + width - 62, y, 13, member.Deaf || member.Mute ? new SKColor(255, 146, 131) : speaking ? TextAccent(x + width - 62) : muted, maxWidth: 62);
         }
         void Discord(float x, float y, float width, int capacity = 3, bool expanded = false)
         {
-            Text("DISCORD", x, y, expanded ? 18 : 15, accent, true);
+            Text("DISCORD", x, y, expanded ? 18 : 15, TextAccent(x), true);
             if (state.Discord.Status == "connected" && state.Discord.ServerName is { Length: > 0 } server)
                 Text(expanded ? server : server + " / " + state.Discord.ChannelName, x + 100, y, 13, muted, maxWidth: width - 100);
             if (state.Discord.Status != "connected") { Text("Discord non collegato", x, y + 34, 18, muted, maxWidth: width); return; }
@@ -325,7 +338,7 @@ public sealed class DeckRenderer : IDisposable
         void WeatherPanel()
         {
             var weather = state.Weather;
-            Text("METEO", 48, 113, 15, accent, true);
+            Text("METEO", 48, 113, 15, TextAccent(48), true);
             Text(config.WeatherLocation?.Name ?? "Scegli una località", 48, 147, 23, heavy: true, maxWidth: 300);
             if (weather.Status != "connected" || weather.LocationName != config.WeatherLocation?.Name)
             {
@@ -397,7 +410,7 @@ public sealed class DeckRenderer : IDisposable
             for (var i = 0; i < 9; i++) WidgetCard(i, 1364 + i % 3 * 178, 100 + i / 3 * 106, 168);
             const float x = 388, width = 920;
             Text(state.SpotifyTransition ? "SPOTIFY / CAMBIO BRANO"
-                : state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", x, 115, 15, accent, true, width);
+                : state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", x, 115, 15, TextAccent(x), true, width);
             var extras = state.Spotify.ForLocal(state.Media, state.Timestamp);
             if (!state.SpotifyTransition && extras.Current is not null)
             {
@@ -432,7 +445,7 @@ public sealed class DeckRenderer : IDisposable
                 if (index > 0) Text(lines[index - 1].Text, x, 174, 23, muted, maxWidth: width);
                 var current = index >= 0 ? lines[index].Text : "";
                 var wrapped = Wrap(current.Length == 0 ? "♪" : current, 38);
-                for (var i = 0; i < Math.Min(2, wrapped.Count); i++) Text(wrapped[i] + (i == 1 && wrapped.Count > 2 ? " …" : ""), x, 247 + i * 48, 38, accent, true, width);
+                for (var i = 0; i < Math.Min(2, wrapped.Count); i++) Text(wrapped[i] + (i == 1 && wrapped.Count > 2 ? " …" : ""), x, 247 + i * 48, 38, TextAccent(x), true, width, rainbow: true);
                 if (index + 1 < lines.Length) Text(lines[index + 1].Text, x, 353, 23, muted, maxWidth: width);
             }
             else if (lyrics.Status == "plain")
@@ -451,7 +464,7 @@ public sealed class DeckRenderer : IDisposable
             canvas.DrawLine(x, 401, x + width, 401, line);
             var duration = double.IsFinite(state.Media.DurationSeconds) ? Math.Clamp(state.Media.DurationSeconds, 0, 3600) : 0;
             var position = double.IsFinite(state.Media.PositionSeconds) ? Math.Clamp(state.Media.PositionSeconds, 0, duration) : 0;
-            if (duration > 0) canvas.DrawRect(x, 399, (float)(position / duration) * width, 4, accentPaint);
+            if (duration > 0) AccentBar(x, 399, (float)(position / duration) * width, 4, x + width / 2, width);
             Text(duration > 0 ? TimeSpan.FromSeconds(position).ToString(@"m\:ss") + " / "
                 + TimeSpan.FromSeconds(duration).ToString(@"m\:ss") : "— / —", x, 430, 18, muted);
             Text(lyricsCredit, x + width - 400, 430, 15, muted, maxWidth: 400);
@@ -460,14 +473,14 @@ public sealed class DeckRenderer : IDisposable
         {
             var voice = TrackedVoiceHeader.Resolve(state.Discord, config.TrackedMemberId);
             if (voice.Muted is null) return;
-            var color = voice.Muted is null ? muted : voice.Muted == true || voice.Deaf ? new SKColor(255, 146, 131) : accent;
+            var color = voice.Muted is null ? muted : voice.Muted == true || voice.Deaf ? new SKColor(255, 146, 131) : TextAccent(1400);
             var speaking = state.Discord.Members.FirstOrDefault(m => m.Id == config.TrackedMemberId) is { } member && IsSpeaking(member);
-            using var panel = new SKPaint { Color = speaking ? accent.WithAlpha(40) : new SKColor(12, 24, 28, 220), IsAntialias = true };
+            using var panel = new SKPaint { Color = speaking ? AuraPalette.At(palette, 1350).WithAlpha(40) : new SKColor(12, 24, 28, 220), IsAntialias = true };
             canvas.DrawRoundRect(SKRect.Create(1180, 10, 340, 46), 7, 7, panel);
             Text(voice.Name, 1194, 40, 20, heavy: true, maxWidth: 194);
             Text(speaking ? "VOCE" : voice.Status, 1400, 40, 14, color, true, maxWidth: 108);
         }
-        Text("PULSEDECK", 32, 42, 23, accent, true);
+        Text("PULSEDECK", 32, 42, 23, TextAccent(32), true, rainbow: true);
         Text((config.AuraEnabled && state.Aura.Status != "connected" ? "AURA NON DISP. / " : "RECON / ") + state.Profile.ToUpperInvariant(), 320, 42, 18, muted, maxWidth: 300);
         if (appIcon is not null) ApplicationIconLayout.Draw(canvas, appIcon, appIconBounds, SKRect.Create(644, 16, 36, 36));
 
@@ -499,7 +512,7 @@ public sealed class DeckRenderer : IDisposable
             Text(state.Hardware.Status == "connected" ? "LIVE SENSOR DATA" : "SENSORS UNAVAILABLE", 32, 432, 14, muted, maxWidth: 250);
         }
 
-        Text(state.Profile == "gaming" ? "GAME TELEMETRY" : state.Profile == "music" ? "NOW PLAYING" : "SYSTEM OVERVIEW", 350, 119, 16, accent, true);
+        Text(state.Profile == "gaming" ? "GAME TELEMETRY" : state.Profile == "music" ? "NOW PLAYING" : "SYSTEM OVERVIEW", 350, 119, 16, TextAccent(350), true);
         if (state.Profile == "music")
         {
             Text(state.Media.Title, 350, 188, 42, heavy: true, maxWidth: 960);
@@ -539,7 +552,7 @@ public sealed class DeckRenderer : IDisposable
             canvas.DrawRect(SKRect.Create(0, 446, 1920, 34), strip);
             var headline = state.News.Select(state.Timestamp, config.News.RotationSeconds);
             var newsSize = Math.Clamp(config.News.FontSize, 20, 26);
-            Text(headline?.Source ?? "NEWS", 32, 470, newsSize - 4, accent, true, maxWidth: 235);
+            Text(headline?.Source ?? "NEWS", 32, 470, newsSize - 4, TextAccent(32), true, maxWidth: 235);
             var notice = state.News.Status switch { "loading" => "Aggiornamento notizie…", "not-configured" => "Scegli i canali in Configurazione → News",
                 "empty" => "Nessuna notizia recente", _ => "Notizie non disponibili" };
             Text(headline?.Title ?? notice, 286, 470, newsSize, maxWidth: 1450, minimumSize: newsSize);
@@ -552,7 +565,7 @@ public sealed class DeckRenderer : IDisposable
                 mail.UnreadCount, notification.Arrival?.Title ?? "Nuova email", notification.Arrival?.Caption ?? "GMAIL");
         if (notification.Arrival is { Kind: "calendar" } calendarArrival && config.Notifications.AnimatesIn(state.Profile))
             MailAnimation.Draw(canvas, Math.Max(.001f, notification.Seconds), bold, null, calendarArrival.Title, calendarArrival.Caption, kind: "calendar");
-        if (notification.IsTest) Text("PROVA NOTIFICHE · DATI SIMULATI", 700, 85, 18, accent);
+        if (notification.IsTest) Text("PROVA NOTIFICHE · DATI SIMULATI", 700, 85, 18, TextAccent(700));
         using var image = SKImage.FromBitmap(bitmap);
         using var encoded = image.Encode(SKEncodedImageFormat.Png, 100);
         var pixels = new byte[1920 * 480 * 4]; Marshal.Copy(bitmap.GetPixels(), pixels, 0, pixels.Length);

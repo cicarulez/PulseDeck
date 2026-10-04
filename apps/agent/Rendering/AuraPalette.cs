@@ -1,9 +1,39 @@
 using SkiaSharp;
+using PulseDeck.Core;
 
 namespace PulseDeck.Agent.Rendering;
 
 public static class AuraPalette
 {
+    public static SKColor[] Colors(DeckConfig config, AuraSnapshot aura)
+    {
+        var fallback = SKColor.Parse(AuraColor.Accent(config, aura));
+        if (!config.AuraEnabled || aura.Status != "connected" || aura.Colors is not { Length: > 0 and <= 64 } colors)
+            return [fallback];
+        var palette = new SKColor[colors.Length];
+        for (var i = 0; i < colors.Length; i++)
+            if (!SKColor.TryParse(colors[i], out palette[i])) return [fallback];
+        return palette;
+    }
+
+    public static SKColor At(SKColor[] colors, float x) =>
+        colors[Math.Clamp((int)(x / 1920 * colors.Length), 0, colors.Length - 1)];
+
+    // Stretch the received sequence across one text or music progress bar.
+    // The service supplies the animation; interpolation only smooths its colors.
+    public static SKShader? Shader(SKColor[] colors, float x, float width, bool readableText = false)
+    {
+        if (colors.Length == 1 || width <= 0) return null;
+        var stops = new float[colors.Length];
+        var values = new SKColor[colors.Length];
+        for (var i = 0; i < colors.Length; i++)
+        {
+            stops[i] = (float)i / (colors.Length - 1);
+            values[i] = readableText ? Text(colors[i]) : colors[i];
+        }
+        return SKShader.CreateLinearGradient(new(x, 0), new(x + width, 0), values, stops, SKShaderTileMode.Clamp);
+    }
+
     // Keep the received color on bars/rings; lighten only text on the dark panel.
     public static SKColor Text(SKColor color)
     {

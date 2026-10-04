@@ -2565,3 +2565,57 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
 - No outgoing RGB control call, firmware change or agent deployment was performed.
   Runtime logs and installation audit remain under LOCALAPPDATA outside Git. The
   probe remains installed for this resumed test.
+
+
+## Aura multizone reception and rendering — 2026-10-04
+
+- Saved the working single-zone integration and integration badges as `914cb67`
+  before extending the receiver. No push was performed.
+- Built experimental receiver 0.6.0 with `AURA_PROBE_LED_COUNT=16`: one horizontal
+  16x1 virtual device, same owned COM identity and EXTERNAL_GENERAL classification.
+  The default build remains one zone. The decoder requires a complete UI4 array,
+  bounded to the advertised count; malformed/partial frames cannot replace data.
+- Both 1-zone and 16-zone builds passed 55 synthetic incoming decoder checks,
+  100 balanced own-COM contract iterations, and three isolated SDK enumerations.
+  SDK light count and width matched each build. Installation also passed SYSTEM
+  on-demand activation, cross-process contracts, SDK metadata and idle-exit checks.
+- Backed up the installed receiver under LOCALAPPDATA, replaced only its owned
+  installation, and reloaded LightingService then ArmouryCrateService. Live Rainbow
+  callbacks were SetEffect2, effect ID 0, variant 8211, count 16. Sixty observations
+  at 500 ms intervals contained 60 different complete frames, with up to 16 distinct
+  simultaneous packed colors. No RGB ownership, SDK setters or physical HAL writes
+  were used by PulseDeck.
+- Protocol 2 exposes `ledCount`, `rawCount`, `rawWords`; the agent validates complete
+  frames and still reads protocol 1. Public `Aura.Colors` preserves ordered colors.
+  The first color remains available as `Aura.Color` for compatibility.
+- The first live multizone agent measure exposed 16 colors per frame while display
+  acknowledgements advanced 48 -> 62 in eight samples, with zero recovery attempts
+  or transport errors. The user confirmed simultaneous changing colors physically.
+- The user applied red/blue in the same static-effect screen. Five successive API
+  reads had the same 16 colors and sample counter 5052, while remaining connected:
+  six `#0000FE`, then `#0000FD`, `#1D00E0`, `#DA0023`, `#FD0000`, then six `#FE0000`.
+  These values include the transition supplied by Aura itself, not reconstructed
+  colors. The user also confirmed seeing both colors on PulseDeck.
+- Per user preference, the renderer fits the whole received sequence to the
+  PULSEDECK wordmark, active lyric line and music progress bar. Sensor bars/rings
+  retain one solid raw color each, selected by horizontal position. Other accent
+  text follows its local zone with readability adjustment; neutral/status text
+  does not change when its original color happens to match the first Aura zone.
+  Spatial interpolation smooths colors, but animation depends on incoming data.
+- Validation: 227 core tests and the final 65 rendering tests passed; Angular
+  production build and self-contained win-x64 publish passed. Pixel checks cover
+  simultaneous colors, wordmark/lyrics/progress spectra, uniform sensor bars,
+  manual/unavailable fallback, and neutral text with a white first Aura zone.
+- Configurator showed “16 zone ricevute”, without horizontal overflow. Receiver
+  logs, backups and actual music previews remain under LOCALAPPDATA, outside Git.
+  Deployment waits for the old agent to exit, preserves the elevated interactive
+  task and verifies the config file hash. The panel reconnect needed its normal
+  startup wake retry; it subsequently connected to the verified COM5 device.
+- The final spectrum build was deployed with the same unchanged config hash and
+  interactive elevated task; the verified display reconnected successfully. The
+  updated configurator description was checked after refreshing the cached page.
+  The user reapplied Rainbow and accepted the wordmark/active-lyrics treatment
+  ("mi piace"). Rainbow was left active at the end of the check.
+- Limitations: refresh remains at most 2 Hz; only the one-zone and 16x1 layouts
+  were checked against this installed ASUS SDK. This does not read or mirror each
+  physical PC device's topology. Full Windows reboot persistence is still untested.

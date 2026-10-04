@@ -9,7 +9,10 @@
   </label>
 </div>
 <p><pd-status [label]="label()" [active]="active()" />
-  @if (active()) { · Colore ricevuto <code>{{ state()?.color }}</code> }
+  @if (active()) {
+    @if ((state()?.colors?.length ?? 0) > 1) { · {{ state()?.colors?.length }} zone ricevute }
+    @else { · Colore ricevuto <code>{{ state()?.color }}</code> }
+  }
 </p>
 @if (state()?.detail; as detail) { <p>{{ detail }}</p> }
-<p>Accenti e barre seguono i colori del PC, con aggiornamento fino a due volte al secondo. I testi scuri vengono schiariti per mantenerli leggibili. Se Aura non è disponibile viene usato il colore manuale.</p>
+<p>La scritta PULSEDECK, la riga attiva dei testi musicali e la barra di avanzamento del brano seguono l’intera sequenza di colori Aura, con aggiornamento fino a due volte al secondo. Barre e anelli dei sensori mantengono un colore uniforme ciascuno. I testi scuri vengono schiariti per mantenerli leggibili. Se Aura non è disponibile viene usato il colore manuale.</p>

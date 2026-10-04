@@ -56,15 +56,35 @@ malformed reports and inaccessible files produce an explicit unavailable state.
 Static samples may be old while the host heartbeat remains fresh. Availability
 does not independently prove that the user still selected the device in Aura Sync.
 
-The virtual device advertises one LED in a 1x1 layout, and the decoder accepts
-exactly one color per incoming sample. This supports a shared animated accent,
-not a spatial rainbow: multiple simultaneous colors would require a validated
-multizone receiver contract and corresponding rendering support.
+The default build still advertises one LED. An experimental 16-zone horizontal
+build has been observed receiving 16 distinct simultaneous colors from the live
+LightingService with Rainbow, across 60 half-second observations on 2026-10-04.
+The receiver accepts only a complete, bounded UI4 array matching its declared LED
+count. Build the multizone variant explicitly:
+
+```sh
+AURA_PROBE_LED_COUNT=16 ./tools/aura-probe/build.sh artifacts/aura-multizone
+```
+
+Counts 1–64 are bounded by the build and decoder; only 1 and 16 have been checked
+against the installed SDK. Multizone reports use protocol version 2 with `ledCount`,
+`rawCount` and ordered `rawWords`; version 1 remains readable by the agent. An older
+agent rejects version 2 and uses its manual fallback, so update the agent as well.
+`rawWord` remains the first element for diagnostics, not an average of the zones.
+The SDK metadata check verifies both the declared width and returned light count.
 
 The renderer reads the latest color, at most twice per second, sharing the same
 rendering path for PNG preview and the panel. It keeps raw colors on decorations
 and lightens dark text colors on the dark panel. No additional frame queue is used.
-The API exposes status/color/sample time/count through `DeckState.aura` and the
+The renderer stretches the received color sequence across the PULSEDECK wordmark,
+active lyric line and music progress bar. Spatial interpolation smooths the
+colors; only incoming frames move the effect. Sensor bars and rings use one raw
+color each, selected by their horizontal position. Other accent text uses its
+local zone with readability adjustment; neutral/status text retains its own color.
+The [ASUS device interface documentation](https://www.asus.com/microsite/aurareadydevportal/interface_aura_service_lib_1_1_i_aura_sync_device.html)
+describes ordered lights and matrix dimensions; actual passive reception above
+was verified separately on this PC.
+The API exposes status/color/colors/sample time/count through `DeckState.aura` and the
 configuration persists `auraEnabled`; native raw diagnostics remain private.
 
 ## Build and run

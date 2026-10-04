@@ -57,6 +57,22 @@ public class AuraColorTests
     }
 
     [Fact]
+    public void MultizonePreservesSimultaneousColorsAndRejectsIncompleteFrames()
+    {
+        var frame = Report with { ProtocolVersion = 2, LedCount = 2, RawCount = 2,
+            LastEffectCount = 2, RawWord = 0xff0000ff, RawWords = [0xff0000ff, 0xffff0000] };
+        Assert.Equal(["#FF0000", "#0000FF"], AuraColor.Evaluate(frame, Now, 100000, true).Colors!);
+        Assert.Equal("connected", AuraColor.Evaluate(frame, Now, 100000, true).Status);
+        foreach (var invalid in new[] { frame with { RawWords = null }, frame with { RawWords = [0xff0000ff] },
+            frame with { RawCount = 1 }, frame with { LastEffectCount = 1 }, frame with { LedCount = 65 },
+            frame with { LedCount = 0 }, frame with { RawWord = 0 } })
+            Assert.Null(AuraColor.Evaluate(invalid, Now, 100000, true).Colors);
+        Assert.Null(AuraColor.Evaluate(frame, Now.AddSeconds(4), 104000, true).Colors);
+        Assert.Null(AuraColor.Evaluate(frame, Now, 100000, false).Colors);
+        Assert.Equal(["#FFFF00"], AuraColor.Evaluate(Report, Now, 100000, true).Colors!);
+    }
+
+    [Fact]
     public void ManualChoiceAndUnavailableAuraAlwaysUseSavedFallback()
     {
         var config = new DeckConfig { AccentColor = "#123456" };

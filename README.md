@@ -31,7 +31,7 @@ The browser configurator and physical panel share the **same renderer**. What yo
   <a href="docs/getting-started.md"><img alt="SteamGridDB: game artwork" src="https://img.shields.io/badge/SteamGridDB-game_artwork-9bc8f5?labelColor=111c22"></a>
 </p>
 
-These labels describe specific PulseDeck features; some require optional setup. Aura following uses a separately installed experimental receiver, tested with static colors and Color cycle on the development PC. It currently follows one color at a time; multizone rainbow effects are not reproduced.
+These labels describe specific PulseDeck features; some require optional setup. Aura following uses a separately installed experimental receiver, tested with static colors and Color cycle on the development PC. An experimental 16-zone build also receives simultaneous Rainbow colors and uses them on the wordmark, active lyrics and music progress bar; sensor bars retain a solid color each.
 
 *Independent community integrations. No vendor sponsorship, endorsement or certification is claimed. Names belong to their respective owners; these are text-only feature badges, not official vendor logos.*
 

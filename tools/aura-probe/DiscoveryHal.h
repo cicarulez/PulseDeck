@@ -7,6 +7,12 @@
 #define PROBE_DEVICE_NAME L"PulseDeck Virtual Probe"
 /* Installed LightingService maps 0x64000 to EXTERNAL_GENERAL; 0 means All. */
 #define PROBE_DEVICE_TYPE 0x64000UL
+#ifndef PROBE_LED_COUNT
+#define PROBE_LED_COUNT 1
+#endif
+#if PROBE_LED_COUNT < 1 || PROBE_LED_COUNT > 64
+#error PROBE_LED_COUNT must be between 1 and 64
+#endif
 
 typedef struct ProbeStats {
     LONG activations;
@@ -24,6 +30,8 @@ typedef struct ProbeStats {
     LONG raw_samples;
     ULONG raw_word;
     ULONGLONG raw_sample_tick;
+    ULONG raw_count;
+    ULONG raw_words[PROBE_LED_COUNT];
 } ProbeStats;
 
 int CheckProbeContracts(void);

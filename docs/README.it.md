@@ -19,7 +19,7 @@ Il configuratore e il display usano lo stesso renderer. L’agent gira sul PC; n
   <a href="getting-started.md"><img alt="SteamGridDB: immagini dei giochi" src="https://img.shields.io/badge/SteamGridDB-immagini_dei_giochi-9bc8f5?labelColor=111c22"></a>
 </p>
 
-Le etichette indicano funzioni specifiche di PulseDeck; alcune richiedono una configurazione opzionale. Aura usa un ricevitore sperimentale installato separatamente, verificato sul PC di sviluppo con colori statici e Ciclo colori. Attualmente segue un colore alla volta: gli effetti arcobaleno con più zone non vengono riprodotti.
+Le etichette indicano funzioni specifiche di PulseDeck; alcune richiedono una configurazione opzionale. Aura usa un ricevitore sperimentale installato separatamente, verificato sul PC di sviluppo con colori statici e Ciclo colori. Una build sperimentale a 16 zone riceve anche i colori simultanei di Arcobaleno e li applica alla scritta PULSEDECK, al testo attivo e all’avanzamento del brano; ogni barra dei sensori mantiene un colore uniforme.
 
 *Integrazioni indipendenti della community. Non vengono dichiarate sponsorizzazioni, approvazioni o certificazioni dei produttori. I nomi appartengono ai rispettivi titolari; questi badge testuali non sono loghi ufficiali.*
 

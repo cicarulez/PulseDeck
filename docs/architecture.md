@@ -50,7 +50,12 @@ Optional Aura following uses a separate native COM destination under
 delivers colors to that destination; `AuraColorProvider` only reads its versioned
 SYSTEM-profile report. Fresh heartbeats and host identity distinguish a valid
 static color from a stale file. `DeckState.Aura` carries availability and the
-decoded color. `AuraEnabled` defaults to false; when enabled the shared renderer
+decoded color plus an ordered `Colors` array. Protocol 2 validates complete
+multizone frames against the declared LED count; protocol 1 remains supported.
+The renderer fits the received spectrum to the PULSEDECK wordmark, active lyrics
+and music progress bar. Sensor bars/rings retain a solid color selected by their
+horizontal position. Neutral/status text is independent of Aura; other accent
+text follows its local zone. Animation comes from incoming frames. `AuraEnabled` defaults to false; when enabled the shared renderer
 updates at most twice per second, keeps the manual accent as unavailable fallback,
 and lightens dark accent text. Neither the agent nor receiver acquires RGB control.
 The agent still runs as the elevated interactive user, not SYSTEM. See the

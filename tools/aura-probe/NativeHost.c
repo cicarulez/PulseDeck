@@ -216,11 +216,11 @@ int main(int argc, char **argv) {
             VariantClear(&device_type);
             GET(device.pdispVal, "Width", &width);
             GET(device.pdispVal, "Height", &height);
-            REQUIRE(width.vt == VT_UI4 && width.ulVal == 1 && height.vt == VT_UI4 && height.ulVal == 1);
+            REQUIRE(width.vt == VT_UI4 && width.ulVal == PROBE_LED_COUNT && height.vt == VT_UI4 && height.ulVal == 1);
             GET(device.pdispVal, "Lights", &lights);
             DISPATCH(lights);
             GET(lights.pdispVal, "Count", &count);
-            REQUIRE(count.vt == VT_I4 && count.lVal == 1);
+            REQUIRE(count.vt == VT_I4 && count.lVal == PROBE_LED_COUNT);
             VariantClear(&count);
             GET(device.pdispVal, "Effects", &effects);
             DISPATCH(effects);
@@ -283,7 +283,7 @@ cleanup:
                "\"receiverProcessId\":%lu,\"syntheticSamples\":%ld,\"unverifiedCallbacks\":%ld,"
                "\"hasColorSample\":%s,\"colorSource\":\"%s\",\"deviceName\":\"%s\",\"deviceCount\":%d,\"iterations\":%ld,"
                "\"halActivations\":%ld,\"halEnumerations\":%ld,\"capabilityReads\":%ld,"
-               "\"staticEffectDescriptorVerified\":%s,"
+               "\"staticEffectDescriptorVerified\":%s,\"ledCount\":%u,"
                "\"effectRequests\":%ld,\"syncRequests\":%ld,"
                "\"referencesAtExit\":{\"hal\":%ld,\"device\":%ld,\"factory\":%ld}}\n",
                remote ? "true" : "false", receiver_result.process_id, receiver_result.synthetic_samples, receiver_result.unverified_callbacks,
@@ -291,7 +291,7 @@ cleanup:
                receiver_result.has_sample ? "synthetic-test" : "unavailable",
                empty ? "" : "PulseDeck Virtual Probe", empty ? 0 : 1, iterations,
                stats.activations, stats.enumerations, stats.capabilities,
-               empty ? "false" : "true",
+               empty ? "false" : "true", empty ? 0U : (unsigned)PROBE_LED_COUNT,
                stats.effect_requests, stats.sync_requests,
                stats.hal_refs, stats.device_refs, stats.factory_refs);
     }

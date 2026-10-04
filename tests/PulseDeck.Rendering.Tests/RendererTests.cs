@@ -6,6 +6,70 @@ using Xunit;
 
 public class RendererTests
 {
+    [Fact]
+    public void AuraSpectrumFitsLogoLyricsAndProgressWhileSensorBarsStayUniform()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Synthetic track", "Artist", "Spotify.exe", 170, 180, "connected");
+        var state = State with { Profile = "music", Media = media,
+            Lyrics = new("synced", SpotifyLyrics.Key(media), [new(0, "Original colorful fixture")]),
+            Aura = new("connected", "#FF0000", Colors: ["#FF0000", "#00FF00", "#0000FF"]) };
+        var config = new DeckConfig { AuraEnabled = true };
+        using var image = SKBitmap.Decode(renderer.Render(state, config).Png);
+        void HasSpectrum(int x, int y, int width, int height)
+        {
+            var colors = Enumerable.Range(y, height).SelectMany(row => Enumerable.Range(x, width).Select(col => image.GetPixel(col, row))).ToArray();
+            Assert.Contains(colors, c => c.Red > 150 && c.Red > c.Green + 50 && c.Red > c.Blue + 50);
+            Assert.Contains(colors, c => c.Green > 150 && c.Green > c.Red + 50 && c.Green > c.Blue + 50);
+            Assert.Contains(colors, c => c.Blue > 150 && c.Blue > c.Red + 50 && c.Blue > c.Green + 50);
+        }
+        HasSpectrum(32, 20, 230, 25);
+        HasSpectrum(388, 208, 920, 45);
+        HasSpectrum(388, 399, 870, 4);
+        var alternating = Enumerable.Range(0, 16).Select(i => i % 2 == 0 ? "#FF0000" : "#0000FF").ToArray();
+        using var desktop = SKBitmap.Decode(renderer.Render(State with { Aura = new("connected", alternating[0], Colors: alternating) }, config).Png);
+        // A filled CPU bar crosses a zone boundary but keeps one solid color.
+        Assert.Equal(desktop.GetPixel(50, 149), desktop.GetPixel(175, 149));
+        Assert.Equal(SKColors.Blue, desktop.GetPixel(50, 149));
+    }
+
+    [Fact]
+    public void AuraWhiteFirstZoneDoesNotRecolorNeutralDiscordText()
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig { Layout = "compact", AuraEnabled = true };
+        var state = State with { Discord = new([new("test", "Neutral member", false, false)], null, "connected"),
+            Aura = new("connected", "#FFFFFF", Colors: ["#FFFFFF", "#0000FF"]) };
+        using var multizone = SKBitmap.Decode(renderer.Render(state, config).Png);
+        using var single = SKBitmap.Decode(renderer.Render(state with { Aura = new("connected", "#FFFFFF") }, config).Png);
+        // The member is silent, so their name stays white even in the blue zone.
+        for (var y = 334; y < 352; y++)
+            for (var x = 1378; x < 1570; x++)
+                Assert.Equal(single.GetPixel(x, y), multizone.GetPixel(x, y));
+    }
+
+    [Theory]
+    [InlineData("compact", 50, 149, 1030, 149)]
+    [InlineData("weather", 400, 149, 1040, 149)]
+    public void AuraZonesColorDifferentPartsOfTheSameFrame(string layout, int leftX, int leftY, int rightX, int rightY)
+    {
+        using var renderer = new DeckRenderer();
+        var config = new DeckConfig { Layout = layout, AuraEnabled = true,
+            Widgets = WidgetCatalog.Defaults().Select(w => w with { Source = "metric", MetricId = "cpu.load", Style = "bar" }).ToArray() };
+        var split = State with { Aura = new("connected", "#FF0000", Colors: ["#FF0000", "#0000FF"]) };
+        using var image = SKBitmap.Decode(renderer.Render(split, config).Png);
+        Assert.Equal(SKColors.Red, image.GetPixel(leftX, leftY));
+        Assert.Equal(SKColors.Blue, image.GetPixel(rightX, rightY));
+        var reversed = split with { Aura = new("connected", "#0000FF", Colors: ["#0000FF", "#FF0000"]) };
+        using var next = SKBitmap.Decode(renderer.Render(reversed, config).Png);
+        Assert.Equal(SKColors.Blue, next.GetPixel(leftX, leftY));
+        Assert.Equal(SKColors.Red, next.GetPixel(rightX, rightY));
+        var manual = config with { AuraEnabled = false };
+        Assert.Equal(renderer.Render(split, manual).Pixels, renderer.Render(reversed, manual).Pixels);
+        Assert.Equal(renderer.Render(split with { Aura = split.Aura with { Status = "unavailable" } }, config).Pixels,
+            renderer.Render(reversed with { Aura = reversed.Aura with { Status = "unavailable" } }, config).Pixels);
+    }
+
     [Theory]
     [InlineData("classic")]
     [InlineData("compact")]

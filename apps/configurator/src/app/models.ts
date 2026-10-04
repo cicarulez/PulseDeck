@@ -42,7 +42,7 @@ export interface DisplayState {
   recoveryAttempts: number; recoveries: number; acknowledgedFrames: number;
   lastAcknowledgedAt: string | null; lastTransportError: string | null; userDisconnected: boolean;
 }
-export interface AuraSnapshot { status: string; color: string | null; receivedAt: string | null; samples: number; detail: string | null; }
+export interface AuraSnapshot { status: string; color: string | null; colors: string[] | null; receivedAt: string | null; samples: number; detail: string | null; }
 export interface DeckState {
   aura: AuraSnapshot;
   volume: { status: string; percent: number | null; muted: boolean };
