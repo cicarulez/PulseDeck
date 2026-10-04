@@ -1,16 +1,71 @@
 # Isolated Aura virtual-device experiment
 
-**Retired from the development PC on 2026-09-17 at the user's request.**
+**Resumed at the user's request on 2026-10-04.** The unchanged 0.4.0 probe was
+rebuilt, tested and reinstalled. SYSTEM activation, SDK enumeration and idle exit
+passed. After an explicitly authorized LightingService restart, its inventory
+contains PulseDeck and the probe recorded four incoming raw samples, last word
+`0xFF000000`. A separately authorized ArmouryCrateService restart refreshed its
+inventory: an eighth EXTERNAL_GENERAL entry exists but has empty display name,
+Type=0 and StatusReady=0. The probe then received ten total samples, last word
+`0xFF00FFFF`, compatible with the user's yellow LEDs under ABGR packing. Channel
+order and static transitions were then checked with user-applied red
+(`0xFF0000FF`), blue (`0xFFFF0000`) and restored yellow (`0xFF00FFFF`). The observed
+packing is `0xAABBGGRR`; the high byte's meaning remains unverified. The user
+confirms a visible "Dispositivi esterni" tile. Color cycle and the agent's physical
+panel rendering were subsequently verified; full Windows reboot persistence has
+not yet been checked with this version. The probe's
+unchanged `colorVerified=false` label remains conservative runtime metadata; the
+dated external observations are recorded in [validation](../../docs/validation.md).
+
+**Previously retired from the development PC on 2026-09-17 at the user's request.**
 The user abandoned the virtual Aura-device experiment after repeated missing-tile
 results. Own class/category registration and installed folder were removed;
 REGDB_E_CLASSNOTREG and no remaining probe process were verified. ASUS services and
 PulseDeck were left running. Sources and private runtime backup are preserved.
-Commands and installed-state descriptions below are historical/reproduction notes,
-not authorization to reinstall or resume tests. No Aura provider is active.
+The older installed-state descriptions below are historical/reproduction notes;
+the current opt-in provider and receiver contract are described next.
 
-This is a development probe, not an installed Aura device or a PulseDeck provider.
-The native x86 executable hosts the installed ASUS SDK and our own minimal HAL.
+The development probe executable hosts the installed ASUS SDK and our minimal HAL
+for isolated metadata tests. The separate installed destination does not load the
+ASUS SDK. It receives calls from LightingService and never controls other devices.
 No vendor binaries, logs or proprietary inspection output belong in Git.
+
+## Agent integration (receiver 0.5.0)
+
+The receiver remains an optional, separately installed experimental component.
+Build it with the command below and install with `Manage-InstalledProbe.ps1` in an
+elevated Windows PowerShell. It is not silently installed by the agent build.
+After an installation/update, discovery required a LightingService reload followed
+by an ArmouryCrateService reload on the tested PC. These operations interrupt ASUS
+services and are not performed automatically by the installer or agent.
+
+Select **Dispositivi esterni** in Aura Sync, then enable **Segui Aura Sync** under
+PulseDeck's **Configurazione → Display e musica** and save. The manual accent is
+retained as fallback. Existing configurations default to manual mode. The optional
+provider reads only the installed SYSTEM destination's report; it never invokes
+COM/SDK setters or takes lighting ownership. Run the agent through its elevated
+interactive-user task so it can read the SYSTEM profile. The receiver's SYSTEM
+COM identity does not change the agent's interactive-user startup requirement.
+
+Protocol version 1 adds a monotonic `heartbeatTick`, updated at least once per
+second even for static colors. The agent requires a recent heartbeat and wall-clock
+timestamp, a live session-0 host with the expected executable path/start time,
+and a nonzero sample count with the supported incoming envelope. Reports from
+0.4.0 are incompatible rather than silently treated as live data. Stops, stale or
+malformed reports and inaccessible files produce an explicit unavailable state.
+Static samples may be old while the host heartbeat remains fresh. Availability
+does not independently prove that the user still selected the device in Aura Sync.
+
+The virtual device advertises one LED in a 1x1 layout, and the decoder accepts
+exactly one color per incoming sample. This supports a shared animated accent,
+not a spatial rainbow: multiple simultaneous colors would require a validated
+multizone receiver contract and corresponding rendering support.
+
+The renderer reads the latest color, at most twice per second, sharing the same
+rendering path for PNG preview and the panel. It keeps raw colors on decorations
+and lightens dark text colors on the dark panel. No additional frame queue is used.
+The API exposes status/color/sample time/count through `DeckState.aura` and the
+configuration persists `auraEnabled`; native raw diagnostics remain private.
 
 ## Build and run
 

@@ -18,6 +18,23 @@ The browser configurator and physical panel share the **same renderer**. What yo
 
 **Early development, tested on one display revision.** The verified device is `chs_88inch.dev1_rom1.90`, USB `0525:A4A7`. Other sizes and revisions are not yet supported. The configurator and display labels are currently in Italian; localization is a welcome contribution.
 
+## Integrations at a glance
+
+<p>
+  <a href="tools/aura-probe/README.md"><img alt="ASUS Aura Sync: experimental RGB following" src="https://img.shields.io/badge/ASUS_Aura_Sync-RGB_following_%C2%B7_experimental-a9ff69?labelColor=111c22"></a>
+  <a href="docs/spotify.md"><img alt="Spotify: now playing" src="https://img.shields.io/badge/Spotify-now_playing-a9ff69?labelColor=111c22"></a>
+  <a href="docs/getting-started.md#discord-credentials"><img alt="Discord: voice activity" src="https://img.shields.io/badge/Discord-voice_activity-a9ff69?labelColor=111c22"></a>
+</p>
+<p>
+  <a href="docs/getting-started.md"><img alt="Steam and EA: library discovery" src="https://img.shields.io/badge/Steam_%2B_EA-library_discovery-9bc8f5?labelColor=111c22"></a>
+  <a href="docs/calendar.md"><img alt="Google Calendar: appointments" src="https://img.shields.io/badge/Google_Calendar-appointments-9bc8f5?labelColor=111c22"></a>
+  <a href="docs/getting-started.md"><img alt="SteamGridDB: game artwork" src="https://img.shields.io/badge/SteamGridDB-game_artwork-9bc8f5?labelColor=111c22"></a>
+</p>
+
+These labels describe specific PulseDeck features; some require optional setup. Aura following uses a separately installed experimental receiver, tested with static colors and Color cycle on the development PC. It currently follows one color at a time; multizone rainbow effects are not reproduced.
+
+*Independent community integrations. No vendor sponsorship, endorsement or certification is claimed. Names belong to their respective owners; these are text-only feature badges, not official vendor logos.*
+
 ## Where it started
 
 The idea began with [Discord Overlay](https://github.com/cicarulez/discord-overlay): keeping Discord voice participants visible while gaming. Overlay restrictions encountered in games, including anti-cheat limitations, inspired a move to a dedicated external display. PulseDeck grew from that need, adding hardware telemetry, game sessions, artwork and music to the original voice-information concept.
@@ -57,11 +74,12 @@ An [optional Spotify account connection](docs/spotify.md) adds all track artists
 | Media | Windows media sessions; optional Chrome extension prioritizes the main YouTube player |
 | Active app | Chrome/Terminal tab titles, Explorer folder names, registered Windows app names/logos and optional Chrome favicons |
 | Spotify | Dedicated lyrics layout; other media sources keep the regular media panel |
+| Aura Sync | Optional experimental receiver follows PC colors on panel accents; manual fallback and readable text |
 | Artwork | Optional SteamGridDB key, Steam fallback, local cache and manual backgrounds |
 | Daily controls | Volume, clock, foreground app or Terminal tab title, manual/automatic profiles |
 | Display | Verified device identification, full/partial frames, bounded recovery and explicit disconnect |
 
-Aura color following, multiple displays, freely positioned layouts and historical telemetry are on the [roadmap](docs/roadmap.md). The current renderer targets roughly one update per second; this is not a high-refresh video display engine.
+Multiple displays, freely positioned layouts and historical telemetry are on the [roadmap](docs/roadmap.md). The renderer normally targets roughly one update per second, or up to two with Aura following; this is not a high-refresh video display engine.
 
 ## Try it
 

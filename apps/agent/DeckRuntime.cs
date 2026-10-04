@@ -11,7 +11,7 @@ public sealed class DeckHub : Hub;
 
 public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, MediaProvider media,
     DiscordProvider discord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, LyricsProvider lyrics, SpotifyService spotify, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
-    CalendarFeed calendar, CalendarCredentials calendarCredentials, NotificationCenter notifications, ILogger<DeckRuntime> logger) : BackgroundService
+    CalendarFeed calendar, CalendarCredentials calendarCredentials, NotificationCenter notifications, AuraColorProvider aura, ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly CalendarArrivalTracker calendarArrivals = new();
     private readonly ProfileSelector selector = new();
@@ -62,7 +62,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                             GameArtwork = gameArtwork.Read(game, stoppingToken),
                             Lyrics = lyrics.Read(mediaTask.Result, profile, settings.SpotifyLyrics, stoppingToken),
                             SpotifyTransition = selector.SpotifyTransition,
-                            Spotify = spotifyState,
+                            Spotify = spotifyState, Aura = aura.Read(settings.AuraEnabled),
                             News = news.Read(settings.News, stoppingToken),
                             Calendar = calendar.Read(settings.Calendar, calendarCredentials.Read(), stoppingToken),
                             Weather = weather.Read(settings.WeatherLocation, settings.Layout == "weather", stoppingToken) };
@@ -96,14 +96,14 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                 if (input is not null)
                 {
                     var visual = notifications.Read(input.Config.Notifications.AnimatesIn(input.State.Profile));
-                    var interval = visual.Arrival is not null && visual.Seconds < 3.2f ? 100 : 1000;
+                    var interval = visual.Arrival is not null && visual.Seconds < 3.2f ? 100 : input.Config.AuraEnabled ? 500 : 1000;
                     if (watch.Elapsed.TotalMilliseconds - last >= interval)
                     {
                         last = watch.Elapsed.TotalMilliseconds;
                         try
                         {
                             // One renderer and one synchronous USB writer. Nothing is queued while USB is busy.
-                            var rendered = renderer.Render(input.State with { Notifications = visual }, input.Config, input.Artwork, input.Icon);
+                            var rendered = renderer.Render(input.State with { Notifications = visual, Aura = aura.Read(input.Config.AuraEnabled) }, input.Config, input.Artwork, input.Icon);
                             Preview = rendered.Png;
                             display.Send(rendered.Pixels, fullFrame: visual.Arrival is not null || visual.IsTest);
                             Interlocked.Increment(ref renderUpdates);

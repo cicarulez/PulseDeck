@@ -66,7 +66,8 @@ public sealed class DeckRenderer : IDisposable
             canvas.DrawBitmap(background, SKRect.Create((1920 - width) / 2, (480 - height) / 2, width, height));
             using var shade = new SKPaint { Color = new SKColor(5, 10, 13, 130) }; canvas.DrawRect(0, 0, 1920, 480, shade);
         }
-        var accent = SKColor.Parse(config.AccentColor);
+        var accent = SKColor.Parse(AuraColor.Accent(config, state.Aura));
+        var textAccent = config.AuraEnabled && state.Aura.Status == "connected" ? AuraPalette.Text(accent) : accent;
         var muted = new SKColor(144, 162, 161);
         using var line = new SKPaint { Color = new SKColor(48, 65, 64), StrokeWidth = 1 };
         using var accentPaint = new SKPaint { Color = accent, IsAntialias = true };
@@ -75,7 +76,7 @@ public sealed class DeckRenderer : IDisposable
         void Text(string value, float x, float y, float size, SKColor? color = null, bool heavy = false, float maxWidth = 0, float minimumSize = 0)
         {
             using var font = new SKFont(heavy ? bold : typeface, size);
-            using var paint = new SKPaint { Color = color ?? SKColors.White, IsAntialias = true };
+            using var paint = new SKPaint { Color = color == accent ? textAccent : color ?? SKColors.White, IsAntialias = true };
             var text = value;
             if (maxWidth > 0 && minimumSize > 0 && font.MeasureText(text) > maxWidth)
                 font.Size = Math.Max(minimumSize, size * maxWidth / font.MeasureText(text));
@@ -134,7 +135,7 @@ public sealed class DeckRenderer : IDisposable
         {
             if (state.Profile == "desktop" && state.Media.Status != "connected" && config.Calendar.Enabled)
             {
-                CalendarPanel.Draw(canvas, state.Calendar, config.Calendar, state.Timestamp, x, y, width, accent, typeface, bold);
+                CalendarPanel.Draw(canvas, state.Calendar, config.Calendar, state.Timestamp, x, y, width, textAccent, typeface, bold);
                 return;
             }
             const float size = 132;
@@ -467,7 +468,7 @@ public sealed class DeckRenderer : IDisposable
             Text(speaking ? "VOCE" : voice.Status, 1400, 40, 14, color, true, maxWidth: 108);
         }
         Text("PULSEDECK", 32, 42, 23, accent, true);
-        Text("RECON / " + state.Profile.ToUpperInvariant(), 320, 42, 18, muted);
+        Text((config.AuraEnabled && state.Aura.Status != "connected" ? "AURA NON DISP. / " : "RECON / ") + state.Profile.ToUpperInvariant(), 320, 42, 18, muted, maxWidth: 300);
         if (appIcon is not null) ApplicationIconLayout.Draw(canvas, appIcon, appIconBounds, SKRect.Create(644, 16, 36, 36));
 
         Text(state.Foreground.DisplayName, 698, 44, 28, maxWidth: 450);

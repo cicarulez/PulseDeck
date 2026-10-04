@@ -1,0 +1,15 @@
+<h3>Colori Aura Sync</h3>
+<div class="fields">
+  <label class="wide">Sorgente del colore
+    <select name="auraEnabled" [ngModel]="enabled()" (ngModelChange)="enabledChange.emit($event)" [disabled]="busy()">
+      <option [ngValue]="false">Colore manuale</option>
+      <option [ngValue]="true">Segui Aura Sync</option>
+    </select>
+    <small>Richiede il ricevitore Aura di PulseDeck e Dispositivi esterni selezionato in Armoury Crate. Salva per applicare.</small>
+  </label>
+</div>
+<p><pd-status [label]="label()" [active]="active()" />
+  @if (active()) { · Colore ricevuto <code>{{ state()?.color }}</code> }
+</p>
+@if (state()?.detail; as detail) { <p>{{ detail }}</p> }
+<p>Accenti e barre seguono i colori del PC, con aggiornamento fino a due volte al secondo. I testi scuri vengono schiariti per mantenerli leggibili. Se Aura non è disponibile viene usato il colore manuale.</p>

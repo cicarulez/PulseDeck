@@ -1,4 +1,5 @@
 import { SpotifySettingsComponent } from './spotify-settings.component';
+import { AuraSettingsComponent } from './aura-settings.component';
 import { SectionTabsComponent, SectionTab } from '../shared/section-tabs.component';
 import { NotificationSettingsComponent } from './notification-settings.component';
 import { Component, effect, input, output, signal } from '@angular/core';
@@ -12,7 +13,7 @@ import { CalendarSettingsComponent } from './calendar-settings.component';
 import { DiscordSettingsComponent } from './discord-settings.component';
 import { GameThemesComponent } from './game-themes.component';
 
-@Component({ selector: 'pd-settings', standalone: true, imports: [SpotifySettingsComponent, SectionTabsComponent, NotificationSettingsComponent, FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
+@Component({ selector: 'pd-settings', standalone: true, imports: [AuraSettingsComponent, SpotifySettingsComponent, SectionTabsComponent, NotificationSettingsComponent, FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
 export class SettingsComponent {
   readonly sections: readonly SectionTab[] = [
     { id: 'behavior', label: 'Profili e giochi' }, { id: 'display', label: 'Display e musica' },

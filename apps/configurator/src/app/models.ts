@@ -30,7 +30,7 @@ export interface DeckConfig {
   weatherLocation: WeatherLocation | null; news: NewsOptions;
   spotifyLyrics: boolean; lyricsAdvanceMilliseconds: number; gamingLayout: boolean; gamingVoiceActivity: boolean; gameThemes: GameTheme[];
   schemaVersion: number; profileMode: string; gameProcesses: string[]; profileDelaySeconds: number;
-  discordMode: string; discordBaseUrl: string; trackedMemberId: string; displayPort: string; backgroundPath: string; accentColor: string;
+  discordMode: string; discordBaseUrl: string; trackedMemberId: string; displayPort: string; backgroundPath: string; accentColor: string; auraEnabled: boolean;
 }
 export interface Metric { id: string; label: string; value: number | null; unit: string; }
 export interface SensorReading { id: string; name: string; hardwareId: string; hardwareName: string; hardwareType: string; sensorType: string; value: number | null; minimum: number | null; maximum: number | null; unit: string; }
@@ -42,7 +42,9 @@ export interface DisplayState {
   recoveryAttempts: number; recoveries: number; acknowledgedFrames: number;
   lastAcknowledgedAt: string | null; lastTransportError: string | null; userDisconnected: boolean;
 }
+export interface AuraSnapshot { status: string; color: string | null; receivedAt: string | null; samples: number; detail: string | null; }
 export interface DeckState {
+  aura: AuraSnapshot;
   volume: { status: string; percent: number | null; muted: boolean };
   fps: { status: string; framesPerSecond: number | null; frameTimeMs: number | null; detail: string | null };
   gameSession: { processId: number; startedAt: string; elapsedSeconds: number } | null;

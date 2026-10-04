@@ -15,7 +15,7 @@ static void Report(const wchar_t *path, const char *state, HRESULT hr) {
     DWORD session = 0;
     ProcessIdToSessionId(GetCurrentProcessId(), &session);
     SYSTEMTIME utc; GetSystemTime(&utc);
-    fprintf(file, "{\"scope\":\"passive installed HAL; unverified incoming samples\",\"state\":\"%s\","
+    fprintf(file, "{\"protocolVersion\":1,\"heartbeatTick\":%llu,\"scope\":\"passive installed HAL; unverified incoming samples\",\"state\":\"%s\","
         "\"utc\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\",\"pid\":%lu,\"session\":%lu,"
         "\"hresult\":\"0x%08lx\",\"activations\":%ld,\"enumerations\":%ld,"
         "\"capabilities\":%ld,\"effectRequests\":%ld,\"syncRequests\":%ld,"
@@ -23,7 +23,7 @@ static void Report(const wchar_t *path, const char *state, HRESULT hr) {
         "\"deviceType\":%lu,\"lastEffectMethod\":%ld,\"lastEffectId\":%lu,"
         "\"lastEffectCount\":%lu,\"lastEffectVariant\":%lu,"
         "\"rawSamples\":%ld,\"rawWord\":%lu,\"rawSampleTick\":%llu,"
-        "\"colorVerified\":false}", state,
+        "\"colorVerified\":false}", GetTickCount64(), state,
         utc.wYear, utc.wMonth, utc.wDay, utc.wHour, utc.wMinute, utc.wSecond,
         GetCurrentProcessId(), session, hr, s.activations, s.enumerations,
         s.capabilities, s.effect_requests, s.sync_requests, s.hal_refs, s.device_refs, s.factory_refs,
@@ -59,6 +59,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, LPSTR args, int show)
     if (SUCCEEDED(hr)) {
         ULONGLONG idle_since = GetTickCount64();
         ProbeStats previous_stats = {0};
+        ULONGLONG last_report = GetTickCount64();
         Report(report, "running", hr);
         for (;;) {
             if (GetFileAttributesW(stop) != INVALID_FILE_ATTRIBUTES) { state = "uninstalled"; break; }
@@ -70,8 +71,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previous, LPSTR args, int show)
                 CoResumeClassObjects(); idle_since = GetTickCount64();
             }
             ProbeStats stats = GetProbeStats();
-            if (memcmp(&stats, &previous_stats, sizeof(stats))) {
+            if (memcmp(&stats, &previous_stats, sizeof(stats)) || GetTickCount64() - last_report >= 1000) {
                 Report(report, "running", S_OK); previous_stats = stats;
+                last_report = GetTickCount64();
             }
             DWORD wait = MsgWaitForMultipleObjects(0, NULL, FALSE, 500, QS_ALLINPUT);
             if (wait == WAIT_FAILED) { hr = HRESULT_FROM_WIN32(GetLastError()); state = "wait-failed"; break; }

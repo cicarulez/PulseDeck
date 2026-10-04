@@ -34,6 +34,29 @@ Dependency license files included by their packages must accompany redistributio
 No TURZX binaries, original theme files, EA artwork or game assets are included.
 Background images are selected from the user's local files.
 
+## Integration names in documentation
+
+The README integration badges use plain-text service names and PulseDeck's own
+palette. They do not contain vendor logos or certification marks and do not claim
+a partnership, sponsorship or endorsement. Project licensing does not grant any
+rights to third-party trademarks.
+
+Brand guidance reviewed on 2026-10-04:
+
+- [Spotify's design guidelines](https://developer.spotify.com/documentation/design)
+  describe permitted integration branding, logo presentation and restrictions on
+  pairing brands. Availability of a logo download is not blanket permission for
+  co-branded promotion.
+- [ASUS's website legal terms](https://www.asus.com/me-en/ASUS_Website_Information/Legal_information/)
+  require prior written consent for use of the marks displayed there. No ASUS or
+  Aura Sync graphical mark has been added to the README.
+- [Discord's brand guidelines](https://discord.com/branding) provide assets and
+  specify permitted uses and restrictions; none are copied into these badges.
+
+These references document the editorial choice, not a legal clearance or a license
+to add other brand assets. Technical compatibility and trademark permission are
+separate matters.
+
 The optional weather layout uses data from [Open-Meteo](https://open-meteo.com/)
 and location search based on [GeoNames](https://www.geonames.org/). See the service's
 [terms](https://open-meteo.com/en/terms), [forecast documentation](https://open-meteo.com/en/docs)

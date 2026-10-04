@@ -14,12 +14,13 @@
   <section class="panel" role="tabpanel" id="settings-panel-display" aria-labelledby="settings-tab-display" [hidden]="section() !== 'display'"><div class="section-title"><span>02 / DISPLAY E ASPETTO</span><h2>Il tuo pannello.</h2></div>
     <div class="fields">
       <label>Porta del TURZX<input name="port" [(ngModel)]="draft.displayPort" pattern="[Cc][Oo][Mm][1-9][0-9]{0,3}" required></label>
-      <label>Colore principale<input name="accent" type="color" [(ngModel)]="draft.accentColor"></label>
+      <label>Colore manuale<input name="accent" type="color" [(ngModel)]="draft.accentColor"><small>Usato anche quando Aura non è disponibile.</small></label>
       <label class="wide">Immagine di sfondo sul PC Windows<input name="background" [(ngModel)]="draft.backgroundPath" placeholder="C:\Immagini\sfondo.png"><small>PNG, JPEG o WebP statico. Lascia vuoto per lo sfondo scuro integrato. L’immagine riempie il pannello con ritaglio centrale.</small></label>
       <label class="wide">Testi nel profilo Musica<select name="spotifyLyrics" [(ngModel)]="draft.spotifyLyrics"><option [ngValue]="true">Testi e copertina, solo per Spotify</option><option [ngValue]="false">Mantieni il layout abituale</option></select><small>Quando la sessione selezionata è Spotify, cerca i testi su LRCLIB usando titolo, artista, album e durata. Mostra la riga corrente se sincronizzata; altrimenti pagine di testo. I risultati sono salvati sul PC per 30 giorni. Senza testo resta il layout Musica con un messaggio esplicito; YouTube e gli altri player mantengono il layout attuale.</small></label>
       <label>Regolazione testi (ms)<input name="lyricsAdvanceMilliseconds" type="number" min="-5000" max="5000" step="1" required [(ngModel)]="draft.lyricsAdvanceMilliseconds"><small>Positivo anticipa, negativo ritarda. Da −5000 a +5000 ms; predefinito +350 ms. Solo testi sincronizzati, senza spostare la riproduzione. Salva per applicare.</small></label>
       <label class="wide">Layout nel profilo Gaming<select name="gamingLayout" [(ngModel)]="draft.gamingLayout"><option [ngValue]="true">Discord, copertina e sessione</option><option [ngValue]="false">Mantieni il layout scelto in Widget</option></select><small>Discord occupa la colonna sinistra; copertina, durata e FPS del gioco sostituiscono musica e Discord a destra. I sensori rimangono 12 nel layout Meteo, 16 negli altri. Alt-Tab ripristina il layout abituale dopo il ritardo; la durata continua dalla partenza del processo.</small></label>
     </div>
+    <pd-aura-settings [enabled]="draft.auraEnabled" (enabledChange)="draft.auraEnabled = $event" [busy]="busy()" />
     <pd-steam-grid />
     <pd-game-themes [themes]="draft.gameThemes" [processes]="themeProcesses()" [games]="discoveredGames" [busy]="busy()" (themesChange)="draft.gameThemes = $event" />
   </section>

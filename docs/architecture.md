@@ -45,6 +45,17 @@ Providers produce typed snapshots, including status and diagnostics. Sensor upda
 
 Configured LPC sensor loss can trigger bounded motherboard-only reinitialization when PawnIO and elevation are available. This does not change fan curves or acquire RGB control.
 
+Optional Aura following uses a separate native COM destination under
+`tools/aura-probe`, discovered by ASUS as “Dispositivi esterni”. LightingService
+delivers colors to that destination; `AuraColorProvider` only reads its versioned
+SYSTEM-profile report. Fresh heartbeats and host identity distinguish a valid
+static color from a stale file. `DeckState.Aura` carries availability and the
+decoded color. `AuraEnabled` defaults to false; when enabled the shared renderer
+updates at most twice per second, keeps the manual accent as unavailable fallback,
+and lightens dark accent text. Neither the agent nor receiver acquires RGB control.
+The agent still runs as the elevated interactive user, not SYSTEM. See the
+[receiver instructions](../tools/aura-probe/README.md) and dated validation evidence.
+
 Speaking is an explicit voice event, not the inverse of mute/deaf. Every Discord roster highlights speakers only when the voice connection is available. Voice membership follows the tracked user in the configured channel, independently of the active profile; without a tracked ID it follows human occupancy. The legacy `gamingVoiceActivity` setting remains the opt-in switch. Streaming is a separate Gateway flag and does not depend on voice availability. Desktop expands Discord into the media area while the tracked user is in the connected roster (or the roster is nonempty without a tracked ID) and no media session is connected; paused sessions retain their panel. The header hides the tracked member when absent from the connected roster.
 
 PresentMon collection is prepared before protected games launch. Discovery changes should not restart a healthy collector while a game is running. Metrics are application-presented FPS/frame times; status distinguishes unavailable or unprepared collection.

@@ -2407,3 +2407,161 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
 - Physical evidence covers frame acknowledgements, not visual inspection of the
   panel. No Discord voice transitions or remote playback controls were exercised.
   Public client ID, user data, screenshots and tokens are not repository fixtures.
+
+## Aura passive probe investigation resumed — 2026-10-04
+
+- User explicitly requested resuming virtual-device discovery and receiving Aura
+  RGB signals. Initial checks confirmed the previous probe directory and its
+  class/category registrations were absent; service inventory contained no probe.
+- Rebuilt the unchanged native 0.4.0 probe with warnings as errors using the local
+  MinGW compiler. Windows checks passed: 15 synthetic decoder cases, 100 balanced
+  own COM contract iterations and three isolated SDK enumerations. Installed ASUS
+  SDK remains 3.07.05.0. These tests do not establish live color reception.
+- After user acceptance of Windows UAC, installation succeeded under
+  `C:\Program Files\PulseDeck Aura Probe`. The temporary SYSTEM client verified
+  automatic COM activation, direct metadata, three SDK enumerations and idle exit.
+  Baseline report at 11:59:14 UTC: two activations, seven enumerations, four
+  capability reads, zero effect requests and zero raw samples. These activations
+  are installer tests, not ASUS discovery.
+- Both class and category registrations are present. Subsequent read-only device
+  inventory still reports zero PulseDeck identities; LightingService PID remains
+  6784. User entered the Aura Sync device page and reported no probe tile. A new
+  device-inventory read still found zero PulseDeck identities, with no probe host
+  process running. Page entry has not established discovery; the current effect
+  and color have not been supplied and actual RGB reception remains unverified.
+- Before the next experiment, copied LastProfile.xml and script/LastScript.xml
+  into a private LOCALAPPDATA backup and confirmed no running service dependents.
+  User explicitly authorized restarting only LightingService. Restart succeeded
+  at 12:02 UTC, changing its PID from 6784 to 53796; service returned to Running.
+- After restart, detailed inventory contains exactly one PulseDeck Virtual Probe,
+  type EXTERNAL_GENERAL, one LED. A new session-0 host (PID 67220) reports one
+  activation, two enumerations, one capability read, five incoming effect requests
+  and four accepted raw samples. Last request: SetEffect2, ID 0, count 1,
+  VT_ARRAY|VT_UI4; last word 4278190080 (`0xFF000000`). This establishes receipt of
+  incoming data after service reload, not matching with physical LED colors or
+  continuous animation. No direct/SDK activation tests ran in this interval.
+- Display API still reports COM5/chs_88inch.dev1_rom1.90 connected with 9008 frame
+  acknowledgements and no current error; three cumulative recoveries were present.
+  No fresh physical-image confirmation was obtained.
+- A bounded five-minute elevated, read-only observer was prepared to copy changed
+  SYSTEM probe reports into private user diagnostics. User was asked to recheck
+  the Aura Sync tile after restart and report the active LED effect/color.
+- User confirms all physical LEDs are yellow and no probe tile is visible after
+  restart. Observer started successfully; latest report remains at four samples
+  and `0xFF000000`, so it is not evidence of following the yellow LED state.
+  Read-only AuraSync.ini inspection also finds static RGB 255/255/0.
+- Armoury Crate's cached QueryAllDevice.xml and GetDeviceStatus.xml remain dated
+  06:42:47 UTC, before the LightingService reload, and omit PulseDeck. Its
+  GetDeviceStatusNew.xml was updated at 12:03:08 UTC but still omits the probe.
+  A stale plugin inventory is a testable hypothesis, not a proven UI eligibility
+  rule. Saved these diagnostic files and AuraSync.ini privately before proposing
+  a separate ArmouryCrateService reload; no such reload has yet been performed.
+- User suggested that Wallpaper has proprietary Armoury Crate integration whereas
+  the other tiles represent hardware. The current UI inventory has seven tiles:
+  motherboard, Wallpaper, keyboard, mouse, GPU, memory and addressable strip.
+  Thus the hardware tiles are not all motherboard RGB-header connections. Read-only
+  inspection of the installed Aura plugin finds dedicated Wallpaper installation
+  and synchronization handling, consistent with ASUS's official Wallpaper guide.
+  It also contains EXTERNAL_GENERAL mappings; neither this nor successful HAL
+  enumeration establishes that arbitrary third-party destinations get selectable
+  UI tiles. Plugin integration versus cached inventory remains unresolved.
+- User separately authorized restarting ArmouryCrateService. At 12:07:48–12:08:03
+  UTC it changed PID 6488 to 31068 and returned to Running; LightingService stayed
+  at PID 53796. Its QueryAllDevice.xml was refreshed and now includes PulseDeck.
+  GetDeviceStatusNew.xml now has eight entries, including EXTERNAL_GENERAL, but
+  that entry has empty display name/device ID, Type=0 and StatusReady=0. It reports
+  DeviceSync=1, ACControllable=1 and CheckBoxEnable=1. Thus cache reload changes
+  discovery, but does not establish a complete or visible selectable tile.
+- The same probe host now reports 13 incoming calls and 10 accepted samples, last
+  word 4278255615 (`0xFF00FFFF`). This is compatible with yellow under ABGR packing,
+  not yet a verified channel order. A new bounded observer and a user-operated
+  static red then yellow comparison were requested. No color setter was invoked
+  by PulseDeck. Display remained connected with 9374 acknowledgements, no current
+  error; this is transport evidence, not fresh physical-image confirmation.
+- User now confirms a visible "Dispositivi esterni" tile after the Armoury Crate
+  service reload. This corresponds to the newly present EXTERNAL_GENERAL entry.
+  Asked user to select it if needed and perform the static red comparison while
+  the bounded observer is active. Color correspondence remains pending.
+- Completed user-operated static color comparison with the same probe process
+  (PID 67220). User applied each requested color in Armoury Crate and confirmed
+  completion; observer recorded fresh samples after each change:
+
+  | User-applied color | Latest report UTC | Sample count | Raw word |
+  | --- | --- | --- | --- |
+  | Yellow baseline | 12:07:55 | 10 | `0xFF00FFFF` |
+  | Red, RGB 255/0/0 | 12:09:58 | 18 | `0xFF0000FF` |
+  | Blue, RGB 0/0/255 | 12:10:35 | 28 | `0xFFFF0000` |
+  | Yellow restored, RGB 255/255/0 | 12:11:07 | 41 | `0xFF00FFFF` |
+
+- These observations establish real incoming static color transitions, consistent
+  with numeric packing `0xAABBGGRR` (R in bits 0–7, G in 8–15, B in 16–23).
+  High byte was always FF; its meaning was not independently established. All
+  observed accepted samples used SetEffect2, ID 0, count 1, VT_ARRAY|VT_UI4.
+  The unchanged probe still labels reports colorVerified=false by design; this
+  dated external validation does not alter the decoder or create an agent provider.
+- The user restored the original yellow. No additional service reload or outgoing
+  RGB setter was used during color comparison. Dynamic effects, frame cadence,
+  future boot/update persistence and rendering colors on the panel remain untested.
+  The diagnostic observer is bounded to five minutes; the separate on-demand HAL
+  remains installed. This supersedes earlier statements that no real Aura color
+  reception or visible tile had been achieved.
+
+## Aura color following in the agent and physical panel — 2026-10-04
+
+- User requested continuing with animated effects and integration. Applied Color
+  cycle manually in Aura Sync; the bounded observer recorded 64 distinct colors
+  between 12:14:00 and 12:14:32 UTC, sample counter 55 → 275. User was then asked
+  to restore yellow; the receiver later received `0xFF00FFFF` again.
+- Receiver 0.5.0 adds protocol version 1 and a monotonic heartbeat, refreshed even
+  when static colors produce no callbacks. Existing sample decoding and device
+  metadata are unchanged. Warnings-as-errors native build passed; Windows decoder
+  checks (15) and own COM ownership checks (100 iterations) passed. Installation
+  backed up 0.4.0, removed its owned registration, waited for its host to exit and
+  installed 0.5.0. SYSTEM activation/SDK metadata/idle-exit checks passed. Reloaded
+  LightingService then ArmouryCrateService within the authorized integration work;
+  one PulseDeck identity and incoming yellow were verified after the update.
+- Added an opt-in read-only Aura provider, typed core report/snapshot, configuration
+  toggle and standalone Angular settings component reusing shared forms/status UI.
+  The provider verifies protocol, host path/session/start time, heartbeat and input
+  shape before exposing a color. Stale/missing/incompatible sources fall back to
+  the saved manual accent with explicit unavailable status. Static colors remain
+  valid with a fresh host heartbeat. Selection in Aura Sync is a user prerequisite;
+  the provider cannot independently confirm continued sync-group membership.
+- Shared preview/panel renderer follows the latest color at up to two frames per
+  second. Decorations keep the received color; dark text is lightened. No synthetic
+  readings, lighting ownership, outgoing ASUS RGB setters or new USB commands.
+- Targeted checks passed: nine core tests (including observed byte order, static
+  retention, stale/dead/previous-boot reports and fallback), four real renderer
+  tests covering all layouts and text lightening, Angular production build with
+  Node 24.19.0 and self-contained Windows agent publish with .NET 10.
+- Deployment staged a complete package, saved startup-task XML and configuration,
+  stopped the agent and waited for process exit before moving the old installation
+  aside. First configuration PUT from Windows PowerShell returned HTTP 400; the
+  attempted rollback then timed out waiting for the launcher, which was still
+  retrying display startup after the agent exited. The complete new package and
+  previous installation were both retained; no partial DLL copy was performed.
+  Restarted only the owned launcher after confirming no agent remained. Sending
+  the configuration as explicit UTF-8 bytes succeeded. Only `auraEnabled` differs
+  from the original configuration. Task identity/settings and credentials were
+  preserved. Agent remains elevated in the signed-in user's session.
+- After normal standby wake-up retries, COM5/chs_88inch.dev1_rom1.90 reconnected.
+  Agent Aura status is connected, initially #FFFF00. Browser check verified the
+  installed toggle/status/color, HTTP 200 for manual/Aura save transitions, and no
+  horizontal overflow at 390px. Form submission was DOM-triggered through the
+  actual Angular handler. An unrelated existing game-artwork HTTP 404 remains.
+- User reapplied Color cycle and confirmed that physical panel colors follow the
+  PC successfully. Eight consecutive API observations at 12:25:44–12:25:51 UTC
+  showed eight distinct colors, sample count 613 → 723, and acknowledged panel
+  frames 137 → 151. All observations had Aura connected, display connected and no
+  current transport error. This provides physical confirmation as well as API/
+  transport evidence. Asked user to restore the original static yellow afterward.
+- User confirmed yellow restored. Final agent check: Aura enabled/connected,
+  #FFFF00, 1635 samples; manual accent remains #ffff00. Display has 323 acknowledged
+  frames, zero recoveries and no current error since the final agent start. The
+  configurator also shows Aura connected and #FFFF00.
+- Full Windows reboot persistence, receiver-unavailable behavior on the physical
+  panel, every other Aura effect and other ASUS versions remain untested. Stale
+  source handling is covered by core tests; no whole-PC reboot was performed.
+- No outgoing RGB control call, firmware change or agent deployment was performed.
+  Runtime logs and installation audit remain under LOCALAPPDATA outside Git. The
+  probe remains installed for this resumed test.

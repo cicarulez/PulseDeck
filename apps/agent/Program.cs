@@ -39,6 +39,7 @@ builder.Services.AddHttpClient("steamgriddb", client => { client.Timeout = TimeS
 builder.Services.AddSingleton(provider => new SteamGridArtwork(provider.GetRequiredService<IHttpClientFactory>().CreateClient("steamgriddb"), provider.GetRequiredService<ConfigStore>(), provider.GetRequiredService<SteamGridCredentials>()));
 builder.Services.AddSingleton<PresentMonProvider>();
 builder.Services.AddSingleton<VolumeProvider>();
+builder.Services.AddSingleton<AuraColorProvider>();
 builder.Services.AddHttpClient("game-artwork", client => { client.Timeout = TimeSpan.FromSeconds(10); client.MaxResponseContentBufferSize = 4 * 1024 * 1024; });
 builder.Services.AddSingleton(provider => new GameArtworkProvider(provider.GetRequiredService<IHttpClientFactory>().CreateClient("game-artwork"), provider.GetRequiredService<ConfigStore>(), provider.GetRequiredService<SteamGridArtwork>()));
 builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });

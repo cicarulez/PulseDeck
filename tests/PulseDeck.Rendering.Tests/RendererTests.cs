@@ -10,6 +10,34 @@ public class RendererTests
     [InlineData("classic")]
     [InlineData("compact")]
     [InlineData("weather")]
+    public void AuraChangesSharedRenderingAndUnavailableColorsAreIgnored(string layout)
+    {
+        using var renderer = new DeckRenderer();
+        var manual = new DeckConfig { Layout = layout, AccentColor = "#FFFF00" };
+        var aura = manual with { AuraEnabled = true };
+        var yellow = State with { Aura = new("connected", "#FFFF00") };
+        Assert.Equal(renderer.Render(yellow, manual).Pixels, renderer.Render(yellow, aura).Pixels);
+        var blue = State with { Aura = new("connected", "#0000FF") };
+        Assert.NotEqual(renderer.Render(yellow, aura).Pixels, renderer.Render(blue, aura).Pixels);
+        Assert.Equal(renderer.Render(blue, manual).Pixels, renderer.Render(yellow, manual).Pixels);
+        Assert.Equal(renderer.Render(State with { Aura = new("unavailable", "#0000FF") }, aura).Pixels,
+            renderer.Render(State with { Aura = new("unavailable", "#FF0000") }, aura).Pixels);
+    }
+
+    [Fact]
+    public void DarkAuraTextIsLightenedWithoutChangingBrightColors()
+    {
+        Assert.Equal(SKColors.Yellow, AuraPalette.Text(SKColors.Yellow));
+        var black = AuraPalette.Text(SKColors.Black);
+        Assert.True(black.Red >= 159 && black.Green >= 159 && black.Blue >= 159);
+        var blue = AuraPalette.Text(SKColors.Blue);
+        Assert.True(blue.Blue == 255 && blue.Red > 100 && blue.Green > 100);
+    }
+
+    [Theory]
+    [InlineData("classic")]
+    [InlineData("compact")]
+    [InlineData("weather")]
     public void CalendarArrivalIsTransientDesktopOnlyAndKeepsMailCount(string layout)
     {
         using var renderer = new DeckRenderer(); var config = new DeckConfig { Layout = layout };

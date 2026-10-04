@@ -14,6 +14,7 @@ public sealed record DeckConfig
     public string DisplayPort { get; init; } = "COM5";
     public string BackgroundPath { get; init; } = "";
     public string AccentColor { get; init; } = "#a9ff69";
+    public bool AuraEnabled { get; init; }
     public string Layout { get; init; } = "compact";
     public WeatherLocation? WeatherLocation { get; init; }
     public NewsOptions News { get; init; } = new();
@@ -115,6 +116,7 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
     public GameArtworkSnapshot GameArtwork { get; init; } = new();
     public FpsSnapshot Fps { get; init; } = new("unavailable");
     public VolumeSnapshot Volume { get; init; } = new();
+    public AuraSnapshot Aura { get; init; } = new();
     public WeatherSnapshot Weather { get; init; } = new();
     public NewsSnapshot News { get; init; } = new();
     public CalendarSnapshot Calendar { get; init; } = new();
