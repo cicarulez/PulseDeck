@@ -6,6 +6,8 @@ PulseDeck è un progetto open source per trasformare il display USB **TURZX 8,8�
 
 Il configuratore e il display usano lo stesso renderer. L’agent gira sul PC; non serve un account PulseDeck. Le integrazioni opzionali interrogano i rispettivi servizi esterni. L’interfaccia è attualmente in italiano; la documentazione principale è in inglese per facilitare i contributi internazionali.
 
+**Versione sorgente: 0.10.0 · aggiornato il 4 ottobre 2026.** Vedi le [note di sviluppo](releases/v0.10.0.md). Questa versione non implica una release già pubblicata.
+
 ## Integrazioni a colpo d’occhio
 
 <p>
@@ -19,7 +21,7 @@ Il configuratore e il display usano lo stesso renderer. L’agent gira sul PC; n
   <a href="getting-started.md"><img alt="SteamGridDB: immagini dei giochi" src="https://img.shields.io/badge/SteamGridDB-immagini_dei_giochi-9bc8f5?labelColor=111c22"></a>
 </p>
 
-Le etichette indicano funzioni specifiche di PulseDeck; alcune richiedono una configurazione opzionale. Aura usa un ricevitore sperimentale installato separatamente, verificato sul PC di sviluppo con colori statici e Ciclo colori. Una build sperimentale a 16 zone riceve anche i colori simultanei di Arcobaleno e li applica alla scritta PULSEDECK, al testo attivo e all’avanzamento del brano; ogni barra dei sensori mantiene un colore uniforme.
+Le etichette indicano funzioni specifiche di PulseDeck; alcune richiedono una configurazione opzionale. Aura usa un ricevitore sperimentale installato separatamente, verificato sul PC di sviluppo con colori statici e Ciclo colori. Una build sperimentale a 16 zone riceve anche i colori simultanei di Arcobaleno e li applica alla scritta PULSEDECK, al testo attivo e all’avanzamento del brano e alle barre dello spettro; ogni barra dei sensori mantiene un colore uniforme.
 
 *Integrazioni indipendenti della community. Non vengono dichiarate sponsorizzazioni, approvazioni o certificazioni dei produttori. I nomi appartengono ai rispettivi titolari; questi badge testuali non sono loghi ufficiali.*
 
@@ -33,9 +35,12 @@ L’idea è partita da [Discord Overlay](https://github.com/cicarulez/discord-ov
 - **Gaming:** rilevamento Steam/EA, immagini, FPS, timer che continua durante Alt-Tab e attività vocale Discord.
 - **Musica:** copertina Spotify, testi sincronizzati opzionali e nove sensori in una griglia 3×3.
 - **Aura Sync:** accenti e barre seguono i colori del PC tramite il ricevitore sperimentale, con ritorno al colore manuale se non disponibile.
+- **Luminosità:** valore manuale da 0 a 100; con un valore salvato, Scuro (OFF) di Aura oscura il pannello e la riattivazione o perdita della connessione Aura ripristina il valore scelto.
 - **Configurazione:** widget, profili, sfondi, anteprima e collegamento del display dal browser.
 
 Il progetto è in sviluppo iniziale. Il modello verificato è `chs_88inch.dev1_rom1.90`, USB `0525:A4A7`; gli altri modelli non sono ancora supportati. Le immagini della documentazione usano il renderer reale con dati dimostrativi e contenuti originali.
+
+Il layout Spotify può mostrare nove widget oppure i primi tre (CPU, GPU e RAM nella configurazione predefinita) sopra uno spettro audio reale del solo player. L’audio viene analizzato in memoria sul PC. Il renderer punta a 10 aggiornamenti al secondo durante le animazioni, indipendentemente dalla trasmissione USB, che punta a 4. L’anteprima recupera anche dopo caricamenti delle immagini rallentati. La frequenza effettiva dipende dal rendering e dal trasporto. Vedi le [misure sul pannello](validation.md).
 
 ## Da dove partire
 

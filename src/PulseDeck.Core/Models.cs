@@ -12,6 +12,7 @@ public sealed record DeckConfig
     public string TrackedMemberId { get; init; } = "";
     public string DiscordVoiceChannelId { get; init; } = "";
     public string DisplayPort { get; init; } = "COM5";
+    public int? DisplayBrightness { get; init; }
     public string BackgroundPath { get; init; } = "";
     public string AccentColor { get; init; } = "#a9ff69";
     public bool AuraEnabled { get; init; }
@@ -21,6 +22,7 @@ public sealed record DeckConfig
     public NotificationOptions Notifications { get; init; } = new();
     public CalendarOptions Calendar { get; init; } = new();
     public bool SpotifyLyrics { get; init; } = true;
+    public bool MusicSpectrum { get; init; }
     public int LyricsAdvanceMilliseconds { get; init; } = 350;
     public bool GamingLayout { get; init; } = true;
     public bool GamingVoiceActivity { get; init; } = true;
@@ -52,6 +54,7 @@ public sealed record DeckConfig
         if (!Uri.TryCreate(DiscordBaseUrl, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https") || !string.IsNullOrEmpty(uri.UserInfo)) return "Enter an HTTP(S) Discord backend URL without credentials.";
         if (DisplayPort is null || !System.Text.RegularExpressions.Regex.IsMatch(DisplayPort, @"^COM[1-9]\d{0,3}$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return "Invalid COM port.";
         if (AccentColor is null || !System.Text.RegularExpressions.Regex.IsMatch(AccentColor, "^#[0-9a-fA-F]{6}$")) return "Accent must be a six-digit hex color.";
+        if (DisplayBrightness is < 0 or > 100) return "Display brightness must be between 0 and 100 percent.";
         if (BackgroundPath is null || BackgroundPath.Length > 1024 || TrackedMemberId is null || TrackedMemberId.Length > 100) return "Invalid background path or member ID.";
         return GameTheme.Validate(GameThemes) ?? WidgetCatalog.Validate(Widgets);
     }
@@ -70,6 +73,7 @@ public sealed record HardwareSnapshot(IReadOnlyList<Metric> Metrics, string Stat
 }
 public sealed record MediaSnapshot(bool Playing, string Title, string Artist, string App, double PositionSeconds, double DurationSeconds, string Status)
 {
+    public double PlaybackRate { get; init; } = 1;
     public string[] Artists { get; init; } = [];
     public string DisplayArtist => Artists.Length > 0 ? string.Join(", ", Artists) : Artist;
     public string? ArtworkId { get; init; }
@@ -94,6 +98,8 @@ public sealed record DiscordSnapshot(IReadOnlyList<VoiceMember> Members, VoiceMe
 }
 public sealed record DisplaySnapshot(bool Connected, string Port, string? DeviceId, string Status, string? Error = null)
 {
+    public int? AppliedBrightness { get; init; }
+    public bool AuraOff { get; init; }
     public int RecoveryAttempts { get; init; }
     public int Recoveries { get; init; }
     public long AcknowledgedFrames { get; init; }
@@ -106,6 +112,7 @@ public sealed record DisplaySnapshot(bool Connected, string Port, string? Device
     public FrameRect? LastFrameRegion { get; init; }
     public int LastTransferBytes { get; init; }
     public double LastTransferMilliseconds { get; init; }
+    public int LastRegionCount { get; init; }
 }
 public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string ForegroundApp, HardwareSnapshot Hardware,
     MediaSnapshot Media, DiscordSnapshot Discord, DisplaySnapshot Display, string FpsStatus = "not-configured")
@@ -117,6 +124,7 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
     public FpsSnapshot Fps { get; init; } = new("unavailable");
     public VolumeSnapshot Volume { get; init; } = new();
     public AuraSnapshot Aura { get; init; } = new();
+    public AudioSpectrumSnapshot AudioSpectrum { get; init; } = new();
     public WeatherSnapshot Weather { get; init; } = new();
     public NewsSnapshot News { get; init; } = new();
     public CalendarSnapshot Calendar { get; init; } = new();

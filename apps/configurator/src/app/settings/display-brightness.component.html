@@ -1,0 +1,15 @@
+<div class="fields">
+  <label>Luminosità del pannello
+    <select name="displayBrightnessMode" [ngModel]="percent() === null" (ngModelChange)="setInherited($event)" [disabled]="busy()">
+      <option [ngValue]="true">Mantieni il valore attuale</option>
+      <option [ngValue]="false">Imposta con PulseDeck</option>
+    </select>
+    <small>Salva per applicare. Il valore scelto viene ripristinato quando ricolleghi il pannello. Con “Segui Aura Sync”, Scuro (OFF) lo porta temporaneamente a 0%.</small>
+  </label>
+  @if (percent() !== null) {
+    <label>Luminosità: {{ percent() }}%
+      <input name="displayBrightness" type="range" min="0" max="100" step="1" [ngModel]="percent()" (ngModelChange)="setPercent($event)" [disabled]="busy()" aria-label="Luminosità del pannello in percentuale">
+      <small>0% riduce la luminosità al minimo e può rendere lo schermo scuro. “Mantieni il valore attuale” lascia la luminosità già applicata.</small>
+    </label>
+  }
+</div>

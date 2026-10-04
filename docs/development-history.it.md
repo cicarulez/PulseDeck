@@ -2,9 +2,26 @@
 
 # Piano di sviluppo PulseDeck
 
-Aggiornato il 18 settembre 2026. Questo file conserva decisioni, priorità e verifiche
+Aggiornato il 4 ottobre 2026. Questo file conserva decisioni, priorità e verifiche
 per riprendere il lavoro nelle prossime sessioni. Le attività future non sono già
 implementate e non richiedono di installare tutte le dipendenze in anticipo.
+
+## Stato al 4 ottobre 2026
+
+La versione sorgente 0.10.0 include Aura passivo a 16 zone, colori distribuiti
+su testo e spettro, layout Musica con tre widget e spettro del solo Spotify,
+luminosità manuale e spegnimento tramite Scuro (OFF) di Aura. La luminosità
+salvata viene ripristinata alla riattivazione o indisponibilità di Aura.
+
+Acquisizione, renderer e USB sono separati: anteprima prossima a 10 fps;
+prova indipendente con frame completi sul pannello a 4,33 fps per cinque minuti,
+senza errori e con immagine confermata corretta dall’utente. La riproduzione
+di una clip originale nella memoria del pannello è riuscita; gli overlay
+sul video sono stati respinti e non sono disponibili nell’app. Le vecchie
+sezioni conservano le decisioni e le date del loro periodo.
+
+Vedi [verifiche](validation.md), [ricerca video](turzx_internal_playback_research.md)
+e [note della versione](releases/v0.10.0.md) per risultati e limiti.
 
 ## Obiettivo
 

@@ -12,6 +12,13 @@ TURZX revision C frame encoding from **turing-smart-screen-python**, commit
 - Copyright (C) 2023 Arthur Ferrai
 - License: GPL-3.0-or-later; see `LICENSE`.
 
+The experimental media and composition commands in `TurzxMediaProtocol.cs`
+and `TurzxVideoOverlayProtocol.cs` follow the public
+video-support work by gwendal-h in
+https://github.com/mathoudebine/turing-smart-screen-python/pull/348,
+source commit `58aa2f21515019d1e9ed66263c243e36e29bba43` (2023), under
+GPL-3.0-or-later. This diagnostic is separate from production frame delivery.
+
 The Python diagnostic in `tools/turzx-probe` was developed in the local
 Discord Overlay project and imports a separately installed upstream driver.
 

@@ -4,12 +4,18 @@ using System.Management;
 using System.Text;
 using System.Text.RegularExpressions;
 using PulseDeck.Core;
+using PulseDeck.Agent.Configuration;
+using PulseDeck.Agent.Providers;
 
 namespace PulseDeck.Agent.Display;
 
 public sealed class TurzxDisplay : IDisposable
 {
     private readonly ILogger<TurzxDisplay> logger;
+    private readonly ConfigStore config;
+    private readonly AuraColorProvider aura;
+    private int? appliedBrightness;
+    private readonly AuraBrightness brightness = new();
     private readonly object gate = new();
     private readonly TurzxFrameDelivery delivery;
     private SerialPort? serial;
@@ -17,11 +23,13 @@ public sealed class TurzxDisplay : IDisposable
     private volatile bool stopping;
     private long commandGeneration, connectionGeneration;
     private DisplaySnapshot status = new(false, "", null, "disconnected");
-    public DisplaySnapshot Status { get { lock (gate) return status; } }
+    public DisplaySnapshot Status { get { lock (gate) return status with { AppliedBrightness = appliedBrightness, AuraOff = brightness.Off }; } }
 
-    public TurzxDisplay(ILogger<TurzxDisplay> logger)
+    public TurzxDisplay(ILogger<TurzxDisplay> logger, ConfigStore config, AuraColorProvider aura)
     {
         this.logger = logger;
+        this.config = config;
+        this.aura = aura;
         delivery = new(WritePacket, ReadStatus, () =>
         {
             Open(status.Port, allowWake: false, expectedId: status.DeviceId);
@@ -93,7 +101,37 @@ public sealed class TurzxDisplay : IDisposable
         WritePacket(TurzxProtocol.StopMediaCommand());
         ReadStatus();
         CheckCancellation();
+        ApplyBrightnessCore();
         return id;
+    }
+
+    public void ApplyBrightness()
+    {
+        lock (gate)
+        {
+            if (IsCancelled() || !status.Connected) return;
+            try { ApplyBrightnessCore(); }
+            catch (Exception e)
+            {
+                // Stop after a failed control write; never retry on every render tick.
+                delivery.Cancel();
+                ClosePort();
+                status = status with { Connected = false, Status = "error", Error = e.Message, LastTransportError = e.Message };
+                logger.LogWarning(e, "Could not apply display brightness; reconnect the panel to retry.");
+            }
+        }
+    }
+
+    private void ApplyBrightnessCore()
+    {
+        var settings = config.Current;
+        var snapshot = aura.Read(settings.AuraEnabled);
+        var percent = brightness.Resolve(settings, snapshot);
+        if (percent is null) { appliedBrightness = null; return; }
+        if (percent == appliedBrightness) return;
+        CheckCancellation();
+        WritePacket(TurzxProtocol.BrightnessCommand(percent.Value));
+        appliedBrightness = percent;
     }
 
     private void CheckCancellation()
@@ -103,6 +141,7 @@ public sealed class TurzxDisplay : IDisposable
 
     private void ClosePort()
     {
+        appliedBrightness = null;
         var port = serial;
         serial = null;
         try { port?.Dispose(); }
@@ -159,7 +198,8 @@ public sealed class TurzxDisplay : IDisposable
                 LastTransportError = delivery.LastError, LastAcknowledgedAt = delivery.LastAcknowledgedAt,
                 LastFrameKind = delivery.LastFrameKind, LastFrameCounter = delivery.LastFrameCounter,
                 FullFrameFallback = delivery.FullFrameFallback, LastFrameRegion = delivery.LastFrameRegion,
-                LastTransferBytes = delivery.LastTransferBytes, LastTransferMilliseconds = delivery.LastTransferMilliseconds
+                LastTransferBytes = delivery.LastTransferBytes, LastTransferMilliseconds = delivery.LastTransferMilliseconds,
+                LastRegionCount = delivery.LastRegionCount
             };
             if (next.Status != status.Status || attempts != delivery.Attempts || recoveries != delivery.Recoveries)
                 logger.LogInformation("TURZX {Port}: {State}; recovery attempts {Attempts}/2, recoveries {Recoveries}, acknowledged frames {Frames}; frame {Kind}, counter {Counter}; region {Region}, bytes {Bytes}, duration {Milliseconds} ms, full fallback {Fallback}; last error: {Error}",

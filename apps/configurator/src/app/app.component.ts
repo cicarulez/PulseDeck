@@ -7,8 +7,9 @@ import { SensorsComponent } from './sensors/sensors.component';
 import { WidgetsComponent } from './widgets/widgets.component';
 import { DeckConfig } from './models';
 import { DisplayControlsComponent } from './display/display-controls.component';
+import { LivePreviewComponent } from './shared/live-preview.component';
 
-@Component({ selector: 'pd-root', standalone: true, imports: [StatusBadgeComponent, MetricCardComponent, SettingsComponent, SensorsComponent, WidgetsComponent, DisplayControlsComponent], templateUrl: './app.component.html', styleUrl: './app.component.scss' })
+@Component({ selector: 'pd-root', standalone: true, imports: [StatusBadgeComponent, MetricCardComponent, SettingsComponent, SensorsComponent, WidgetsComponent, DisplayControlsComponent, LivePreviewComponent], templateUrl: './app.component.html', styleUrl: './app.component.scss' })
 export class AppComponent {
   readonly deck = inject(DeckService);
   readonly tab = signal<'overview' | 'sensors' | 'widgets' | 'settings'>(window.location.hash.startsWith('#settings/') ? 'settings' : 'overview');
@@ -24,7 +25,7 @@ export class AppComponent {
     const source = this.deck.state()?.media.app.toLowerCase() ?? '';
     return source.includes('spotify') ? 'Spotify' : source.includes('chrome') ? 'Google Chrome' : source.includes('msedge') ? 'Microsoft Edge' : 'Sessione multimediale Windows';
   });
-  readonly preview = computed(() => '/api/preview.png?v=' + encodeURIComponent(this.deck.state()?.timestamp ?? 'initial'));
+  readonly preview = computed(() => '/api/preview.png?v=' + encodeURIComponent(this.deck.previewFrame() || this.deck.state()?.timestamp || 'initial'));
   readonly profile = computed(() => ({ desktop: 'Desktop', music: 'Musica', gaming: 'Gaming' }[this.deck.state()?.profile ?? 'desktop'] ?? 'Desktop'));
   constructor() { void this.deck.start(); }
   async save(config: DeckConfig) { this.saved.set(await this.deck.save(config)); setTimeout(() => this.saved.set(false), 4000); }

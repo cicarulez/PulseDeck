@@ -3,6 +3,52 @@ using Xunit;
 
 public class ProtocolTests
 {
+    [Fact]
+    public void DistantChangedBandsAvoidSendingTheUnchangedMiddleAndCoverEveryPixel()
+    {
+        var before = Frame(); var after = Frame();
+        for (int y = 20; y < 40; y++) for (int x = 30; x < 180; x++) after[(y * 1920 + x) * 4] = 1;
+        for (int y = 400; y < 420; y++) for (int x = 1400; x < 1800; x++) after[(y * 1920 + x) * 4] = 2;
+        var regions = TurzxProtocol.ChangedRegions(before, after);
+        Assert.Equal(2, regions.Length);
+        Assert.True(regions.Sum(r => r.Width * r.Height) < 20000);
+        for (int y = 0; y < 480; y++) for (int x = 0; x < 1920; x++)
+            if (after[(y * 1920 + x) * 4] != 0) Assert.Contains(regions, r => x >= r.X && x < r.X + r.Width && y >= r.Y && y < r.Y + r.Height);
+        Assert.Empty(TurzxProtocol.ChangedRegions(before, before));
+    }
+    [Fact]
+    public void BatchedPayloadAddressesSeparateRegionsWithoutChangingPixelsBetweenThem()
+    {
+        var pixels = Frame();
+        FrameRect[] regions = [new(10, 20, 15, 4), new(10, 400, 15, 5), new(1700, 200, 2, 3)];
+        foreach (var rect in regions)
+            for (int y = rect.Y; y < rect.Y + rect.Height; y++) for (int x = rect.X; x < rect.X + rect.Width; x++)
+                for (int c = 0; c < 4; c++) pixels[(y * 1920 + x) * 4 + c] = (byte)(x + y + c);
+        var (header, encoded) = TurzxProtocol.PartialFrameRegions(pixels, regions, 90, 42);
+        int rawLength = (header[4] << 16 | header[5] << 8 | header[6]) - 2;
+        var raw = new byte[rawLength];
+        for (int i = 0, source = 0; i < rawLength; i++)
+        {
+            if (i > 0 && i % 249 == 0) { Assert.Equal(0, encoded[source]); source++; }
+            raw[i] = encoded[source++];
+        }
+        var reconstructed = Frame(); var lastAddress = -1;
+        for (int pos = 0; pos < raw.Length;)
+        {
+            int address = raw[pos++] << 16 | raw[pos++] << 8 | raw[pos++];
+            int length = raw[pos++] << 8 | raw[pos++];
+            Assert.True(address > lastAddress); lastAddress = address;
+            for (int i = 0; i < length; i++)
+            {
+                int x = (address + i) / 480, y = 479 - (address + i) % 480;
+                raw.AsSpan(pos, 4).CopyTo(reconstructed.AsSpan((y * 1920 + x) * 4, 4)); pos += 4;
+            }
+        }
+        Assert.Equal(pixels, reconstructed);
+        Assert.Equal(new byte[] { 0, 0, 0, 42 }, header[10..14]);
+        Assert.Throws<ArgumentOutOfRangeException>(() => TurzxProtocol.PartialFrameRegions(pixels, [], 90, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TurzxProtocol.PartialFrameRegions(pixels, [new(0, 0, 1921, 1)], 90, 0));
+    }
     private static byte[] Frame() => new byte[1920 * 480 * 4];
     [Theory]
     [InlineData(@"USB\VID_1A86&PID_CA88\CT88INCH", true)]

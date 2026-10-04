@@ -40,6 +40,8 @@ builder.Services.AddSingleton(provider => new SteamGridArtwork(provider.GetRequi
 builder.Services.AddSingleton<PresentMonProvider>();
 builder.Services.AddSingleton<VolumeProvider>();
 builder.Services.AddSingleton<AuraColorProvider>();
+builder.Services.AddSingleton<AudioSpectrumProvider>();
+builder.Services.AddHostedService(p => p.GetRequiredService<AudioSpectrumProvider>());
 builder.Services.AddHttpClient("game-artwork", client => { client.Timeout = TimeSpan.FromSeconds(10); client.MaxResponseContentBufferSize = 4 * 1024 * 1024; });
 builder.Services.AddSingleton(provider => new GameArtworkProvider(provider.GetRequiredService<IHttpClientFactory>().CreateClient("game-artwork"), provider.GetRequiredService<ConfigStore>(), provider.GetRequiredService<SteamGridArtwork>()));
 builder.Services.AddHttpClient("weather", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 65536; });
@@ -252,9 +254,9 @@ app.MapDelete("/api/steamgriddb", (SteamGridCredentials credentials) =>
     catch { return Results.Problem("Impossibile rimuovere la chiave dal PC."); }
 });
 app.MapGet("/api/config", (ConfigStore store) => store.Current);
-app.MapPut("/api/config", (DeckConfig config, ConfigStore store) =>
+app.MapPut("/api/config", (DeckConfig config, ConfigStore store, TurzxDisplay display) =>
 {
-    try { store.Save(config); return Results.Ok(store.Current); }
+    try { store.Save(config); display.ApplyBrightness(); return Results.Ok(store.Current); }
     catch (ArgumentException e) { return Results.BadRequest(new { error = e.Message }); }
     catch (IOException) { return Results.Problem("Could not save the configuration."); }
 });

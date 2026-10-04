@@ -16,6 +16,17 @@ Keep the entire folder together: `PulseDeck.Agent.exe`, its libraries, `wwwroot`
 4. Preview your layout. Closing the browser leaves the agent running.
 5. To connect the supported panel, fully close the vendor TURZX app, select the panel's actual COM port, then choose **Collega display**.
 
+To adjust panel brightness, open **Configurazione → Display e musica**, select
+**Imposta con PulseDeck**, move the 0–100% slider and save. The chosen brightness
+is saved and reapplied when the display reconnects. **Mantieni il valore attuale**
+is the default for existing configurations and leaves the panel's current value
+in place; it does not restore an earlier brightness setting.
+With **Segui Aura Sync** enabled and a manual brightness saved, **Scuro (OFF)**
+temporarily sets the panel brightness to 0%. Reapplying an active Aura effect
+restores the saved value. An unavailable Aura connection does not turn off the
+panel. This power-state reading was checked against LightingService on the
+development PC; other Armoury Crate versions may not expose the same state.
+
 COM5 is the development machine's port, not a universal setting. PulseDeck checks the USB/device identity before transmitting.
 
 To start without elevation, use `Start-PulseDeck.ps1 -StandardUser`. Some sensors and FPS collection may be unavailable. Missing readings are shown as `—`, not replaced with sample values.

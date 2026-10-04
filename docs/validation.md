@@ -1,4 +1,4 @@
-# Validation — updated 2026-09-17
+# Validation — updated 2026-10-04
 
 ## Bounded USB recovery — 2026-09-17 (0.1.1)
 
@@ -2619,3 +2619,319 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
 - Limitations: refresh remains at most 2 Hz; only the one-zone and 16x1 layouts
   were checked against this installed ASUS SDK. This does not read or mirror each
   physical PC device's topology. Full Windows reboot persistence is still untested.
+
+## Refresh investigation and Spotify audio spectrum — 2026-10-04
+
+- User requested general animation improvements and an optional Music column with
+  CPU/GPU/RAM above a real audio spectrum, restricted to the player. Implemented
+  `MusicSpectrum` (default false); it retains the first three existing bindings and
+  preserves the other six for switching back. Only the Spotify app is supported.
+- Windows process-loopback selects the unique Spotify root in the interactive
+  session and includes its child processes. There is no system-output or microphone
+  fallback. Pause, profile exit or disabling cancels capture. A 2048-sample Hann
+  FFT produces 24 logarithmic bands in memory; no audio recording is saved.
+- Six-second signed-user probe on Spotify PID 56268: 128 analysed windows,
+  262395 samples, normalized peak 0.7842. Selecting the silent probe's own process
+  while Spotify played instead produced 129 windows / 264600 samples with peak
+  exactly zero. This checks exclusion of unrelated Spotify audio; a simultaneous
+  second audible application alongside Spotify was not independently exercised.
+- Initial integrated Music run: 9.38 acknowledged fps over roughly ten seconds,
+  2–6 regions, 140250–1360750 bytes and 9.64–89.04 ms per update. User physically
+  confirmed the new layout and improved fluidity. User requested Aura colors
+  across the spectrum bars; renderer now fits the same ordered palette across
+  those bars while hardware bars/rings keep their solid colors.
+- That initial run later rejected a partial at frame 691 / host counter 3575 and
+  entered the existing full-frame fallback. An experimental complete refresh every
+  256 partial commands did not solve it (another rejection at frame 115, counter
+  63); that ineffective policy was removed. Initial high fps is not evidence of
+  sustained reliability. The mail test in full fallback measured only 3.79 fps.
+- Direct diagnostic using the agent's live preview reproduced a rejection after
+  19.68 s / counter 832 on a 140×2 rectangle, 1820 raw bytes. Thin-region tests at
+  heights 1/2/3/4/8/16, 100 repetitions each with a 20 ms gap, all passed. Separate
+  commands with a 20 ms post-ACK gap passed 90 s / 2144 commands / 411 updates at
+  4.56 fps. These observations suggest command bursts matter; they do not identify
+  a definitive firmware bug or a minimum safe processing delay.
+- Packed non-contiguous column segments into one partial command and one ACK,
+  keeping the full-frame command unchanged. Direct live-preview trial passed
+  90 s / 690 updates at 7.66 fps without a resend. This diagnostic includes preview
+  HTTP/decode overhead and is not the integrated agent's final cadence. Core tests
+  reconstruct multiple separated regions from the encoded bytes, including block
+  stuffing; the baseline advances only after the entire batch is acknowledged.
+- Added monotonic playback interpolation between the one-second media samples,
+  respecting pause, rate, duration and fresh seek/track samples. Stale extrapolation
+  is bounded to two seconds; it is not another high-frequency provider poll.
+- Validation: 231 Core tests, 67 renderer tests, Angular production build and
+  self-contained Windows agent publish passed. The initial batched integration
+  was deployed after retrying UAC, but its sustained test failed; final conservative
+  integration results follow below. No firmware update, baud-rate experiment,
+  concurrent serial writer or queued frame was introduced.
+- The user's refresh plan (not included in this checkout) was reviewed as a design
+  proposal. Its full adaptive scheduler, per-widget render invalidation, EWMA cost
+  model, pending-frame slot and complete benchmark matrix are not implemented by
+  this change. Existing synchronous rendering reads the latest provider state
+  after USB completes and queues no frames.
+
+- Integrated batched agent subsequently rejected an update at frame 722 / host
+  counter 721, after about 40 s of Music measurement (9.51 fps until rejection).
+  Another direct batch trial rejected at 17.55 s / counter 171. Decoding its saved
+  payload reconstructed 3425 correctly ordered column records and 98786 pixels,
+  without malformed addresses or embedded EF69 markers; the exact payload then
+  passed five replays after fresh full baselines and 500 ms spacing. This supports
+  its structural validity, but does not establish the failure's root cause.
+- The 8 Hz batch cap and single global bounding-box trials also encountered serial
+  timeouts. A diagnostic counter held at zero was rejected on the second update,
+  confirming that counters must still increment; no production counter change was
+  retained. A repeated full refresh policy and a simple cadence reduction alone
+  were insufficient evidence to ship high-rate partial animation.
+- Direct full-frame trial with Rainbow and Spotify active completed 300 s / 1155
+  acknowledged updates at 3.847 fps, without resend or timeout. The production
+  renderer therefore targets 4 Hz for Aura, playback and notification animation
+  and requests the verified complete-frame path. Ordinary telemetry retains
+  1 Hz and the original single partial bounding rectangle. Unchanged images skip
+  USB. Multi-region encoding remains confined to the diagnostic tool.
+- Compared partial batches with Aura following disabled only in PulseDeck while
+  Spotify and the PC's Rainbow effect stayed active. Typical packets dropped to
+  60–166 KB, but the batch was still rejected at 21.46 s / counter 209 (75806 raw
+  bytes). Thus Rainbow increases work, but the failure also occurs without its
+  colors on the panel. Original Aura-enabled config was restored in `finally`.
+- Final installed agent, with Spotify and Rainbow active: 300.21 seconds / 1108
+  acknowledged updates, 3.69 fps. All sampled frames used the verified full path
+  (3702250 bytes), with 201.06–225.91 ms transfer times, zero errors, zero recoveries
+  and no fallback. Audio spectrum remained connected throughout. Deployment
+  preserved the config hash and the elevated interactive-user startup task.
+- Simulated mail notification in Music: 3.62 fps over its animation, zero errors
+  or recoveries. Original notification profile settings were restored afterward.
+  This does not demonstrate a higher notification frame rate than the previous
+  full-frame path. Actual preview inspection confirmed the ordered Aura palette
+  across spectrum bars and active lyrics. User confirmed the final appearance,
+  but reported that motion still looks very slow. Earlier physical feedback
+  confirmed the three-widget layout. No claim of 60 Hz or sustained high-rate
+  partial updates is made.
+- Follow-up to the user's report of slow motion: flushing the partial payload and
+  waiting 20 ms before querying status passed 90 s / 357 changing previews at
+  3.965 fps. A second trial targeted 10 commands/s, repeating the current spectrum
+  pixels between fresh previews (not synthesizing readings). It accepted 200
+  commands in 21.73 s, then timed out waiting for status. This is command throughput,
+  not a visual 9 fps result; the installed renderer still supplied roughly 4 fps.
+  The diagnostic reconnected the agent in `finally`. No faster production policy
+  was installed on the strength of these results.
+- User supplied the [official 8.8-inch product page](https://www.turzx.com/en/2026/09/14/turzx-8-8-inch-detail/).
+  The manufacturer's [English product overview](https://www.turzx.com/en/) lists
+  Desktop Mode support for 8.8-inch / 1920×480, without specifying its frame rate
+  or identifying this unit's ROM revision. Current Windows enumeration sees only
+  the ASUS monitor and the TURZX serial port, using Microsoft's `usbser.inf`.
+- Read-only inspection of the existing TURZX V3.06 package found a display-class
+  IddCx driver, version 14.0.48.257 (2025-03-14), with a valid Microsoft Windows
+  Hardware Compatibility Publisher catalog signature. Its INF matches USB
+  1A86:AD10/AD11/AD12/AD13, whereas the currently awake panel uses 0525:A4A7.
+  No matching desktop-mode USB device is presently enumerated. This establishes
+  a distinct driver path; it does not establish compatibility or a safe mode-switch
+  procedure for `chs_88inch.dev1_rom1.90`. No driver was installed and no device mode,
+  firmware, task or configuration was changed during this check. A desktop output
+  for PulseDeck would also need faster rendering; placing the current 4 Hz preview
+  in a fullscreen window alone would not improve the displayed animation rate.
+- User remembers Desktop Mode in the previously used TURZX application. Read-only
+  inspection of that installed application's UI resources found instructions to
+  install its driver, switch into Desktop Mode, and switch back into Monitor mode.
+  Those instructions strengthen the case for a controlled test, but do not verify
+  this unit's actual desktop refresh rate or the success of either transition.
+- Interactive vendor checks temporarily disconnected PulseDeck before starting
+  TURZX, then closed TURZX and reconnected the identified COM5 panel. The initial
+  logo dialog reported `connection succeeded`; it was not evidence of a driver
+  installation. User also saw the original vendor theme on the physical panel.
+  Later inspection found the Desktop Mode navigation control in the automation
+  tree, but it was offscreen and disabled while vendor rendering was running.
+  An internal enabled flag alone did not establish that the button was visible.
+  No Install Driver, Switch or ROM-update action was selected.
+- Downloaded the V3.1.0 English package linked by the
+  [official app page](https://www.turzx.com/2025/05/26/88_inch/) (English package
+  dated 2026-01-12), into a separate runtime investigation directory. Its display
+  INF, DLL and catalog are byte-identical to the installed V3.06 driver files.
+  The newer program was not launched or installed during this comparison.
+- At the user's request, checked DOCX files in both packages. Each has only
+  `FPS ON GUIDE.docx`; the files are byte-identical. Text and all four embedded
+  screenshots describe MSI Afterburner/RTSS game-FPS setup, not panel refresh,
+  Desktop Mode or display-driver compatibility. Vendor archives, document images,
+  UI diagnostics and private inspection artifacts remain outside source control.
+- After these checks, PulseDeck was connected to `chs_88inch.dev1_rom1.90` with
+  Aura following and MusicSpectrum still enabled; the PulseDeck startup task was
+  running and the legacy TURZX task remained disabled. Exact desktop-mode
+  compatibility and physical desktop refresh remain unverified; a current product
+  family page does not by itself identify this unit's revision.
+- Follow-up analysis of public YouTube storyboard frames supplied by the user:
+  [Desktop Mode demonstration](https://www.youtube.com/watch?v=2cqMYYFnlos)
+  shows the vendor application's Desktop Mode page with `Install Driver` and
+  `Switch Mode` controls around 00:58–01:10, Windows display settings with two
+  screens around 01:16–01:28, and the physical 8.8-inch panel showing a Windows
+  desktop and video around 01:34–01:46. The
+  [second video](https://www.youtube.com/watch?v=DvjuuuyedA4) includes promotional
+  Desktop Extended Mode images around 01:20–01:35. These support the existence
+  of desktop functionality in the product family and a familiar vendor UI;
+  they do not identify this unit's ROM or measure delivered animation fps.
+  This was storyboard inspection, not full audiovisual playback. No application,
+  driver or hardware-mode change was made for this follow-up.
+- Authorized manual retry in the installed V3.06 application: after the user
+  opened Settings and stopped vendor playback, UI inspection showed `RunBtn`
+  labelled `Run`, enabled and visible. `DesktopModeBtnTxt` was enabled but
+  offscreen, and the user confirmed that Desktop Mode was absent. Stopping
+  playback therefore did not expose the navigation on this unit. This narrows
+  the UI issue but does not prove hardware incompatibility; visibility also
+  depends on the application's device-capability and version checks. No driver
+  install, mode switch or firmware operation was performed in this retry.
+- The user subsequently opened Device. Accessible controls identify a storage,
+  startup-mode and media-management page, not the model/ROM diagnostic page
+  anticipated in the guidance; it did not establish desktop compatibility.
+  Closed the vendor application through the diagnostic's cleanup path and
+  verified PulseDeck reconnected to the identified COM5 panel, receiving full-frame
+  acknowledgements with zero transport errors. Vendor `code.ini` remained
+  byte-identical to the backup made before this retry. Desktop compatibility
+  remains unresolved; absence of the navigation in V3.06 is not proof that this
+  hardware cannot support it.
+- Authorized retry using the official `TURZX-V3.1.0-ENG.rar`, extracted to an
+  isolated runtime directory. The application's visible version is actually
+  `2026-06-29 V4.2.1.3`; its executable still matches the earlier archive extract,
+  so this is not evidence of an executable auto-update. First launch reported
+  completed font installation and requested an application restart. Following
+  the restart, observation adopted the replacement vendor process. The agent's
+  existing vendor-process guard refused reconnection while that process remained
+  active, preventing simultaneous ownership.
+- In this version, Settings again showed visible `Run` and an enabled but
+  offscreen Desktop Mode control. The user confirmed Desktop Mode was absent.
+  Windows still enumerated only the ASUS monitor. No display driver was installed,
+  no desktop transition was attempted and no firmware action was selected.
+- User reported very smooth AMD animation on the physical panel, continuing even
+  while the vendor UI showed `Run` after stopping playback. The bundled AMD MP4
+  is H.264, 480×1920, encoded at 24 fps. Vendor video-transfer/playback paths and
+  the supplied guide support internal video playback as an explanation. This is
+  not a measurement of physical refresh or live USB frame throughput, and does
+  not establish a fast path for arbitrary live Aura/spectrum/lyrics rendering.
+  Internal playback/composition merits separate investigation for reusable
+  animations. Proprietary media and extracted vendor files remain outside git.
+- Closed the replacement vendor process and verified PulseDeck connected again
+  to the identified COM5 unit with successful full-frame acknowledgements and
+  zero errors. The legacy vendor configuration remained byte-identical to its
+  pre-retry backup. Desktop compatibility remains unverified on this ROM.
+- Optional display-brightness control added: null preserves the panel value;
+  saved 0–100% values use the upstream revision-C command and are reapplied after
+  identity-checked connection/recovery. Core tests cover command scaling/padding,
+  invalid values, old configurations and persistence: 241 passed. Angular built
+  with Node 24.19.0; the Windows agent publish passed.
+- First brightness deployment rolled back because an inherited deployment check
+  required connected 16-zone Aura, while the current effect was unsupported on
+  the previous build too. Removed that effect-specific deployment condition and
+  redeployed successfully. Configuration hash was preserved; the panel reconnected
+  and acknowledged full frames without errors. Browser checks verified selecting
+  manual brightness, changing the slider to 70%, enabled Save and returning to
+  inherited mode, without saving or changing physical brightness. The user then
+  confirmed that saved brightness changes work on the physical panel and left
+  25% selected. An API disconnect/connect retained that saved value, revalidated
+  the exact device and reapplied the command without errors. Post-reconnect
+  luminance was not independently measured; command success is not a lux reading.
+- Standalone media-directory inspection checked VID/PID 0525:A4A7, COM5 and
+  `chs_88inch.dev1_rom1.90` after disconnecting the agent. `/root/video/` returned
+  an empty listing; `/mnt/SDCARD/video/` returned `result:nodir-createdone`.
+  Thus the firmware created the missing directory during an intended query.
+  No video was uploaded or deleted in this inspection. The agent reconnected
+  with successful acknowledgements, zero errors and saved brightness still 25%.
+- Browser preview was tied to the one-second provider timestamp, even when the
+  renderer produced animation frames approximately four times per second.
+  Added a separate SignalR frame revision and changed both preview consumers to
+  use it. Angular build and Windows publish passed; installed-browser cadence
+  has not yet been measured with this change.
+- User applied Aura Scuro (OFF), then Statico/yellow. OFF retained the previous
+  16 yellow HAL words and sample count 77406; static resumed incoming samples.
+  The live LightingService `LastProfile.xml` Group/isenabled changed from 0 to 1,
+  with EXTERNAL_GENERAL present in ingroupdevice. Added bounded, DTD-disabled
+  read-only parsing of that signal, gated by a live verified LightingService
+  process and healthy HAL report. Unknown/malformed/missing state never dims.
+  A saved manual brightness is required for restoration; configuration remains
+  unchanged. Physical OFF/restore validation is pending deployment.
+- First OFF build deployed successfully with unchanged configuration and verified
+  COM5 reconnection. User confirmed the screen goes dark. API recorded
+  Aura.Status=off, LightingOff=true, AppliedBrightness=0 and saved brightness=25.
+  Reactivation restored AppliedBrightness=25 with zero transport errors. The
+  unavailable-Aura restoration is covered by Core transition tests; loss of the
+  live Aura service has not been forced on this PC. Added a waiting-at-boot case
+  so confirmed OFF does not require an earlier RGB frame: 260 Core tests passed.
+- First preview revision build measured 37 frame events and 39 successful preview
+  responses over a ten-second browser check, with 257–280 ms event intervals and
+  a decoded 1920px-wide image. The user still perceived no fluidity improvement.
+  Separated rendering (10 Hz animated target) from synchronous USB delivery
+  (4 Hz target), using one immutable latest frame rather than a queue. This
+  separation is awaiting deployment/measurement; it does not establish a faster
+  hardware protocol or resolve the earlier high-rate partial rejection.
+- Decoupled build deployed with unchanged configuration, connected COM5 and
+  saved/applied brightness 25%. Spotify was playing with static Aura; an animated
+  Aura effect is not required for the music-spectrum check. A 12-second browser
+  sample received 117 frame events and 118 successful PNG responses, average
+  interval 102.68 ms (maximum 123 ms). User confirmed improvement after hard
+  refresh, then reported slowdown recovering again after refreshing.
+- Added a shared preview component for overview and widget editing. It permits
+  one fetch/decode at a time, replaces pending revisions with the newest, retains
+  the current picture until the next has decoded, bounds fetch time and revokes
+  retired blob URLs. Updated Angular build passed and browser assets were copied
+  with the index last, keeping old bundles and a runtime backup; agent not restarted.
+  An injected 180 ms image delay yielded 24 loaded pictures over five seconds,
+  followed by 51 over five seconds after removing the delay, without a refresh.
+  Maximum simultaneous image requests was one. A separate 45-second check loaded
+  146/146/147 images in successive 15-second windows, retaining one live blob URL.
+  Switching to widget editing decoded a 1920px-wide preview and kept one blob URL.
+  These checks do not prove the cause of the user's earlier intermittent slowdown.
+- Decoupled-preview full-frame probe requested up to 8 Hz for 300.06 seconds,
+  reading actual live previews and retaining the verified full command. All 1,300
+  frames were acknowledged: 4.3325 fps, no rejection/timeouts. Original Normal
+  priority ran for 150.15 seconds (649 frames); AboveNormal ran for the remainder
+  (651 frames). Average encode/write/full-ACK/status times were respectively
+  4.906/179.937/29.562/0.339 ms and 5.195/180.433/29.119/0.342 ms. Priority was
+  restored in finally. This comparison did not show a meaningful improvement;
+  it changes the probe process's CPU scheduling, not USB port priority. The API
+  confirmed reconnection, exact panel identity, 25% brightness and zero errors.
+  Physical artifact confirmation from the user is pending. The earlier rejected
+  partial payload's last packet was also inspected: it did not match the packet
+  ending patterns described by the 5-inch video-overlay PR, so that proposed
+  workaround alone cannot explain the saved rejection on this 8.8-inch ROM.
+- User confirmed the revised preview remains fluid after at least one minute,
+  and reported no visual artifacts or blocks during the five-minute full-frame
+  trial. Standalone internal playback uploaded the original 26,767-byte clip,
+  verified its stored size and received `play_video_success`. User reported
+  motion smoother than the live spectrum but not comparable to the vendor AMD
+  animation. The source clip's 24 fps is not a measurement of physical refresh.
+  Cleanup reported file size zero, and the ordinary agent reconnect was requested.
+  A subsequent experimental live CPU-overlay trial is separate from production;
+  its packet-shape tests plus existing Core suite passed (263 tests).
+- First CPU-overlay trial acknowledged CA initialization (`seq_png_init_sucess`)
+  and empty visibility, then timed out on the first update with counter zero.
+  The initial status contained renderCnt=2160. A second bounded trial seeded the
+  header counter from its fresh initial QUERY_STATUS (renderCnt=8); the first
+  actual CPU update returned `needReSend:1|renderCnt:9`. Thus neither counter
+  assumption proves compatible 8.8-inch live composition. Both trials reported
+  cleanup file size zero and requested the normal agent reconnect. Final API
+  checks showed the expected connected identity, saved/applied brightness 25%,
+  Aura still enabled, no transport error and no recovery attempts. No production
+  video/overlay path was enabled; the verified C8 full-frame command is unchanged.
+
+
+## 2026-10-04 — source snapshot and documentation website
+
+- Agent and browser configurator source versions aligned to 0.10.0; this is a
+  development snapshot, not a published tag/archive or an installed-agent upgrade.
+- Refreshed the English/Italian overview, historical-notes header, roadmap,
+  publishing instructions and current refresh limits. Historical measurements
+  retain their original dates and results.
+- Replaced the small OAuth landing page with a dedicated project homepage.
+  A pinned Python Markdown build generates 34 HTML pages with shared navigation,
+  contents, relative HTML links and source-code links back to GitHub. Both CI and
+  Pages build and verify local page/image/anchor links. A missing historical user
+  refresh-plan file is described in the validation record rather than linked.
+- Chromium checked all five primary navigation destinations. At 390 px wide,
+  homepage, getting-started, roadmap, validation and privacy pages had no horizontal
+  document overflow or broken local images. Desktop/mobile screenshots reviewed.
+- Added a production-renderer Music spectrum image with synthetic bands/colors
+  and original artwork; it was rendered on Linux and is labelled accordingly.
+- Core 263, rendering 67 and Spotify 19 tests passed (349 total); Angular production
+  build, self-contained Windows agent publish and documentation renderer passed.
+  Markdown source links and generated HTML links passed; git whitespace checks passed.
+- Validation is local. The public domain previously rendered the repository README,
+  including raw Markdown navigation links. Updating the live domain requires the
+  committed changes to reach GitHub and Pages to use the custom Actions workflow;
+  repository publishing settings were not changed by this local verification.

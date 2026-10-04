@@ -12,7 +12,7 @@
     @if (saved()) { <div class="notice" role="status">Configurazione salvata.</div> }
     @if (tab() === 'overview') {
       <section class="panel preview-panel"><div class="panel-heading"><div><span class="eyebrow">LIVE CANVAS</span><h2>Recon <span>/ 1920 × 480</span></h2></div><pd-display-controls [display]="deck.state()?.display ?? null" [online]="deck.connected()" [busy]="deck.busy()" (action)="deck.display($event)" /></div>
-        <div class="screen">@if (deck.state() && deck.connected()) { <img [src]="preview()" alt="Anteprima live del pannello PulseDeck" width="1920" height="480"> } @else { <div class="screen-empty"><span>◫</span>Il tuo pannello apparirà qui quando l’agent sarà pronto.</div> }</div>
+        <div class="screen">@if (deck.state() && deck.connected()) { <pd-live-preview [source]="preview()" /> } @else { <div class="screen-empty"><span>◫</span>Il tuo pannello apparirà qui quando l’agent sarà pronto.</div> }</div>
         <div class="preview-footer"><span>L’anteprima usa lo stesso rendering inviato al display.</span><span>Chiudi TURZX prima di collegare.</span></div>
       </section>
       <div class="section-heading"><h2>Telemetria hardware</h2><span>Valori reali dal tuo PC</span></div>

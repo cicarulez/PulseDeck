@@ -11,10 +11,11 @@ export class AuraSettingsComponent {
   readonly enabledChange = output<boolean>();
   readonly busy = input(false);
   readonly state = computed(() => this.deck.connected() ? this.deck.state()?.aura : undefined);
-  readonly active = computed(() => this.state()?.status === 'connected');
+  readonly active = computed(() => this.state()?.status === 'connected' || this.state()?.status === 'off');
   readonly label = computed(() => {
     if (!this.deck.connected()) return 'Agent non disponibile';
     if (!this.deck.config()?.auraEnabled) return 'Colore manuale';
+    if (this.state()?.status === 'off') return 'Aura: Scuro (OFF)';
     return this.active() ? 'Aura collegata' : 'Aura non disponibile';
   });
 }

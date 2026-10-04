@@ -47,7 +47,7 @@ Configured LPC sensor loss can trigger bounded motherboard-only reinitialization
 
 Optional Aura following uses a separate native COM destination under
 `tools/aura-probe`, discovered by ASUS as “Dispositivi esterni”. LightingService
-delivers colors to that destination; `AuraColorProvider` only reads its versioned
+delivers colors to that destination; `AuraColorProvider` reads its versioned
 SYSTEM-profile report. Fresh heartbeats and host identity distinguish a valid
 static color from a stale file. `DeckState.Aura` carries availability and the
 decoded color plus an ordered `Colors` array. Protocol 2 validates complete
@@ -56,10 +56,23 @@ The renderer fits the received spectrum to the PULSEDECK wordmark, active lyrics
 and music progress bar. Sensor bars/rings retain a solid color selected by their
 horizontal position. Neutral/status text is independent of Aura; other accent
 text follows its local zone. Animation comes from incoming frames. `AuraEnabled` defaults to false; when enabled the shared renderer
-updates at most twice per second, keeps the manual accent as unavailable fallback,
+targets four updates per second while animated, keeps the manual accent as unavailable fallback,
 and lightens dark accent text. Neither the agent nor receiver acquires RGB control.
+Dark (OFF) retains the old RGB frame on the tested service. The provider therefore
+also reads the bounded LightingService `LastProfile.xml` Group/isenabled switch,
+requiring EXTERNAL_GENERAL in the synchronized group, a verified live service
+and a healthy receiver. A confirmed OFF sets `Aura.Status=off`; malformed or
+unavailable power state cannot turn the panel off. No ASUS settings are written.
 The agent still runs as the elevated interactive user, not SYSTEM. See the
 [receiver instructions](../tools/aura-probe/README.md) and dated validation evidence.
+
+Optional `MusicSpectrum` selects the Spotify process tree in the current Windows
+session and uses WASAPI process loopback (Windows build 20348 or newer). It never
+falls back to the full system mix or a microphone. Ambiguous or unsupported players
+are unavailable. Capture stops on pause, profile exit or disabling the option.
+Stereo PCM is analysed in memory using a 2048-sample Hann FFT and 24 logarithmic
+bands; only normalized levels enter snapshots. No audio file is written. Readings
+older than 300 ms render as zero. See Microsoft's [process-loopback sample](https://learn.microsoft.com/en-us/samples/microsoft/windows-classic-samples/applicationloopbackaudio-sample/).
 
 Speaking is an explicit voice event, not the inverse of mute/deaf. Every Discord roster highlights speakers only when the voice connection is available. Voice membership follows the tracked user in the configured channel, independently of the active profile; without a tracked ID it follows human occupancy. The legacy `gamingVoiceActivity` setting remains the opt-in switch. Streaming is a separate Gateway flag and does not depend on voice availability. Desktop expands Discord into the media area while the tracked user is in the connected roster (or the roster is nonempty without a tracked ID) and no media session is connected; paused sessions retain their panel. The header hides the tracked member when absent from the connected roster.
 
@@ -71,15 +84,23 @@ Weather, news, lyrics and artwork use bounded asynchronous requests, cancellatio
 
 ## Rendering
 
-`DeckRenderer` produces a 1920×480 BGRA frame and PNG preview from the same state/configuration. Desktop, Gaming and Music share widget resolution and drawing. Fixed-slot layouts retain hidden bindings when switching compositions. Music displays the first nine slots in a 3×3 grid.
+`DeckRenderer` produces a 1920×480 BGRA frame and PNG preview from the same state/configuration. Desktop, Gaming and Music share widget resolution and drawing. Fixed-slot layouts retain hidden bindings when switching compositions. Music displays the first nine slots in a 3×3 grid, or the first three above a 24-band audio spectrum when `MusicSpectrum` is enabled. Hidden bindings are preserved.
 
-The normal update target is roughly 1 Hz. Serial delivery is synchronous, so slow providers or writes can reduce cadence. There is no high-refresh animation queue. Images are local or runtime-cached resources; proprietary artwork is not part of the source distribution.
+The normal update target is roughly 1 Hz. During Aura following, notification arrivals and music playback, the renderer targets 10 Hz independently of the USB writer, which targets 4 Hz. A single immutable latest-frame reference replaces intermediate frames while USB is busy; no frame queue accumulates. Playback position is interpolated between provider samples using a monotonic clock, respecting playback rate and pausing, with extrapolation bounded to two seconds. This drives progress and synchronized lyrics without faster provider polling. Slow rendering or serial writes can reduce their respective cadences. Images are local or runtime-cached resources; proprietary artwork is not part of the source distribution.
 
 The [documentation generator](../tools/docs-gallery/README.md) compiles this renderer with synthetic snapshots. It never calls production providers or writes to a panel.
 
 ## Display transport
 
-`TurzxDisplay` validates VID/PID and HELLO identity before sending an initial full frame. `TurzxFrameDelivery` owns the acknowledged baseline and bounded recovery policy in portable Core code. Partial rectangles are computed against an acknowledged frame; failed sends never become the next baseline.
+`TurzxDisplay` validates VID/PID and HELLO identity before sending an initial full frame. `TurzxFrameDelivery` owns the acknowledged baseline and bounded recovery policy in portable Core code. Normal partial updates use the existing single changed bounding rectangle.
+Aura, music playback and notification animations request complete frames at up to
+4 Hz, using the verified full command. Higher-rate single and multiple-region
+partial trials were rejected or timed out on the tested ROM; they are not the
+production animation path. Unchanged frames still skip USB delivery. The
+experimental `ChangedRegions` / `PartialFrameRegions` encoder is used only by the
+[refresh diagnostic](../tools/display-refresh-probe/README.md); successful short
+trials did not establish sustained reliability. Failed sends never become the
+next baseline.
 
 A `needReSend:1` reply invalidates the baseline and schedules a full frame. A recurring resend, timeout or malformed reply can require closing/reopening and revalidating the device. Recovery permits two attempts with minimum delays of 2 and 5 seconds, replenished after 60 consecutive acknowledged frames. It does not queue stale frames or loop indefinitely.
 
@@ -87,9 +108,27 @@ Explicit disconnect cancels pending recovery and startup reconnect attempts. Rec
 
 The full-frame command `C8 EF 69 00 38 40 0E 10` is covered by regression tests. Protocol changes need actual device evidence. See [hardware compatibility](hardware.md) and [validation](validation.md).
 
+`DisplayBrightness` is optional (null by default): existing configurations keep
+the panel's current brightness. A saved integer from 0 to 100 sends the upstream
+revision-C brightness command, scaled to 0–255. Control writes share the serial
+gate with image delivery, apply after verified initialization/recovery, and are
+deduplicated for a connection. A failed brightness write closes the connection
+and reports an error rather than retrying continuously. Selecting null leaves
+the currently applied brightness in place; it does not recover an earlier value.
+With Aura following and a manual brightness configured, confirmed Aura OFF
+temporarily sends 0% without changing configuration. Reactivation, unavailable
+Aura or disabling Aura restores the saved brightness. Switching to inherited
+brightness during this temporary override restores the last known manual value
+once. `/api/display` exposes the last sent `AppliedBrightness` and override flag;
+these are command diagnostics, not measured luminance.
+
 ## Local API and storage
 
-The host binds to `127.0.0.1:5178`; SignalR `/live` publishes snapshots. Representative endpoints are `/api/state`, `/api/config`, `/api/preview.png`, `/api/sensors`, `/api/display` and `/api/games`. Mutations use the configurator client header and origin checks. This is a local trusted-user API, not a public authenticated service.
+The host binds to `127.0.0.1:5178`; SignalR `/live` publishes state snapshots and a separate `frame` revision whenever a preview PNG is rendered. Browser previews follow this revision rather than the one-second sensor cadence. Representative endpoints are `/api/state`, `/api/config`, `/api/preview.png`, `/api/sensors`, `/api/display` and `/api/games`. Mutations use the configurator client header and origin checks. This is a local trusted-user API, not a public authenticated service.
+Overview and widget editing reuse a preview component that loads/decodes one
+image at a time, keeps only the newest pending revision, retains the previous
+picture until decoding succeeds, and releases retired blob URLs. A slower browser
+therefore skips intermediate previews rather than cancelling each unfinished image.
 
 Configuration, credentials and caches belong in `%LOCALAPPDATA%\PulseDeck` or `PULSEDECK_DATA_DIR`. Discord and SteamGridDB credentials use DPAPI CurrentUser and are not returned by API responses. Automatic startup is an elevated interactive-user task, not a service in session 0.
 

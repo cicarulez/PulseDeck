@@ -1,3 +1,4 @@
+import { DisplayBrightnessComponent } from './display-brightness.component';
 import { SpotifySettingsComponent } from './spotify-settings.component';
 import { AuraSettingsComponent } from './aura-settings.component';
 import { SectionTabsComponent, SectionTab } from '../shared/section-tabs.component';
@@ -13,7 +14,7 @@ import { CalendarSettingsComponent } from './calendar-settings.component';
 import { DiscordSettingsComponent } from './discord-settings.component';
 import { GameThemesComponent } from './game-themes.component';
 
-@Component({ selector: 'pd-settings', standalone: true, imports: [AuraSettingsComponent, SpotifySettingsComponent, SectionTabsComponent, NotificationSettingsComponent, FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
+@Component({ selector: 'pd-settings', standalone: true, imports: [DisplayBrightnessComponent, AuraSettingsComponent, SpotifySettingsComponent, SectionTabsComponent, NotificationSettingsComponent, FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
 export class SettingsComponent {
   readonly sections: readonly SectionTab[] = [
     { id: 'behavior', label: 'Profili e giochi' }, { id: 'display', label: 'Display e musica' },
@@ -32,6 +33,8 @@ export class SettingsComponent {
     const gmail = this.draft.notifications.pollSeconds, calendar = this.draft.calendar.pollMinutes;
     if (!Number.isInteger(gmail) || gmail < 15 || gmail > 300) return 'Inserisci un intervallo Gmail intero tra 15 e 300 secondi.';
     if (!Number.isInteger(calendar) || calendar < 1 || calendar > 60) return 'Inserisci un intervallo calendario intero tra 1 e 60 minuti.';
+    const brightness = this.draft.displayBrightness;
+    if (brightness !== null && (!Number.isInteger(brightness) || brightness < 0 || brightness > 100)) return 'Inserisci una luminosità intera tra 0 e 100%.';
     const advance = this.draft.lyricsAdvanceMilliseconds;
     if (!Number.isInteger(advance) || advance < -5000 || advance > 5000) return 'Inserisci una regolazione testi intera tra -5000 e +5000 ms.';
     return '';

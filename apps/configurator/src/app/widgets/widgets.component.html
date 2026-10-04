@@ -1,5 +1,5 @@
 <section class="panel preview"><span class="eyebrow">PANNELLO ATTUALMENTE INVIATO</span>
-  @if (online()) { <img [src]="preview()" width="1920" height="480" alt="Pannello PulseDeck attualmente inviato al display"> }
+  @if (online()) { <pd-live-preview [source]="preview()" description="Anteprima del pannello PulseDeck" /> }
   <p>Le modifiche diventano visibili sul pannello e nell’anteprima dopo il salvataggio.</p>
 </section>
 <section class="panel layout-picker fields">

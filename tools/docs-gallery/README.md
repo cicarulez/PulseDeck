@@ -12,7 +12,7 @@ From the repository root, with .NET 10:
 dotnet run --project tools/docs-gallery -c Release -- artifacts/docs-gallery
 ```
 
-Copy `desktop.png`, `gaming.png` and `music.png` from that output into `docs/images` after visual review. The tool also writes the synthetic state/config/catalog JSON used by the configurator capture. These fixtures remain under ignored `artifacts`.
+Copy `desktop.png`, `gaming.png`, `music.png` and `music-spectrum.png` from that output into `docs/images` after visual review. The tool also writes the synthetic state/config/catalog JSON used by the configurator capture. These fixtures remain under ignored `artifacts`.
 
 For screenshots matching the Windows agent's Segoe UI typography, run the tool on Windows. You can cross-publish from WSL:
 
@@ -20,7 +20,7 @@ For screenshots matching the Windows agent's Segoe UI typography, run the tool o
 dotnet publish tools/docs-gallery -c Release -r win-x64 --self-contained true -o artifacts/docs-gallery-tool
 ```
 
-Run `PulseDeck.DocsGallery.exe` on Windows with an output-directory argument. Copy the three panel PNGs to `docs/images` and the three JSON files to `artifacts/docs-gallery` in your checkout. Linux rendering works but may use different fallback fonts. No proprietary fonts need to be redistributed.
+Run `PulseDeck.DocsGallery.exe` on Windows with an output-directory argument. Copy the four panel PNGs to `docs/images` and the three JSON files to `artifacts/docs-gallery` in your checkout. Linux rendering works but may use different fallback fonts. No proprietary fonts need to be redistributed.
 
 ## Capture the configurator and covers
 

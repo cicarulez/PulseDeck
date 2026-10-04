@@ -1,12 +1,33 @@
 # PulseDeck public site
 
-Static site sources are in `site/`, for `https://pulsedeck.davidecappa.it`.
+The homepage, templates and styles are in `site/`; documentation comes from
+repository Markdown. The generated site is for `https://pulsedeck.davidecappa.it`.
 Public support and privacy contact: `support@davidecappa.it`, confirmed by the
 project manager. No OAuth credentials belong in this site.
 
 ## GitHub Pages
 
-Publish only `site/` as the Pages artifact using a GitHub Actions workflow.
+The workflow `.github/workflows/pages.yml` builds and publishes only
+`artifacts/site/`. It runs on homepage, documentation, template and version changes.
+All documentation links are rewritten to HTML; source-code links lead to GitHub.
+The build checks local page, image and anchor links before publication.
+
+To preview the exact artifact locally:
+
+```sh
+python3 -m venv /tmp/pulsedeck-docs-venv
+/tmp/pulsedeck-docs-venv/bin/pip install -r scripts/requirements-docs.txt
+/tmp/pulsedeck-docs-venv/bin/python scripts/build-site.py
+python3 -m http.server 8080 --directory artifacts/site
+```
+
+Open `http://localhost:8080`. Generated files stay outside source control.
+The checked-in Markdown files remain directly readable on GitHub.
+
+If the public homepage renders the repository README and raw `.md` links instead
+of this homepage, check the Pages publishing source: a legacy branch/Jekyll build
+can publish a different artifact. Repository settings must use this Actions
+workflow. A local commit alone does not update the public site.
 Set the repository's Pages source to GitHub Actions. The site contains a CNAME
 file, but also configure the custom domain in the repository Pages settings.
 Enable HTTPS after the domain resolves and GitHub issues the certificate.

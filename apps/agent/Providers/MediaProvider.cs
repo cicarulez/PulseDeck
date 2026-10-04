@@ -48,7 +48,7 @@ public sealed class MediaProvider(BrowserMediaStore browser, IHttpClientFactory 
             if (playing) position += Math.Max(0, (DateTimeOffset.Now - timeline.LastUpdatedTime).TotalSeconds) * (playback.PlaybackRate ?? 1);
             if (duration > 0) position = Math.Min(position, duration);
             return new(playing, metadata.Title, metadata.Artist, session.SourceAppUserModelId, position, duration, "connected")
-                { ArtworkId = artwork.Current?.Id, Album = metadata.AlbumTitle };
+                { ArtworkId = artwork.Current?.Id, Album = metadata.AlbumTitle, PlaybackRate = playback.PlaybackRate ?? 1 };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch
@@ -68,6 +68,6 @@ public sealed class MediaProvider(BrowserMediaStore browser, IHttpClientFactory 
             return await client.GetByteArrayAsync("https://i.ytimg.com/vi/" + media.VideoId + "/hqdefault.jpg", token);
         }, cancellationToken);
         return new(media.Playing, media.Title, media.Artist, "Chrome · YouTube", media.PositionSeconds,
-            media.DurationSeconds, "connected") { ArtworkId = artwork.Current?.Id, Source = "youtube-extension" };
+            media.DurationSeconds, "connected") { ArtworkId = artwork.Current?.Id, Source = "youtube-extension", PlaybackRate = media.PlaybackRate };
     }
 }

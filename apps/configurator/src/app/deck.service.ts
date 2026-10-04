@@ -5,6 +5,7 @@ import { SpotifyConnection, GmailStatus, DiscordOptions, GameLibraryStatus, Deck
 @Injectable({ providedIn: 'root' })
 export class DeckService {
   readonly state = signal<DeckState | null>(null);
+  readonly previewFrame = signal(0);
   readonly widgetCatalog = signal<WidgetCatalog | null>(null);
   readonly config = signal<DeckConfig | null>(null);
   readonly version = signal<string | null>(null);
@@ -18,6 +19,7 @@ export class DeckService {
   async start() {
     if (this.started) return;
     this.started = true;
+    this.connection.on('frame', (revision: number) => this.previewFrame.set(revision));
     this.connection.on('state', (state: DeckState) => { this.state.set(state); this.lastState = Date.now(); this.connected.set(true); });
     this.connection.onreconnecting(() => this.connected.set(false));
     this.connection.onclose(() => { this.connected.set(false); setTimeout(() => void this.open(), 3000); });

@@ -12,6 +12,11 @@ public static class TurzxProtocol
     // Captured from the successful upstream 8.8-inch probe: 4-byte command,
     // 2-byte frame size, 2-byte line size. No extra zero before 0x3840.
     public static byte[] FullFrameCommand() => Packet(Convert.FromHexString("C8EF690038400E10"));
+    public static byte[] BrightnessCommand(int percent)
+    {
+        if (percent is < 0 or > 100) throw new ArgumentOutOfRangeException(nameof(percent));
+        return Packet([0x7b, 0xef, 0x69, 0, 0, 0, 1, 0, 0, 0, (byte)(percent * 255 / 100)]);
+    }
     // Upstream ScreenOff: stop video, stop media (read 1024-byte status), then turn off.
     public static byte[] StopVideoCommand() => Packet(Convert.FromHexString("79EF6900000001"));
     public static byte[] StopMediaCommand() => Packet(Convert.FromHexString("96EF6900000001"));
@@ -49,14 +54,26 @@ public static class TurzxProtocol
     }
 
     public static (byte[] Header, byte[] Payload) PartialFrame(byte[] landscapeBgra, FrameRect rect, int rom, uint count)
+        => PartialFrameRegions(landscapeBgra, [rect], rom, count);
+
+    // Each encoded column segment carries its own address and length. Several
+    // non-overlapping regions can share one command and acknowledgement.
+    public static (byte[] Header, byte[] Payload) PartialFrameRegions(byte[] landscapeBgra, FrameRect[] regions, int rom, uint count)
     {
         CheckFrame(landscapeBgra);
-        if (rect.X < 0 || rect.Y < 0 || rect.Width <= 0 || rect.Height <= 0 || rect.X + rect.Width > Width || rect.Y + rect.Height > Height)
-            throw new ArgumentOutOfRangeException(nameof(rect));
+        if (regions.Length is < 1 or > 6) throw new ArgumentOutOfRangeException(nameof(regions));
+        foreach (var rect in regions)
+            if (rect.X < 0 || rect.Y < 0 || rect.Width <= 0 || rect.Height <= 0 || rect.X + rect.Width > Width || rect.Y + rect.Height > Height)
+                throw new ArgumentOutOfRangeException(nameof(regions));
+        var ordered = regions.OrderByDescending(r => r.Y).ToArray();
         using var raw = new MemoryStream();
         var pixelBytes = rom > 88 ? 4 : 3;
-        for (int x = rect.X; x < rect.X + rect.Width; x++)
+        // Portrait addresses stay ascending, including multiple segments in one column.
+        var startX = regions.Min(r => r.X); var endX = regions.Max(r => r.X + r.Width);
+        for (int x = startX; x < endX; x++)
+        foreach (var rect in ordered)
         {
+            if (x < rect.X || x >= rect.X + rect.Width) continue;
             var address = x * Height + Height - rect.Y - rect.Height;
             raw.WriteByte((byte)(address >> 16)); raw.WriteByte((byte)(address >> 8)); raw.WriteByte((byte)address);
             raw.WriteByte((byte)(rect.Height >> 8)); raw.WriteByte((byte)rect.Height);
@@ -81,6 +98,50 @@ public static class TurzxProtocol
             minX = Math.Min(minX, x); minY = Math.Min(minY, y); maxX = Math.Max(maxX, x); maxY = Math.Max(maxY, y);
         }
         return maxX < 0 ? null : new(minX, minY, maxX - minX + 1, maxY - minY + 1);
+    }
+
+    // Separate changed row bands. One batch shares the command/ACK overhead,
+    // so merging compares pixel bytes plus the five-byte column headers.
+    public static FrameRect[] ChangedRegions(byte[] before, byte[] after)
+    {
+        CheckFrame(before); CheckFrame(after);
+        var bands = new List<FrameRect>();
+        for (int y = 0; y < Height; y++)
+        {
+            int left = Width, right = -1;
+            for (int x = 0; x < Width; x++)
+            {
+                var offset = (y * Width + x) * 4;
+                if (before.AsSpan(offset, 4).SequenceEqual(after.AsSpan(offset, 4))) continue;
+                left = Math.Min(left, x); right = x;
+            }
+            if (right < 0) continue;
+            var row = new FrameRect(left, y, right - left + 1, 1);
+            if (bands.Count > 0 && y == bands[^1].Y + bands[^1].Height)
+                bands[^1] = Union(bands[^1], row);
+            else bands.Add(row);
+        }
+        while (bands.Count > 1)
+        {
+            var index = 0; var cost = long.MaxValue;
+            for (int i = 0; i < bands.Count - 1; i++)
+            {
+                var joined = Union(bands[i], bands[i + 1]);
+                var extra = Bytes(joined) - Bytes(bands[i]) - Bytes(bands[i + 1]);
+                if (extra < cost) { cost = extra; index = i; }
+            }
+            if (bands.Count <= 6 && cost > 0) break;
+            bands[index] = Union(bands[index], bands[index + 1]);
+            bands.RemoveAt(index + 1);
+        }
+        return bands.ToArray();
+        static long Bytes(FrameRect r) => (long)r.Width * (5 + 4 * r.Height);
+    }
+
+    public static FrameRect Union(FrameRect a, FrameRect b)
+    {
+        int x = Math.Min(a.X, b.X), y = Math.Min(a.Y, b.Y);
+        return new(x, y, Math.Max(a.X + a.Width, b.X + b.Width) - x, Math.Max(a.Y + a.Height, b.Y + b.Height) - y);
     }
 
     private static void CheckFrame(byte[] pixels)

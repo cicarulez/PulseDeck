@@ -3,7 +3,8 @@ using System.Text.Json;
 namespace PulseDeck.Core;
 
 public sealed record AuraSnapshot(string Status = "disabled", string? Color = null,
-    DateTimeOffset? ReceivedAt = null, long Samples = 0, string? Detail = null, string[]? Colors = null);
+    DateTimeOffset? ReceivedAt = null, long Samples = 0, string? Detail = null, string[]? Colors = null,
+    bool? LightingOff = null);
 
 // Versioned, passive HAL diagnostics. Monotonic heartbeat rejects stale files from
 // stopped hosts and previous boots without expiring a legitimate static color.

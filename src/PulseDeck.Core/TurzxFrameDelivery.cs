@@ -23,6 +23,7 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
     public FrameRect? LastFrameRegion { get; private set; }
     public int LastTransferBytes { get; private set; }
     public double LastTransferMilliseconds { get; private set; }
+    public int LastRegionCount { get; private set; }
     public string State => !active ? (failed ? "error" : "disconnected") : pending ? "recovering" : "connected";
 
     public void Start(int firmware)
@@ -40,6 +41,7 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
         LastFrameRegion = null;
         LastTransferBytes = 0;
         LastTransferMilliseconds = 0;
+        LastRegionCount = 0;
     }
 
     public void Cancel()
@@ -69,6 +71,7 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
             LastFrameRegion = null;
             LastTransferBytes = 0;
             LastTransferMilliseconds = 0;
+            LastRegionCount = 0;
             transferring = true;
             if (pending)
             {
@@ -83,6 +86,7 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
             if (previous is null || FullFrameFallback || fullFrame)
             {
                 LastFrameKind = "full";
+                LastRegionCount = 1;
                 LastFrameRegion = new(0, 0, TurzxProtocol.Width, TurzxProtocol.Height);
                 LastFrameCounter = null;
                 Write(TurzxProtocol.Packet(Convert.FromHexString("86EF6900000001")));
@@ -99,6 +103,7 @@ public sealed class TurzxFrameDelivery(Action<byte[]> write, Func<string> readSt
             else if (rect is { } changed)
             {
                 LastFrameKind = "partial";
+                LastRegionCount = 1;
                 LastFrameRegion = changed;
                 LastFrameCounter = counter;
                 var (header, payload) = TurzxProtocol.PartialFrame(pixels, changed, rom, counter++);

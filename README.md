@@ -10,6 +10,8 @@
   <p><a href="docs/getting-started.md">Get started</a> · <a href="docs/gallery.md">Gallery</a> · <a href="CONTRIBUTING.md">Contribute</a> · <a href="docs/roadmap.md">Roadmap</a> · <a href="docs/README.it.md">Italiano</a></p>
 </div>
 
+**Development snapshot: v0.10.0 · 4 October 2026.** See the [development notes](docs/releases/v0.10.0.md); this does not imply a published release. The [project website](https://pulsedeck.davidecappa.it/) presents the documentation as web pages.
+
 ## What is PulseDeck?
 
 PulseDeck turns a **TURZX 8.8″ 1920 × 480 USB panel** into a contextual dashboard for your Windows PC. It runs locally, gathers the information you choose, and switches between Desktop, Gaming and Music as you work, play and listen.
@@ -31,7 +33,7 @@ The browser configurator and physical panel share the **same renderer**. What yo
   <a href="docs/getting-started.md"><img alt="SteamGridDB: game artwork" src="https://img.shields.io/badge/SteamGridDB-game_artwork-9bc8f5?labelColor=111c22"></a>
 </p>
 
-These labels describe specific PulseDeck features; some require optional setup. Aura following uses a separately installed experimental receiver, tested with static colors and Color cycle on the development PC. An experimental 16-zone build also receives simultaneous Rainbow colors and uses them on the wordmark, active lyrics and music progress bar; sensor bars retain a solid color each.
+These labels describe specific PulseDeck features; some require optional setup. Aura following uses a separately installed experimental receiver, tested with static colors and Color cycle on the development PC. An experimental 16-zone build also receives simultaneous Rainbow colors and uses them on the wordmark, active lyrics, music progress bar and audio spectrum; sensor bars retain a solid color each.
 
 *Independent community integrations. No vendor sponsorship, endorsement or certification is claimed. Names belong to their respective owners; these are text-only feature badges, not official vendor logos.*
 
@@ -57,7 +59,11 @@ Discover games in Steam and EA libraries, show artwork, keep the session timer t
 
 ![Music layout: original sample cover, synchronized sample lyrics and nine hardware widgets](docs/images/music.png)
 
-Spotify gets cover art, track progress and optional synchronized lyrics from LRCLIB, with nine sensors in a 3×3 grid. Track changes keep the layout stable while lyrics load. Automatic priority is **Gaming → Music → Desktop**; manual selection takes precedence.
+![Optional Music layout with three hardware widgets and synthetic multicolor spectrum](docs/images/music-spectrum.png)
+
+Choose nine hardware widgets or the first three above a real 24-band spectrum of the Spotify app. The spectrum uses Windows process loopback, excludes other applications and analyses audio locally in memory.
+
+Spotify gets cover art, track progress and optional synchronized lyrics from LRCLIB, alongside the selected widget layout. Track changes keep the layout stable while lyrics load. Automatic priority is **Gaming → Music → Desktop**; manual selection takes precedence.
 
 An [optional Spotify account connection](docs/spotify.md) adds all track artists, the active device and upcoming tracks. Music works without a login and falls back to local metadata when the connection is unavailable.
 
@@ -74,12 +80,12 @@ An [optional Spotify account connection](docs/spotify.md) adds all track artists
 | Media | Windows media sessions; optional Chrome extension prioritizes the main YouTube player |
 | Active app | Chrome/Terminal tab titles, Explorer folder names, registered Windows app names/logos and optional Chrome favicons |
 | Spotify | Dedicated lyrics layout; other media sources keep the regular media panel |
-| Aura Sync | Optional experimental receiver follows PC colors on panel accents; manual fallback and readable text |
+| Aura Sync | Optional passive 16-zone receiver; multicolor accents, lyrics and spectrum; manual fallback and readable text |
 | Artwork | Optional SteamGridDB key, Steam fallback, local cache and manual backgrounds |
 | Daily controls | Volume, clock, foreground app or Terminal tab title, manual/automatic profiles |
-| Display | Verified device identification, full/partial frames, bounded recovery and explicit disconnect |
+| Display | Verified device identification, manual brightness, Aura OFF dimming with brightness restoration, bounded recovery and explicit disconnect |
 
-Multiple displays, freely positioned layouts and historical telemetry are on the [roadmap](docs/roadmap.md). The renderer normally targets roughly one update per second, or up to two with Aura following; this is not a high-refresh video display engine.
+Multiple displays, freely positioned layouts and historical telemetry are on the [roadmap](docs/roadmap.md). The renderer targets one update per second for ordinary telemetry and up to ten for animations, independently of USB delivery, which targets four updates per second. The browser preview recovers from slow image loads without requiring a refresh. Actual cadence depends on rendering and USB transfer; see the [measured results](docs/validation.md). This is not a video display engine.
 
 ## Try it
 

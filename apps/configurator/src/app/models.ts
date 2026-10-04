@@ -22,13 +22,14 @@ export interface WidgetSlot { id: string; name: string; isBar: boolean; }
 export interface WidgetCatalog { slots: WidgetSlot[]; defaults: WidgetConfig[]; }
 export interface GameTheme { processName: string; backgroundPath: string; coverPath?: string | null; }
 export interface DeckConfig {
+  displayBrightness: number | null;
   notifications: NotificationOptions;
   calendar: CalendarOptions; discordVoiceChannelId: string;
   gameDiscovery: GameDiscoveryOptions;
   widgets: WidgetConfig[];
   layout: 'classic' | 'compact' | 'weather';
   weatherLocation: WeatherLocation | null; news: NewsOptions;
-  spotifyLyrics: boolean; lyricsAdvanceMilliseconds: number; gamingLayout: boolean; gamingVoiceActivity: boolean; gameThemes: GameTheme[];
+  spotifyLyrics: boolean; musicSpectrum: boolean; lyricsAdvanceMilliseconds: number; gamingLayout: boolean; gamingVoiceActivity: boolean; gameThemes: GameTheme[];
   schemaVersion: number; profileMode: string; gameProcesses: string[]; profileDelaySeconds: number;
   discordMode: string; discordBaseUrl: string; trackedMemberId: string; displayPort: string; backgroundPath: string; accentColor: string; auraEnabled: boolean;
 }
@@ -42,8 +43,9 @@ export interface DisplayState {
   recoveryAttempts: number; recoveries: number; acknowledgedFrames: number;
   lastAcknowledgedAt: string | null; lastTransportError: string | null; userDisconnected: boolean;
 }
-export interface AuraSnapshot { status: string; color: string | null; colors: string[] | null; receivedAt: string | null; samples: number; detail: string | null; }
+export interface AuraSnapshot { status: string; color: string | null; colors: string[] | null; receivedAt: string | null; samples: number; detail: string | null; lightingOff: boolean | null; }
 export interface DeckState {
+  audioSpectrum: { status: string; bands: number[] | null; detail: string | null; processId: number | null; samples: number };
   aura: AuraSnapshot;
   volume: { status: string; percent: number | null; muted: boolean };
   fps: { status: string; framesPerSecond: number | null; frameTimeMs: number | null; detail: string | null };

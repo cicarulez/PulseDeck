@@ -22,6 +22,16 @@ Voice activity, sensors, original sample game artwork, elapsed session time and 
 
 Spotify-style track state, original sample lyric lines and nine sensors. The larger cover sits beside the lyrics, with playback status above them and synchronization details beside the attribution. The RAM ring shows only the percentage in this composition.
 
+## Music spectrum and Aura colors
+
+![Music layout with three widgets and multicolor spectrum](images/music-spectrum.png)
+
+The optional Music composition keeps CPU, GPU and RAM above a 24-band spectrum.
+Aura colors span the wordmark, active lyric line and spectrum. This static example
+uses synthetic bands and colors; it is not a recording or a measured Aura frame.
+The application captures and analyses only the Spotify process audio locally.
+This image was rendered on Linux on 4 October 2026; fonts can differ from Windows.
+
 ## Configurator
 
 ![The actual Angular configurator populated with documentation fixtures](images/configurator.png)
@@ -38,4 +48,4 @@ The current UI is in Italian. This capture runs the built Angular app against an
 
 Use [tools/docs-gallery](../tools/docs-gallery/README.md). Its C# project links the production renderer; its Playwright script captures the production configurator and composes the project cover. It never connects to the real agent or writes to a display.
 
-The committed panel screenshots were rendered on Windows to use the same Segoe UI typography as the agent. Linux output is also supported, with platform font differences. Documentation images and generator code are covered by the repository's GPL-3.0-or-later license.
+The original Desktop, Gaming and nine-widget Music screenshots were rendered on Windows to use the same Segoe UI typography as the agent. Linux output is also supported, with platform font differences. Documentation images and generator code are covered by the repository's GPL-3.0-or-later license.

@@ -1,0 +1,3 @@
+@use '../shared/form-fields' as form;
+@include form.fields;
+:host{display:block;margin-top:20px}small{font-size:12px;line-height:1.6;color:var(--muted)}input[type=range]{padding:0;accent-color:var(--accent)}

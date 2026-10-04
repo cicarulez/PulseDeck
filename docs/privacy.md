@@ -40,6 +40,8 @@ These providers see normal network request information, including your IP addres
 
 Chrome, Windows Terminal and Explorer folder-window titles are read natively for the active-app widget, even without the extension. Explorer full-path titles are reduced to the folder label. Packaged Windows apps use their locally registered display names and logos; PulseDeck does not query the Store or persist these icons. This can include private/incognito window titles. Optional Chrome favicons use only the focused non-incognito HTTP/HTTPS tab and expire after six seconds; metadata and icon caches stay in memory.
 
+The optional music spectrum captures only the selected Spotify process tree through Windows process loopback. PCM samples are analysed in a fixed memory window, never saved or uploaded. Local snapshots contain only frequency-band levels, capture status and a process ID. Other players are unavailable; there is no system-wide audio or microphone fallback.
+
 ## Before sharing screenshots or logs
 
 Remove bot tokens, API keys, encrypted credential files, account/server/channel IDs, private names, home-directory paths, browser URLs and unrelated diagnostic content. Do not publish runtime backups. Use the [documentation gallery fixtures](../tools/docs-gallery/README.md) for public screenshots when real data is unnecessary.

@@ -2,8 +2,9 @@ import { Component, computed, effect, input, output, signal } from '@angular/cor
 import { DeckConfig, HardwareState, WidgetCatalog, WidgetConfig } from '../models';
 import { WidgetSlotEditorComponent } from './widget-slot-editor.component';
 import { FormsModule } from '@angular/forms';
+import { LivePreviewComponent } from '../shared/live-preview.component';
 
-@Component({ selector: 'pd-widgets', standalone: true, imports: [WidgetSlotEditorComponent, FormsModule], templateUrl: './widgets.component.html', styleUrl: './widgets.component.scss' })
+@Component({ selector: 'pd-widgets', standalone: true, imports: [WidgetSlotEditorComponent, FormsModule, LivePreviewComponent], templateUrl: './widgets.component.html', styleUrl: './widgets.component.scss' })
 export class WidgetsComponent {
   readonly config = input.required<DeckConfig>();
   readonly catalog = input.required<WidgetCatalog>();

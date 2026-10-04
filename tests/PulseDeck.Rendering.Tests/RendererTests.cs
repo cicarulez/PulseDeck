@@ -7,6 +7,37 @@ using Xunit;
 public class RendererTests
 {
     [Fact]
+    public void MusicSpectrumIsOptionalAndRendersRealBandsOrUnavailableState()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Synthetic track", "Artist", "Spotify.exe", 2, 180, "connected");
+        var state = State with { Profile = "music", Media = media };
+        var options = new DeckConfig { MusicSpectrum = true };
+        var unavailable = renderer.Render(state, options);
+        var signal = state with { AudioSpectrum = new("connected", Enumerable.Range(0, 24).Select(i => i / 24f).ToArray()) };
+        var active = renderer.Render(signal, options);
+        Assert.NotEqual(unavailable.Pixels, active.Pixels);
+        for (int y = 0; y < 180; y++) Assert.True(unavailable.Pixels.AsSpan(y * 1920 * 4, 1920 * 4).SequenceEqual(active.Pixels.AsSpan(y * 1920 * 4, 1920 * 4)));
+        Assert.Equal(renderer.Render(state, new()).Pixels, renderer.Render(signal, new()).Pixels);
+        Assert.Equal(renderer.Render(state with { Profile = "desktop" }, options).Pixels,
+            renderer.Render(signal with { Profile = "desktop" }, options).Pixels);
+    }
+    [Fact]
+    public void AudioBarsFitReceivedAuraColorsAcrossTheWholeSpectrum()
+    {
+        using var renderer = new DeckRenderer();
+        var state = State with { Profile = "music", Media = new(true, "Track", "Artist", "Spotify.exe", 2, 180, "connected"),
+            AudioSpectrum = new("connected", Enumerable.Repeat(.8f, 24).ToArray()),
+            Aura = new("connected", "#FF0000", Colors: ["#FF0000", "#00FF00", "#0000FF"]) };
+        using var rainbow = SKBitmap.Decode(renderer.Render(state, new() { MusicSpectrum = true, AuraEnabled = true }).Png);
+        var left = rainbow.GetPixel(1385, 300); var middle = rainbow.GetPixel(1630, 300); var right = rainbow.GetPixel(1860, 300);
+        Assert.True(left.Red > 150 && left.Blue < 40);
+        Assert.True(middle.Green > 150 && middle.Red < 40);
+        Assert.True(right.Blue > 150 && right.Red < 40);
+        using var manual = SKBitmap.Decode(renderer.Render(state, new() { MusicSpectrum = true, AuraEnabled = false }).Png);
+        Assert.Equal(manual.GetPixel(1385, 300), manual.GetPixel(1860, 300));
+    }
+    [Fact]
     public void AuraSpectrumFitsLogoLyricsAndProgressWhileSensorBarsStayUniform()
     {
         using var renderer = new DeckRenderer();

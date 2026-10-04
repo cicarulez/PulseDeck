@@ -2,6 +2,8 @@
 
 This is the maintainer's launch checklist. The repository already uses GPL-3.0-or-later; keep the license and upstream notices intact. Preparing files and packages does not itself change GitHub visibility or publish a release.
 
+Current source snapshot: **0.10.0**, updated 2026-10-04. Its [notes](releases/v0.10.0.md) describe development work, not an already published archive or tag.
+
 ## Repository presentation
 
 Suggested **About** description:
@@ -31,7 +33,7 @@ The first public introduction should link to the README, gallery, setup guide an
 3. Commit the exact source being packaged. For a local review archive:
 
    ```sh
-   python3 scripts/package-release.py --tag v0.7.4
+   python3 scripts/package-release.py --tag v0.10.0
    ```
 
    This creates a Windows ZIP, a corresponding-source ZIP and `SHA256SUMS` under ignored `artifacts/release`. It does not create a tag or upload anything. The output directory must be empty so files from different versions cannot be mixed. Version metadata is checked; a fresh build remains necessary to establish same-version source parity.
@@ -39,14 +41,16 @@ The first public introduction should link to the README, gallery, setup guide an
 4. Once the commit is ready, create and push the matching tag:
 
    ```sh
-   git tag -a v0.7.4 -m "PulseDeck 0.7.4 public preview"
-   git push origin v0.7.4
+   git tag -a v0.10.0 -m "PulseDeck 0.10.0 public preview"
+   git push origin v0.10.0
    ```
 
 5. In GitHub Actions, run **Prepare draft release** with that existing tag. The workflow validates the version, rebuilds/tests the tag and creates a **draft prerelease** with archives, source, checksums and the version's release notes.
 6. Review the draft and downloads, then publish it from GitHub. Keep early development builds marked prerelease until support expectations change.
 
 The workflow deliberately does not publish automatically on every commit or tag. It requires repository Actions permissions, a valid existing tag and the checked-in release-notes file. An existing release with the same tag causes creation to fail rather than replacing its files.
+
+For the documentation website, follow [site setup](site-setup.md). Its build generates HTML from repository Markdown; the Pages workflow also runs on documentation changes.
 
 ## Verify the public result
 

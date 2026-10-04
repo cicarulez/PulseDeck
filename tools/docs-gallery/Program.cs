@@ -9,7 +9,7 @@ using SkiaSharp;
 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 var output = Path.GetFullPath(args.FirstOrDefault() ?? "artifacts/docs-gallery");
 Directory.CreateDirectory(output);
-var stamp = new DateTimeOffset(2026, 9, 18, 19, 42, 0, TimeSpan.Zero);
+var stamp = new DateTimeOffset(2026, 10, 4, 19, 42, 0, TimeSpan.Zero);
 var green = SKColor.Parse("#A9FF69");
 byte[] Art(int width, int height, bool album)
 {
@@ -81,6 +81,16 @@ File.WriteAllBytes(Path.Combine(output, "gaming.png"), renderer.Render(gaming, c
 var music = state with { Profile = "music", Discord = new([], null, "idle"), Lyrics = new("synced", SpotifyLyrics.Key(media),
     [new(0, "A quiet room, a little light"), new(80, "Keep the rhythm in your sight"), new(95, "Let the evening drift away")]) };
 File.WriteAllBytes(Path.Combine(output, "music.png"), renderer.Render(music, config, artwork).Png);
+// Static documentation bands and colors, not an audio recording or Aura capture.
+var spectrumMusic = music with
+{
+    Aura = new("connected", "#FF595E", stamp, 1,
+        Colors: ["#FF595E", "#FF924C", "#FFCA3A", "#8AC926", "#52D8B4", "#1982C4", "#6A4C93", "#D76FC0"]),
+    AudioSpectrum = new("connected", Enumerable.Range(0, 24)
+        .Select(i => .18f + .64f * MathF.Abs(MathF.Sin(i * .42f))).ToArray(), Samples: 2048)
+};
+File.WriteAllBytes(Path.Combine(output, "music-spectrum.png"), renderer.Render(spectrumMusic,
+    config with { MusicSpectrum = true, AuraEnabled = true }, artwork).Png);
 var json = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
 File.WriteAllText(Path.Combine(output, "state.json"), JsonSerializer.Serialize(state, json));
 File.WriteAllText(Path.Combine(output, "config.json"), JsonSerializer.Serialize(config, json));

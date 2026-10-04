@@ -407,7 +407,9 @@ public sealed class DeckRenderer : IDisposable
             Text(state.Media.DisplayArtist, 48, 435, 20, muted, maxWidth: 290, minimumSize: 14);
             canvas.DrawLine(354, 90, 354, 435, line);
             canvas.DrawLine(1340, 90, 1340, 435, line);
-            for (var i = 0; i < 9; i++) WidgetCard(i, 1364 + i % 3 * 178, 100 + i / 3 * 106, 168);
+            for (var i = 0; i < (config.MusicSpectrum ? 3 : 9); i++) WidgetCard(i, 1364 + i % 3 * 178, 100 + i / 3 * 106, 168);
+            if (config.MusicSpectrum)
+                AudioSpectrumPanel.Draw(canvas, state.AudioSpectrum, 1364, 194, 524, palette, typeface);
             const float x = 388, width = 920;
             Text(state.SpotifyTransition ? "SPOTIFY / CAMBIO BRANO"
                 : state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", x, 115, 15, TextAccent(x), true, width);
