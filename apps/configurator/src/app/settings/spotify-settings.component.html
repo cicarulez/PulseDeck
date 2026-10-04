@@ -1,0 +1,38 @@
+<p>La modalità Musica funziona già senza login: brano, copertina, avanzamento e testi da LRCLIB. Collegando Spotify ottieni tutti gli artisti, il dispositivo attivo e i prossimi brani in coda.</p>
+<p>Gli extra seguono il brano riprodotto sul PC. Quando Spotify non risponde o l’autorizzazione scade, continuano a funzionare i dati locali. L’accesso serve solo a leggere la riproduzione.</p>
+<pd-status [label]="label()" [active]="active()" />
+<p role="status">{{ detail() }}</p>
+<div class="presets">
+  <button class="button button--primary" type="button" [disabled]="busy() || unavailable() || !status()?.clientId || waiting() || !!status()?.connected" (click)="connect()">Collega Spotify — funzionalità extra</button>
+  @if (status()?.connected || waiting()) {
+    <button class="button" type="button" [disabled]="busy() || unavailable()" (click)="disconnect()">{{ waiting() ? 'Annulla collegamento' : 'Scollega Spotify' }}</button>
+  }
+</div>
+@if (waiting() && authorizationUrl()) { <p><a [href]="authorizationUrl()" target="_blank" rel="noopener noreferrer">Apri il consenso Spotify nel browser</a></p> }
+@if (active()) {
+  <h3>In riproduzione</h3>
+  <p>{{ extras()?.current?.title }} · {{ extras()?.current?.displayArtist }}</p>
+  @if (extras()?.deviceName) { <p>Dispositivo: {{ extras()?.deviceName }}</p> }
+  <h3>A seguire</h3>
+  @if (extras()?.queueStatus !== 'connected') { <p>Coda non disponibile.</p> }
+  @else {
+    <ul>@for (track of extras()?.queue ?? []; track $index) { <li>{{ track.title }}<span>{{ track.displayArtist }}</span></li> } @empty { <li>Coda vuota.</li> }</ul>
+  }
+}
+<details [open]="status() !== null && !status()?.clientId">
+  <summary>{{ status()?.clientId ? 'Configurazione dell’app Spotify' : 'Prima configurazione · crea la tua app Spotify' }}</summary>
+  <p>Per l’uso personale, Spotify richiede un’app Developer. Il proprietario deve avere Premium; la modalità sviluppo consente fino a cinque utenti autorizzati.</p>
+  <ol>
+    <li>Apri il <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Spotify Developer Dashboard</a> e crea un’app per PulseDeck selezionando Web API.</li>
+    <li>Nelle impostazioni dell’app aggiungi esattamente questo Redirect URI: <code>{{ redirectUri }}</code></li>
+    <li>In Users Management aggiungi l’account Spotify che collegherai, se non è già autorizzato.</li>
+    <li>Copia il Client ID nelle impostazioni dell’app e inseriscilo qui.</li>
+  </ol>
+  <div class="fields">
+    <label class="wide">Client ID Spotify<input type="text" autocomplete="off" maxlength="32" [ngModelOptions]="{standalone: true}" [(ngModel)]="clientId" [disabled]="busy()" placeholder="Client ID di 32 caratteri"><small>Il Client ID identifica l’app ed è pubblico. Il Client Secret non serve. Salvare un ID diverso scollega l’account precedente.</small></label>
+    <button class="button" type="button" [disabled]="busy() || unavailable() || !validId()" (click)="saveClient()">Salva Client ID</button>
+  </div>
+  @if (status()?.clientId) { <p>Client ID configurato: <code>{{ status()?.clientId }}</code></p> }
+  <p>L’autorizzazione dell’account viene salvata cifrata per il tuo utente Windows. Puoi revocarla anche dalla pagina <a href="https://www.spotify.com/account/apps/" target="_blank" rel="noopener noreferrer">App del tuo account Spotify</a>.</p>
+</details>
+@if (message()) { <p role="status">{{ message() }}</p> }

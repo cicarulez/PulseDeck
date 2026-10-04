@@ -258,6 +258,28 @@ public class RendererTests
         Assert.Equal(r.Render(gap,c).Pixels,r.Render(gap with {Lyrics=new()},c).Pixels);
     }
     [Fact]
+    public void SpotifyExtrasShowDeviceAndQueueWithoutMovingLyricsOrSensors()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Synthetic track", "First artist", "Spotify.exe", 5, 180, "connected") { Album = "Fixture" };
+        var track = new SpotifyTrack("0123456789ABCDEFGHIJKL", media.Title, ["First artist", "Second artist"], media.Album, 180);
+        var state = State with { Profile = "music", Media = media, Lyrics = new("synced", SpotifyLyrics.Key(media), [new(0, "Original synthetic line")]) };
+        var config = new DeckConfig { Layout = "weather" };
+        var baseline = renderer.Render(state, config).Pixels;
+        var extras = new SpotifySnapshot("connected", track, "My PC", [track with { Title = "Next fixture" }], "connected", state.Timestamp);
+        var enriched = state with { Media = media with { Artists = track.Artists }, Spotify = extras };
+        var extended = renderer.Render(enriched, config).Pixels;
+        Assert.NotEqual(baseline, extended);
+        for (var y = 140; y < 392; y++)
+            Assert.True(baseline.AsSpan((y * 1920 + 388) * 4, 1500 * 4).SequenceEqual(extended.AsSpan((y * 1920 + 388) * 4, 1500 * 4)));
+        Assert.NotEqual(extended, renderer.Render(enriched with { Spotify = extras with { Queue = [] } }, config).Pixels);
+        Assert.NotEqual(extended, renderer.Render(enriched with { Spotify = extras with { Queue = null, QueueStatus = "unavailable" } }, config).Pixels);
+        Assert.Equal(baseline, renderer.Render(state with { Spotify = extras with { FetchedAt = state.Timestamp.AddSeconds(-26) } }, config).Pixels);
+        Assert.Equal(baseline, renderer.Render(state with { Spotify = extras with { Current = track with { Title = "Other song" } } }, config).Pixels);
+        Assert.Equal(baseline, renderer.Render(state with { Spotify = new() }, config).Pixels);
+    }
+
+    [Fact]
     public void LyricsLookupOutcomesKeepMusicCoverSensorsAndPlaybackGeometry()
     {
         using var renderer = new DeckRenderer();

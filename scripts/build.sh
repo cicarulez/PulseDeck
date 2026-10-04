@@ -7,6 +7,7 @@ npm run build
 cd "$repo_dir"
 node --test tests/youtube-extension/*.test.mjs
 dotnet test tests/PulseDeck.Core.Tests/PulseDeck.Core.Tests.csproj -c Release
+dotnet test tests/PulseDeck.Spotify.Tests/PulseDeck.Spotify.Tests.csproj -c Release
 dotnet test tests/PulseDeck.Rendering.Tests/PulseDeck.Rendering.Tests.csproj -c Release
 dotnet publish apps/agent/PulseDeck.Agent.csproj -c Release -r win-x64 --self-contained true -o artifacts/windows
 python3 scripts/fetch-gaming-dependencies.py artifacts/windows

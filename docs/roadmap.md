@@ -41,7 +41,7 @@ PulseDeck is an early-stage project built around one verified Windows/TURZX setu
 | Historical telemetry | Optional local recording, likely SQLite with retention/aggregation. Consider storage, writes and privacy before recording everything. Not implemented. |
 | Multiple displays | Independent configuration and transport per screen, shared provider acquisition. A second 3.5″ panel is not currently supported. |
 | Aura color following | Read the PC's existing lighting state without acquiring RGB control. Research is paused; a controller replacement does not meet the requirement. |
-| Music layout evolution | Dedicated Spotify composition is implemented. Future work can improve lyrics coverage/fallbacks and layout customization. |
+| Music layout evolution | Dedicated Spotify composition and optional read-only [account extras](spotify.md) are implemented. Base Music remains login-free. Future work can improve lyrics coverage/fallbacks and layout customization; playback controls are deferred. |
 | Daily lifecycle | Tray controls and a clearer update/recovery experience. |
 
 For protocol and runtime constraints see [architecture](architecture.md). For what was actually tested, see [validation](validation.md). The detailed earlier investigation is retained in [development history](development-history.it.md); historical entries may describe features that have since shipped.

@@ -144,7 +144,7 @@ public sealed class DeckRenderer : IDisposable
             var textX = x + size + 18;
             var textWidth = width - size - 18;
             Text(available && state.Media.Title.Length > 0 ? state.Media.Title : "Nessuna riproduzione", textX, y + 47, 24, heavy: true, maxWidth: textWidth);
-            Text(available ? state.Media.Artist : "", textX, y + 80, 18, muted, maxWidth: textWidth);
+            Text(available ? state.Media.DisplayArtist : "", textX, y + 80, 18, muted, maxWidth: textWidth);
             Text(available ? state.Media.Playing ? "IN RIPRODUZIONE" : "IN PAUSA" : "INATTIVO", textX, y + 115, 13, state.Media.Playing ? accent : muted, maxWidth: textWidth);
             string Time(double seconds) => TimeSpan.FromSeconds(Math.Clamp(double.IsFinite(seconds) ? seconds : 0, 0, 359999)).ToString(seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
             Text(available && state.Media.DurationSeconds > 0 ? $"{Time(state.Media.PositionSeconds)} / {Time(state.Media.DurationSeconds)}" : "— / —", textX, y + 144, 20, maxWidth: textWidth);
@@ -390,13 +390,21 @@ public sealed class DeckRenderer : IDisposable
             var lyrics = eligible && state.Lyrics.TrackKey == SpotifyLyrics.Key(state.Media) ? state.Lyrics : new();
             Cover(48, 90, 288);
             Text(state.Media.Title.Length > 0 ? state.Media.Title : "Spotify", 48, 407, 25, heavy: true, maxWidth: 290, minimumSize: 19);
-            Text(state.Media.Artist, 48, 435, 20, muted, maxWidth: 290);
+            Text(state.Media.DisplayArtist, 48, 435, 20, muted, maxWidth: 290, minimumSize: 14);
             canvas.DrawLine(354, 90, 354, 435, line);
             canvas.DrawLine(1340, 90, 1340, 435, line);
             for (var i = 0; i < 9; i++) WidgetCard(i, 1364 + i % 3 * 178, 100 + i / 3 * 106, 168);
             const float x = 388, width = 920;
             Text(state.SpotifyTransition ? "SPOTIFY / CAMBIO BRANO"
                 : state.Media.Playing ? "SPOTIFY / IN RIPRODUZIONE" : "SPOTIFY / IN PAUSA", x, 115, 15, accent, true, width);
+            var extras = state.Spotify.ForLocal(state.Media, state.Timestamp);
+            if (!state.SpotifyTransition && extras.Current is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(extras.DeviceName)) Text("SU " + extras.DeviceName, 908, 115, 13, muted, maxWidth: 400);
+                var upcoming = extras.Queue?.FirstOrDefault();
+                Text(extras.QueueStatus != "connected" ? "CODA NON DISPONIBILE" : upcoming is null ? "CODA VUOTA" : "A SEGUIRE", 1364, 415, 12, muted, maxWidth: 524);
+                if (upcoming is not null) Text(upcoming.Title + " · " + upcoming.DisplayArtist, 1364, 437, 15, maxWidth: 524);
+            }
             var lyricsCredit = "Testi: LRCLIB";
             List<string> Wrap(string value, float size)
             {
@@ -494,7 +502,7 @@ public sealed class DeckRenderer : IDisposable
         if (state.Profile == "music")
         {
             Text(state.Media.Title, 350, 188, 42, heavy: true, maxWidth: 960);
-            Text(state.Media.Artist, 350, 234, 26, muted, maxWidth: 960);
+            Text(state.Media.DisplayArtist, 350, 234, 26, muted, maxWidth: 960);
         }
         else
         {

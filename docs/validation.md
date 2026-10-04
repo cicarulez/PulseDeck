@@ -2363,3 +2363,47 @@ References: [process application identity](https://learn.microsoft.com/en-us/win
   Error-state layout geometry/messages are verified by renderer regression tests;
   the inspected live PNG contained synced lyrics. No voice transitions were tested.
   Private screenshots and deployment artifacts remain outside the repository.
+
+## Optional Spotify account extras — 2026-10-04
+
+- Added opt-in, read-only Spotify OAuth with S256 PKCE, random callback state,
+  a five-minute loopback listener and only playback-state/currently-playing scopes.
+  The base Windows media provider, profile selection and LRCLIB lookup remain
+  independent of Spotify API availability. Full artists affect display text only;
+  local artist metadata still determines the lyrics key and query.
+- Extra metadata must match the local Spotify title, artist, album when supplied
+  and duration. Snapshots expire after 25 seconds. The worker reads playback every
+  ten seconds and queue every thirty seconds or on an observed track change;
+  errors clear stale extras, back off and honor rate limits. Private sessions,
+  unsupported items and other-player/track mismatches fall back to local data.
+- Added Configurazione → Spotify with optional account connection, a personal-app
+  setup guide, connection/error states, device and up to three queued tracks.
+  The shared Music renderer adds device and next-track text without moving lyrics
+  or the sensor grid. Long artist lists shrink before truncation.
+- Release validation: Core **217/217**, Spotify **19/19**, rendering **57/57**;
+  Angular production build and self-contained `win-x64` publish succeeded.
+  Spotify tests use synthetic HTTP responses and exercise PKCE, wrong-state
+  callbacks, cancellation during token exchange, refresh rotation/preservation,
+  disconnect, zero requests without login, retry limits, private/malformed/absent
+  responses, queue/track mismatch and lyrics-key stability. Synthetic renderer
+  PNG was visually inspected; no synthetic readings were sent to the live agent.
+- Deployed the changed DLLs and complete frontend after agent and supervisor exit.
+  Dependency manifests matched; installed file hashes were verified. Prior DLLs,
+  frontend and existing task XML are backed up at
+  `%LOCALAPPDATA%\PulseDeck\deployment-backups\spotify-extra-20261004-112828`.
+  Existing config and credential-file hashes were preserved. COM5 reconnected as
+  `chs_88inch.dev1_rom1.90` and acknowledged frames with no current error.
+- Verified the installed setup screen, public Client ID save, HTTP 400 for invalid
+  IDs and HTTP 403 for mutations without the required client header. Mobile UI at
+  390px had no page-width overflow and its private screenshot was inspected.
+  Desktop browser pointer automation stalled; DOM-triggered button handlers and
+  their resulting requests were exercised instead. An existing game-artwork 404
+  was observed, unrelated to the Spotify endpoints.
+- In the Windows user's session, confirmed `spotify.credentials` is DPAPI
+  encrypted and reloads the configured public Client ID. Opened the actual Spotify
+  consent page for the user's app and verified the requested read permissions.
+  At this checkpoint consent is pending: a real refresh token, live API enrichment
+  and token persistence across agent restart have not yet been validated.
+- Physical evidence covers frame acknowledgements, not visual inspection of the
+  panel. No Discord voice transitions or remote playback controls were exercised.
+  Public client ID, user data, screenshots and tokens are not repository fixtures.

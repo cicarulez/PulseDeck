@@ -11,7 +11,7 @@ import { DisplayControlsComponent } from './display/display-controls.component';
 @Component({ selector: 'pd-root', standalone: true, imports: [StatusBadgeComponent, MetricCardComponent, SettingsComponent, SensorsComponent, WidgetsComponent, DisplayControlsComponent], templateUrl: './app.component.html', styleUrl: './app.component.scss' })
 export class AppComponent {
   readonly deck = inject(DeckService);
-  readonly tab = signal<'overview' | 'sensors' | 'widgets' | 'settings'>(window.location.hash === '#settings/gmail' ? 'settings' : 'overview');
+  readonly tab = signal<'overview' | 'sensors' | 'widgets' | 'settings'>(window.location.hash.startsWith('#settings/') ? 'settings' : 'overview');
   readonly pages = [
     { id: 'overview', icon: '◫', label: 'Panoramica', title: 'Tutto sotto controllo.', subtitle: 'Prestazioni, musica e squadra. Un unico punto di vista.' },
     { id: 'sensors', icon: '≋', label: 'Sensori', title: 'Ogni lettura, in chiaro.', subtitle: 'Esplora tutti i sensori rilevati sul tuo PC.' },

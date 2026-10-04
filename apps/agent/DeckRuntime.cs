@@ -10,7 +10,7 @@ namespace PulseDeck.Agent;
 public sealed class DeckHub : Hub;
 
 public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, MediaProvider media,
-    DiscordProvider discord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, LyricsProvider lyrics, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
+    DiscordProvider discord, ForegroundProvider foreground, GameSessionProvider sessions, GameArtworkProvider gameArtwork, GameDiscoveryService discovery, LyricsProvider lyrics, SpotifyService spotify, PresentMonProvider fps, VolumeProvider volume, WeatherFeed weather, NewsFeed news, DeckRenderer renderer, TurzxDisplay display, IHubContext<DeckHub> hub,
     CalendarFeed calendar, CalendarCredentials calendarCredentials, NotificationCenter notifications, ILogger<DeckRuntime> logger) : BackgroundService
 {
     private readonly CalendarArrivalTracker calendarArrivals = new();
@@ -54,12 +54,15 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     var session = sessions.Read(game, now);
                     if (game is not null && session is null && active.ProcessId != game.ProcessId) game = null;
                     var frameRate = fps.Read(profile == "gaming" ? session : null, settings, now);
+                    var spotifyState = spotify.Read(mediaTask.Result, now);
+                    var localMedia = mediaTask.Result with { Artists = spotifyState.Current?.Artists ?? [] };
                     var next = new DeckState(now, profile, active.ProcessName,
-                        hardwareTask.Result, mediaTask.Result, discordTask.Result, display.Status, frameRate.Status)
+                        hardwareTask.Result, localMedia, discordTask.Result, display.Status, frameRate.Status)
                         { Foreground = active, Game = game, GameSession = session, Fps = frameRate, Volume = volume.Read(),
                             GameArtwork = gameArtwork.Read(game, stoppingToken),
                             Lyrics = lyrics.Read(mediaTask.Result, profile, settings.SpotifyLyrics, stoppingToken),
                             SpotifyTransition = selector.SpotifyTransition,
+                            Spotify = spotifyState,
                             News = news.Read(settings.News, stoppingToken),
                             Calendar = calendar.Read(settings.Calendar, calendarCredentials.Read(), stoppingToken),
                             Weather = weather.Read(settings.WeatherLocation, settings.Layout == "weather", stoppingToken) };

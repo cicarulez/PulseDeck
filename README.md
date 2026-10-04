@@ -42,6 +42,8 @@ Discover games in Steam and EA libraries, show artwork, keep the session timer t
 
 Spotify gets cover art, track progress and optional synchronized lyrics from LRCLIB, with nine sensors in a 3×3 grid. Track changes keep the layout stable while lyrics load. Automatic priority is **Gaming → Music → Desktop**; manual selection takes precedence.
 
+An [optional Spotify account connection](docs/spotify.md) adds all track artists, the active device and upcoming tracks. Music works without a login and falls back to local metadata when the connection is unavailable.
+
 *These are real renderer outputs using fictional names, sample readings and original artwork/lyrics. They are documentation previews, not hardware benchmarks or photographs. See [image provenance](docs/gallery.md).*
 
 ## Built for everyday use

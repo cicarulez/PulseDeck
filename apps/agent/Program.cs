@@ -17,6 +17,13 @@ builder.Services.AddHttpClient("youtube-artwork", client =>
     { client.Timeout = TimeSpan.FromSeconds(1); client.MaxResponseContentBufferSize = MediaArtwork.MaximumBytes; })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 builder.Services.AddSingleton<MediaProvider>();
+builder.Services.AddSingleton<ISpotifyCredentials, SpotifyCredentials>();
+builder.Services.AddHttpClient("spotify", client => { client.Timeout = TimeSpan.FromSeconds(5); client.MaxResponseContentBufferSize = 512 * 1024; })
+    .RemoveAllLoggers()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+builder.Services.AddSingleton(p => new SpotifyApi(p.GetRequiredService<IHttpClientFactory>().CreateClient("spotify")));
+builder.Services.AddSingleton<SpotifyService>();
+builder.Services.AddHostedService(p => p.GetRequiredService<SpotifyService>());
 builder.Services.AddHttpClient("lyrics", client => { client.Timeout = TimeSpan.FromSeconds(8); client.MaxResponseContentBufferSize = 256 * 1024; client.DefaultRequestHeaders.UserAgent.ParseAdd("PulseDeck/0.8.0"); })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 builder.Services.AddSingleton(p => new LyricsProvider(p.GetRequiredService<IHttpClientFactory>().CreateClient("lyrics"), p.GetRequiredService<ConfigStore>()));
@@ -105,6 +112,24 @@ app.MapPost("/api/browser-media", (BrowserMediaUpdate update, BrowserMediaStore 
 app.MapPost("/api/browser-tab", (BrowserTabUpdate update, BrowserTabStore store) =>
     store.Update(update.Tab) ? Results.Ok(new { connected = true }) : Results.BadRequest());
 app.MapGet("/api/state", (DeckRuntime runtime) => runtime.State);
+app.MapGet("/api/spotify", (SpotifyService spotify) => spotify.Status);
+app.MapPost("/api/spotify/client", async (SpotifyClientRequest request, SpotifyService spotify, CancellationToken token) =>
+{
+    try { await spotify.Configure(request.ClientId ?? "", token); return Results.Ok(spotify.Status); }
+    catch (ArgumentException e) { return Results.BadRequest(new { error = e.Message }); }
+    catch { return Results.Problem("Impossibile salvare la configurazione Spotify."); }
+});
+app.MapPost("/api/spotify/connect", async (SpotifyService spotify, CancellationToken token) =>
+{
+    try { return Results.Ok(new { url = await spotify.Connect(token) }); }
+    catch (ArgumentException e) { return Results.BadRequest(new { error = e.Message }); }
+    catch { return Results.Problem("Impossibile avviare il collegamento Spotify."); }
+});
+app.MapDelete("/api/spotify", async (SpotifyService spotify, CancellationToken token) =>
+{
+    try { await spotify.Disconnect(token); return Results.Ok(spotify.Status); }
+    catch { return Results.Problem("Impossibile rimuovere il collegamento Spotify."); }
+});
 app.MapGet("/api/discord/options", (EmbeddedDiscordService discord) => discord.Options());
 app.MapGet("/api/notifications/gmail", (GmailService gmail) => gmail.Status);
 app.MapPost("/api/notifications/gmail/client", async (GmailClientRequest request, GmailService gmail, CancellationToken token) =>

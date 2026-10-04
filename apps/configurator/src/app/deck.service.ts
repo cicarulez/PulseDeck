@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { GmailStatus, DiscordOptions, GameLibraryStatus, DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
+import { SpotifyConnection, GmailStatus, DiscordOptions, GameLibraryStatus, DeckConfig, DeckState, DisplayState, WidgetCatalog } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class DeckService {
@@ -49,6 +49,10 @@ export class DeckService {
     return response.json() as Promise<T>;
   }
   discordOptions() { return this.request<DiscordOptions>('/api/discord/options'); }
+  spotifyStatus() { return this.request<SpotifyConnection>('/api/spotify'); }
+  configureSpotify(clientId: string) { return this.request<SpotifyConnection>('/api/spotify/client', 'POST', { clientId }); }
+  connectSpotify() { return this.request<{url: string}>('/api/spotify/connect', 'POST'); }
+  disconnectSpotify() { return this.request<SpotifyConnection>('/api/spotify', 'DELETE'); }
   gmailStatus() { return this.request<GmailStatus>('/api/notifications/gmail'); }
   importGmailClient(json: string) { return this.request<GmailStatus>('/api/notifications/gmail/client', 'POST', { json }); }
   connectGmail() { return this.request<{url: string}>('/api/notifications/gmail/connect', 'POST'); }

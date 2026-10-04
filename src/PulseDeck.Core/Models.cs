@@ -69,6 +69,8 @@ public sealed record HardwareSnapshot(IReadOnlyList<Metric> Metrics, string Stat
 }
 public sealed record MediaSnapshot(bool Playing, string Title, string Artist, string App, double PositionSeconds, double DurationSeconds, string Status)
 {
+    public string[] Artists { get; init; } = [];
+    public string DisplayArtist => Artists.Length > 0 ? string.Join(", ", Artists) : Artist;
     public string? ArtworkId { get; init; }
     public string Source { get; init; } = "windows";
     public string Album { get; init; } = "";
@@ -117,6 +119,7 @@ public sealed record DeckState(DateTimeOffset Timestamp, string Profile, string 
     public NewsSnapshot News { get; init; } = new();
     public CalendarSnapshot Calendar { get; init; } = new();
     public LyricsSnapshot Lyrics { get; init; } = new();
+    public SpotifySnapshot Spotify { get; init; } = new();
     public NotificationVisual Notifications { get; init; } = new([]);
     public bool SpotifyTransition { get; init; }
 }

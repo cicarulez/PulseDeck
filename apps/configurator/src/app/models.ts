@@ -1,3 +1,6 @@
+export interface SpotifyTrack { id: string; title: string; artists: string[]; displayArtist: string; album: string; durationSeconds: number; }
+export interface SpotifySnapshot { status: string; current: SpotifyTrack | null; deviceName: string | null; queue: SpotifyTrack[] | null; queueStatus: string; fetchedAt: string | null; }
+export interface SpotifyConnection { clientId: string | null; connected: boolean; authorizationStatus: string; dataStatus: string; redirectUri: string; }
 export type NotificationProfile = 'desktop' | 'gaming' | 'music';
 export interface NotificationOptions { gmailEnabled: boolean; animate: boolean; profiles: NotificationProfile[]; pollSeconds: number; }
 export interface NotificationSource { id: string; kind: string; status: string; unreadCount: number | null; updatedAt: string | null; }
@@ -44,10 +47,10 @@ export interface DeckState {
   fps: { status: string; framesPerSecond: number | null; frameTimeMs: number | null; detail: string | null };
   gameSession: { processId: number; startedAt: string; elapsedSeconds: number } | null;
   gameArtwork: { status: string; source: string | null };
-  news: NewsSnapshot; calendar: CalendarSnapshot;
+  news: NewsSnapshot; calendar: CalendarSnapshot; spotify: SpotifySnapshot;
   timestamp: string; profile: string; foregroundApp: string;
   hardware: HardwareState;
-  media: { playing: boolean; title: string; artist: string; app: string; positionSeconds: number; durationSeconds: number; status: string; artworkId: string | null };
+  media: { playing: boolean; title: string; artist: string; displayArtist: string; artists: string[]; app: string; positionSeconds: number; durationSeconds: number; status: string; artworkId: string | null };
   discord: { serverName?: string | null; channelName?: string | null; speakingStatus: string; members: VoiceMember[]; tracked: VoiceMember | null; status: string; detail: string | null };
   display: DisplayState; fpsStatus: string; foreground: ForegroundState; game: ForegroundState | null;
 }

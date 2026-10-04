@@ -1,3 +1,4 @@
+import { SpotifySettingsComponent } from './spotify-settings.component';
 import { SectionTabsComponent, SectionTab } from '../shared/section-tabs.component';
 import { NotificationSettingsComponent } from './notification-settings.component';
 import { Component, effect, input, output, signal } from '@angular/core';
@@ -11,14 +12,14 @@ import { CalendarSettingsComponent } from './calendar-settings.component';
 import { DiscordSettingsComponent } from './discord-settings.component';
 import { GameThemesComponent } from './game-themes.component';
 
-@Component({ selector: 'pd-settings', standalone: true, imports: [SectionTabsComponent, NotificationSettingsComponent, FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
+@Component({ selector: 'pd-settings', standalone: true, imports: [SpotifySettingsComponent, SectionTabsComponent, NotificationSettingsComponent, FormsModule, CalendarSettingsComponent, DiscordSettingsComponent, GameDiscoveryComponent, SteamGridComponent, GameThemesComponent, WeatherSettingsComponent, NewsSettingsComponent], templateUrl: './settings.component.html', styleUrl: './settings.component.scss' })
 export class SettingsComponent {
   readonly sections: readonly SectionTab[] = [
     { id: 'behavior', label: 'Profili e giochi' }, { id: 'display', label: 'Display e musica' },
-    { id: 'discord', label: 'Discord' }, { id: 'gmail', label: 'Notifiche' },
+    { id: 'spotify', label: 'Spotify' }, { id: 'discord', label: 'Discord' }, { id: 'gmail', label: 'Notifiche' },
     { id: 'calendar', label: 'Calendario' }, { id: 'weather', label: 'Meteo' }, { id: 'news', label: 'News' }
   ];
-  readonly section = signal(window.location.hash === '#settings/gmail' ? 'gmail' : 'behavior');
+  readonly section = signal(this.sections.find(item => window.location.hash === '#settings/' + item.id)?.id ?? 'behavior');
   calendarState = input<CalendarSnapshot | null>(null);
   newsState = input<NewsSnapshot | null>(null);
   config = input.required<DeckConfig>(); busy = input(false); save = output<DeckConfig>();
