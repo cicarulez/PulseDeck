@@ -8,6 +8,7 @@ namespace PulseDeck.Core;
 
 public sealed record SpotifyTrack(string Id, string Title, string[] Artists, string Album, double DurationSeconds)
 {
+    public int? AlbumYear { get; init; }
     public string DisplayArtist => string.Join(", ", Artists);
     public bool Matches(MediaSnapshot media) => SpotifyLyrics.Eligible(media)
         && SteamGridImages.Normalize(Title) == SteamGridImages.Normalize(media.Title)
@@ -151,6 +152,10 @@ public sealed class SpotifyApi(HttpClient client)
             ? names.EnumerateArray().Take(20).Select(a => String(a, "name")).Where(a => !string.IsNullOrWhiteSpace(a) && a.Length <= 300).Distinct().ToArray() : [];
         if (artists.Length == 0) return null;
         var album = root.TryGetProperty("album", out var value) ? String(value, "name") : "";
-        return new(id, title, artists, album, ms / 1000d);
+        var release = value.ValueKind == JsonValueKind.Object ? String(value, "release_date") : "";
+        int? year = release.Length >= 4 && release[..4].All(char.IsAsciiDigit)
+            && int.TryParse(release[..4], out var parsed) && parsed > 0
+            && (release.Length == 4 || release.Length > 4 && release[4] == '-') ? parsed : null;
+        return new(id, title, artists, album, ms / 1000d) { AlbumYear = year };
     }
 }

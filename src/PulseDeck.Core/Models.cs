@@ -79,6 +79,10 @@ public sealed record MediaSnapshot(bool Playing, string Title, string Artist, st
     public string? ArtworkId { get; init; }
     public string Source { get; init; } = "windows";
     public string Album { get; init; } = "";
+    public int? AlbumYear { get; init; }
+    public string DisplayDetails => string.IsNullOrWhiteSpace(Album) ? DisplayArtist
+        : (string.IsNullOrWhiteSpace(DisplayArtist) ? "" : DisplayArtist + " - ")
+            + Album + (AlbumYear is { } year ? $" ({year})" : "");
 }
 public sealed record ForegroundSnapshot(int ProcessId, string ProcessName, string DisplayName, bool IsGame, string? IconId, string IconStatus)
 {

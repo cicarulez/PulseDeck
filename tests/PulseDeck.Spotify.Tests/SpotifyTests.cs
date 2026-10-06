@@ -71,6 +71,20 @@ public class SpotifyTests
         Assert.Equal(SpotifyLyrics.Key(Local), SpotifyLyrics.Key(enriched));
     }
     [Theory]
+    [InlineData("2024", 2024)]
+    [InlineData("2024-03", 2024)]
+    [InlineData("2024-03-15", 2024)]
+    [InlineData("", null)]
+    [InlineData("unknown", null)]
+    [InlineData("0000", null)]
+    [InlineData("2024oops", null)]
+    public void AlbumYearUsesReleaseMetadataWhenPresent(string releaseDate, int? expected)
+    {
+        using var json = JsonDocument.Parse(TrackJson.Replace("\"Synthetic album\"", "\"Synthetic album\",\"release_date\":" + JsonSerializer.Serialize(releaseDate)));
+        var track = Assert.IsType<SpotifyTrack>(SpotifyApi.ParseTrack(json.RootElement));
+        Assert.Equal(expected, track.AlbumYear);
+    }
+    [Theory]
     [InlineData("null")]
     [InlineData("{\"type\":\"episode\"}")]
     [InlineData("{\"type\":\"track\",\"is_local\":true}")]

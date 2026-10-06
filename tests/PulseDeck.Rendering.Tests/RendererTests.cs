@@ -7,6 +7,46 @@ using Xunit;
 public class RendererTests
 {
     [Fact]
+    public void AlbumAndYearUseOnlyFreshSpotifyMetadataForTheCurrentTrack()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Song", "Artist", "Spotify.exe", 0, 180, "connected");
+        var state = State with { Profile = "music", Media = media };
+        var config = new DeckConfig();
+        var track = new SpotifyTrack("0123456789ABCDEFGHIJKL", "Song", ["Artist"], "Album", 180) { AlbumYear = 2024 };
+        var extras = new SpotifySnapshot("connected", track, FetchedAt: state.Timestamp);
+        var baseline = renderer.Render(state, config).Pixels;
+        var enriched = renderer.Render(state with { Spotify = extras }, config).Pixels;
+        Assert.Contains(Enumerable.Range(414, 28), y => !baseline.AsSpan((y * 1920 + 48) * 4, 290 * 4)
+            .SequenceEqual(enriched.AsSpan((y * 1920 + 48) * 4, 290 * 4)));
+        Assert.Equal(baseline, renderer.Render(state with { Spotify = extras with { FetchedAt = state.Timestamp.AddSeconds(-26) } }, config).Pixels);
+        Assert.Equal(baseline, renderer.Render(state with { Spotify = extras with { Current = track with { Title = "Other" } } }, config).Pixels);
+        Assert.Equal("", media.Album);
+    }
+    [Fact]
+    public void LongMediaDetailsScrollWithinTheirRowAndResetForANewSong()
+    {
+        using var renderer = new DeckRenderer();
+        var media = new MediaSnapshot(true, "Song", "Artist", "Spotify.exe", 0, 180, "connected")
+            { Album = "A synthetic album with a deliberately long name for scrolling", AlbumYear = 2024 };
+        var state = State with { Profile = "music", Media = media };
+        var config = new DeckConfig { MusicSpectrum = false };
+        var initial = renderer.Render(state, config).Pixels;
+        var paused = renderer.Render(state with { Timestamp = state.Timestamp.AddSeconds(1) }, config).Pixels;
+        var moved = renderer.Render(state with { Timestamp = state.Timestamp.AddSeconds(4) }, config).Pixels;
+        var reset = renderer.Render(state with { Timestamp = state.Timestamp.AddSeconds(5), Media = media with { Title = "New song" } }, config).Pixels;
+        for (var y = 414; y < 442; y++)
+        {
+            var offset = (y * 1920 + 48) * 4;
+            Assert.True(initial.AsSpan(offset, 290 * 4).SequenceEqual(paused.AsSpan(offset, 290 * 4)));
+            Assert.True(initial.AsSpan(offset, 290 * 4).SequenceEqual(reset.AsSpan(offset, 290 * 4)));
+            Assert.True(initial.AsSpan(y * 1920 * 4, 48 * 4).SequenceEqual(moved.AsSpan(y * 1920 * 4, 48 * 4)));
+            Assert.True(initial.AsSpan((y * 1920 + 338) * 4, 16 * 4).SequenceEqual(moved.AsSpan((y * 1920 + 338) * 4, 16 * 4)));
+        }
+        Assert.Contains(Enumerable.Range(414, 28), y => !initial.AsSpan((y * 1920 + 48) * 4, 290 * 4)
+            .SequenceEqual(moved.AsSpan((y * 1920 + 48) * 4, 290 * 4)));
+    }
+    [Fact]
     public void MusicSpectrumIsOptionalAndRendersRealBandsOrUnavailableState()
     {
         using var renderer = new DeckRenderer();

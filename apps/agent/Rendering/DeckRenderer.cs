@@ -21,6 +21,7 @@ public sealed class DeckRenderer : IDisposable
     private SKBitmap? appIcon;
     private string? appIconId;
     private SKRect appIconBounds;
+    private readonly Dictionary<string, (string Identity, DateTimeOffset Since)> mediaScroll = new();
     private SKBitmap? gameIcon;
     private string? gameIconId;
     private readonly SKShader baseGradient = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(1920, 480),
@@ -100,6 +101,35 @@ public sealed class DeckRenderer : IDisposable
             canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
         }
         var widgets = WidgetCatalog.Expand(config.Widgets).ToDictionary(w => w.Slot, w => WidgetCatalog.Resolve(w, state.Hardware));
+        var spotifyTrack = state.Spotify.ForLocal(state.Media, state.Timestamp).Current;
+        // Enrich only the displayed row: the Windows album remains the lyrics lookup identity.
+        var mediaDetails = (state.Media with
+        {
+            Album = string.IsNullOrWhiteSpace(state.Media.Album) ? spotifyTrack?.Album ?? "" : state.Media.Album,
+            AlbumYear = spotifyTrack?.AlbumYear ?? state.Media.AlbumYear
+        }).DisplayDetails;
+        void MediaText(string value, float x, float y, float size, float width, SKColor? color = null, bool heavy = false)
+        {
+            using var font = new SKFont(heavy ? bold : typeface, size);
+            var key = $"{x}/{y}";
+            var identity = state.Media.App + "\n" + state.Media.Title + "\n" + state.Media.Artist + "\n" + value;
+            if (!mediaScroll.TryGetValue(key, out var scroll) || scroll.Identity != identity || state.Timestamp < scroll.Since)
+                mediaScroll[key] = scroll = (identity, state.Timestamp);
+            var overflow = font.MeasureText(value) - width;
+            if (overflow <= 0)
+            {
+                Text(value, x, y, size, color, heavy);
+                return;
+            }
+            const double pause = 2, pixelsPerSecond = 28;
+            var travel = overflow / pixelsPerSecond;
+            var elapsed = (state.Timestamp - scroll.Since).TotalSeconds % (travel + pause * 2);
+            var offset = (float)Math.Clamp((elapsed - pause) * pixelsPerSecond, 0, overflow);
+            canvas.Save();
+            canvas.ClipRect(SKRect.Create(x, y - size * 1.3f, width, size * 1.7f));
+            Text(value, x - offset, y, size, color, heavy);
+            canvas.Restore();
+        }
         void ValueText(WidgetReading widget, float x, float y, float size, float maxWidth, float minimumSize = 18)
         {
             if (widget.Upload is { } upload)
@@ -156,8 +186,8 @@ public sealed class DeckRenderer : IDisposable
             Cover(x, y + 16, size);
             var textX = x + size + 18;
             var textWidth = width - size - 18;
-            Text(available && state.Media.Title.Length > 0 ? state.Media.Title : "Nessuna riproduzione", textX, y + 47, 24, heavy: true, maxWidth: textWidth);
-            Text(available ? state.Media.DisplayArtist : "", textX, y + 80, 18, muted, maxWidth: textWidth);
+            MediaText(available && state.Media.Title.Length > 0 ? state.Media.Title : "Nessuna riproduzione", textX, y + 47, 24, textWidth, heavy: true);
+            MediaText(available ? mediaDetails : "", textX, y + 80, 18, textWidth, muted);
             Text(available ? state.Media.Playing ? "IN RIPRODUZIONE" : "IN PAUSA" : "INATTIVO", textX, y + 115, 13, state.Media.Playing ? TextAccent(textX) : muted, maxWidth: textWidth);
             string Time(double seconds) => TimeSpan.FromSeconds(Math.Clamp(double.IsFinite(seconds) ? seconds : 0, 0, 359999)).ToString(seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
             Text(available && state.Media.DurationSeconds > 0 ? $"{Time(state.Media.PositionSeconds)} / {Time(state.Media.DurationSeconds)}" : "— / —", textX, y + 144, 20, maxWidth: textWidth);
@@ -403,8 +433,8 @@ public sealed class DeckRenderer : IDisposable
             var eligible = SpotifyLyrics.Eligible(state.Media);
             var lyrics = eligible && state.Lyrics.TrackKey == SpotifyLyrics.Key(state.Media) ? state.Lyrics : new();
             Cover(48, 90, 288);
-            Text(state.Media.Title.Length > 0 ? state.Media.Title : "Spotify", 48, 407, 25, heavy: true, maxWidth: 290, minimumSize: 19);
-            Text(state.Media.DisplayArtist, 48, 435, 20, muted, maxWidth: 290, minimumSize: 14);
+            MediaText(state.Media.Title.Length > 0 ? state.Media.Title : "Spotify", 48, 407, 25, 290, heavy: true);
+            MediaText(mediaDetails, 48, 435, 20, 290, muted);
             canvas.DrawLine(354, 90, 354, 435, line);
             canvas.DrawLine(1340, 90, 1340, 435, line);
             for (var i = 0; i < (config.MusicSpectrum ? 3 : 9); i++) WidgetCard(i, 1364 + i % 3 * 178, 100 + i / 3 * 106, 168);
@@ -517,8 +547,8 @@ public sealed class DeckRenderer : IDisposable
         Text(state.Profile == "gaming" ? "GAME TELEMETRY" : state.Profile == "music" ? "NOW PLAYING" : "SYSTEM OVERVIEW", 350, 119, 16, TextAccent(350), true);
         if (state.Profile == "music")
         {
-            Text(state.Media.Title, 350, 188, 42, heavy: true, maxWidth: 960);
-            Text(state.Media.DisplayArtist, 350, 234, 26, muted, maxWidth: 960);
+            MediaText(state.Media.Title, 350, 188, 42, 960, heavy: true);
+            MediaText(mediaDetails, 350, 234, 26, 960, muted);
         }
         else
         {
