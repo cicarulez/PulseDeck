@@ -6,7 +6,7 @@ PulseDeck è un progetto open source per trasformare il display USB **TURZX 8,8�
 
 Il configuratore e il display usano lo stesso renderer. L’agent gira sul PC; non serve un account PulseDeck. Le integrazioni opzionali interrogano i rispettivi servizi esterni. L’interfaccia è attualmente in italiano; la documentazione principale è in inglese per facilitare i contributi internazionali.
 
-**Versione sorgente: 0.10.0 · aggiornato il 4 ottobre 2026.** Vedi le [note di sviluppo](releases/v0.10.0.md). Questa versione non implica una release già pubblicata.
+**Versione sorgente: 0.10.2 · aggiornato il 7 ottobre 2026.** Vedi le [note di sviluppo](releases/v0.10.2.md). Questa versione non implica una release già pubblicata.
 
 ## Integrazioni a colpo d’occhio
 

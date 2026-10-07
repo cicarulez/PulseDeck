@@ -10,7 +10,7 @@
   <p><a href="docs/getting-started.md">Get started</a> · <a href="docs/gallery.md">Gallery</a> · <a href="CONTRIBUTING.md">Contribute</a> · <a href="docs/roadmap.md">Roadmap</a> · <a href="docs/README.it.md">Italiano</a></p>
 </div>
 
-**Development snapshot: v0.10.0 · 4 October 2026.** See the [development notes](docs/releases/v0.10.0.md); this does not imply a published release. The [project website](https://pulsedeck.davidecappa.it/) presents the documentation as web pages.
+**Development snapshot: v0.10.2 · 7 October 2026.** See the [development notes](docs/releases/v0.10.2.md); this does not imply a published release. The [project website](https://pulsedeck.davidecappa.it/) presents the documentation as web pages.
 
 ## What is PulseDeck?
 

@@ -22,8 +22,11 @@ is saved and reapplied when the display reconnects. **Mantieni il valore attuale
 is the default for existing configurations and leaves the panel's current value
 in place; it does not restore an earlier brightness setting.
 With **Segui Aura Sync** enabled and a manual brightness saved, **Scuro (OFF)**
-temporarily sets the panel brightness to 0%. Reapplying an active Aura effect
-restores the saved value. An unavailable Aura connection does not turn off the
+temporarily sets the panel brightness to 0%, except in the **Gaming** profile,
+which keeps the saved brightness. Entering gaming restores that value even if
+Aura is still dark; leaving gaming makes the panel follow Aura again. This applies
+to both automatic and manually selected gaming. Reapplying an active Aura effect
+also restores the saved value. An unavailable Aura connection does not turn off the
 panel. This power-state reading was checked against LightingService on the
 development PC; other Armoury Crate versions may not expose the same state.
 
