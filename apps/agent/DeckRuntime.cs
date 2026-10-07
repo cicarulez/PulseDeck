@@ -21,7 +21,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
     public byte[]? Preview { get; private set; }
 
     private sealed record RenderInput(DeckState State, DeckConfig Config, MediaArtwork? Artwork, ApplicationIcon? Icon, long MediaSampleTimestamp);
-    private sealed record DisplayFrame(byte[] Pixels, bool Animated, long Revision);
+    private sealed record DisplayFrame(byte[] Pixels, bool Animated, long Revision, string Profile);
     private RenderInput? latest;
     private DisplayFrame? latestFrame;
     public long ProviderUpdates => Interlocked.Read(ref providerUpdates);
@@ -120,7 +120,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                                 Notifications = visual, Aura = aura.Read(input.Config.AuraEnabled), AudioSpectrum = spectrum.Read() }, input.Config, input.Artwork, input.Icon);
                             Preview = rendered.Png;
                             var revision = Interlocked.Increment(ref renderUpdates);
-                            Volatile.Write(ref latestFrame, new(rendered.Pixels, animated, revision));
+                            Volatile.Write(ref latestFrame, new(rendered.Pixels, animated, revision, input.State.Profile));
                             // Preview follows rendered frames independently of the slower sensor updates.
                             await hub.Clients.All.SendAsync("frame", revision, token);
                         }
@@ -152,7 +152,7 @@ public sealed class DeckRuntime(ConfigStore config, HardwareProvider hardware, M
                     {
                         // One synchronous USB writer, no queue. Intermediate rendered frames
                         // are discarded while USB is busy; retain the verified full-frame path.
-                        display.ApplyBrightness();
+                        display.ApplyBrightness(frame.Profile);
                         display.Send(frame.Pixels, fullFrame: frame.Animated);
                     }
                     catch (Exception e) { logger.LogError(e, "Could not deliver the panel frame."); }

@@ -4,7 +4,7 @@
       <option [ngValue]="true">Mantieni il valore attuale</option>
       <option [ngValue]="false">Imposta con PulseDeck</option>
     </select>
-    <small>Salva per applicare. Il valore scelto viene ripristinato quando ricolleghi il pannello. Con “Segui Aura Sync”, Scuro (OFF) lo porta temporaneamente a 0%.</small>
+    <small>Salva per applicare. Il valore scelto viene ripristinato quando ricolleghi il pannello. Con “Segui Aura Sync”, Scuro (OFF) lo porta temporaneamente a 0%, tranne nel profilo gaming che mantiene la luminosità salvata.</small>
   </label>
   @if (percent() !== null) {
     <label>Luminosità: {{ percent() }}%

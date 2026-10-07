@@ -65,6 +65,38 @@ public class AuraPowerTests
     }
 
     [Fact]
+    public void GamingRestoresBrightnessAndLeavingGamingFollowsDarkAuraAgain()
+    {
+        var controller = new AuraBrightness();
+        var config = new DeckConfig { AuraEnabled = true, DisplayBrightness = 25 };
+        var off = new AuraSnapshot("off", LightingOff: true);
+        Assert.Equal(0, controller.Resolve(config, off, "desktop"));
+        Assert.True(controller.Off);
+        Assert.Equal(25, controller.Resolve(config, off, "gaming"));
+        Assert.False(controller.Off);
+        Assert.Equal(70, controller.Resolve(config with { DisplayBrightness = 70 }, off, "gaming"));
+        Assert.Equal(0, controller.Resolve(config, off, "music"));
+        Assert.True(controller.Off);
+        Assert.Equal(25, controller.Resolve(config with { DisplayBrightness = null }, off, "gaming"));
+        Assert.False(controller.Off);
+        Assert.Null(controller.Resolve(config with { DisplayBrightness = null }, off, "gaming"));
+    }
+
+    [Fact]
+    public void ForcedGamingIgnoresDarkAuraFromStartupAndRespectsManualBrightness()
+    {
+        var config = new DeckConfig { AuraEnabled = true, DisplayBrightness = 25, ProfileMode = "gaming" };
+        var off = new AuraSnapshot("off", LightingOff: true);
+        Assert.Equal(25, AuraPower.Brightness(config, off));
+        Assert.Equal(0, AuraPower.Brightness(config with { DisplayBrightness = 0 }, off));
+        Assert.Null(AuraPower.Brightness(config with { DisplayBrightness = null }, off));
+        Assert.Equal(0, AuraPower.Brightness(config with { ProfileMode = "desktop" }, off, "gaming"));
+        var controller = new AuraBrightness();
+        Assert.Equal(25, controller.Resolve(config, off));
+        Assert.False(controller.Off);
+    }
+
+    [Fact]
     public void OffRoundTripAndConfigChangesRestoreTheCorrectValue()
     {
         var controller = new AuraBrightness();

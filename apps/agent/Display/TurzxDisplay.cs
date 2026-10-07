@@ -16,6 +16,7 @@ public sealed class TurzxDisplay : IDisposable
     private readonly AuraColorProvider aura;
     private int? appliedBrightness;
     private readonly AuraBrightness brightness = new();
+    private string activeProfile = "desktop";
     private readonly object gate = new();
     private readonly TurzxFrameDelivery delivery;
     private SerialPort? serial;
@@ -105,10 +106,11 @@ public sealed class TurzxDisplay : IDisposable
         return id;
     }
 
-    public void ApplyBrightness()
+    public void ApplyBrightness(string? profile = null)
     {
         lock (gate)
         {
+            if (profile is not null) activeProfile = profile;
             if (IsCancelled() || !status.Connected) return;
             try { ApplyBrightnessCore(); }
             catch (Exception e)
@@ -126,7 +128,7 @@ public sealed class TurzxDisplay : IDisposable
     {
         var settings = config.Current;
         var snapshot = aura.Read(settings.AuraEnabled);
-        var percent = brightness.Resolve(settings, snapshot);
+        var percent = brightness.Resolve(settings, snapshot, activeProfile);
         if (percent is null) { appliedBrightness = null; return; }
         if (percent == appliedBrightness) return;
         CheckCancellation();

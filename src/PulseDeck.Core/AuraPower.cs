@@ -25,9 +25,12 @@ public static class AuraPower
         catch (XmlException) { return null; }
     }
 
-    public static int? Brightness(DeckConfig config, AuraSnapshot aura) =>
-        config.AuraEnabled && config.DisplayBrightness is not null && aura.Status == "off" && aura.LightingOff == true
-            ? 0 : config.DisplayBrightness;
+    public static bool ShouldDim(DeckConfig config, AuraSnapshot aura, string profile = "desktop") =>
+        (config.ProfileMode == "auto" ? profile : config.ProfileMode) != "gaming"
+        && config.AuraEnabled && config.DisplayBrightness is not null && aura.Status == "off" && aura.LightingOff == true;
+
+    public static int? Brightness(DeckConfig config, AuraSnapshot aura, string profile = "desktop") =>
+        ShouldDim(config, aura, profile) ? 0 : config.DisplayBrightness;
 
     public static AuraSnapshot Apply(AuraSnapshot snapshot, bool? off)
     {
@@ -36,7 +39,7 @@ public static class AuraPower
         if (snapshot.Status is not ("connected" or "unsupported" or "waiting")) return snapshot;
         return off == true
             ? snapshot with { Status = "off", Color = null, Colors = null, LightingOff = true,
-                Detail = "Aura Sync è su Scuro (OFF). Con una luminosità impostata in PulseDeck, il pannello segue lo spegnimento." }
+                Detail = "Aura Sync è su Scuro (OFF). Con una luminosità impostata in PulseDeck, il pannello segue lo spegnimento tranne nel profilo gaming." }
             : snapshot with { LightingOff = off };
     }
 }
@@ -46,13 +49,13 @@ public sealed class AuraBrightness
     private int? restoreBrightness;
     public bool Off { get; private set; }
 
-    public int? Resolve(DeckConfig config, AuraSnapshot aura)
+    public int? Resolve(DeckConfig config, AuraSnapshot aura, string profile = "desktop")
     {
-        var off = config.AuraEnabled && config.DisplayBrightness is not null && aura.Status == "off" && aura.LightingOff == true;
+        var off = AuraPower.ShouldDim(config, aura, profile);
         if (off) restoreBrightness = config.DisplayBrightness;
         // Switching to inherited brightness while dark restores the last known
         // manual value once, rather than leaving a temporary zero behind.
-        var target = AuraPower.Brightness(config, aura) ?? (Off ? restoreBrightness : null);
+        var target = AuraPower.Brightness(config, aura, profile) ?? (Off ? restoreBrightness : null);
         Off = off;
         if (!off) restoreBrightness = null;
         return target;
